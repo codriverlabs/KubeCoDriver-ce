@@ -85,7 +85,7 @@ jobs:
           fi
 
       - name: Build and push controller image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: true
@@ -99,7 +99,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Build and push collector image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: build/collector/Dockerfile
@@ -114,7 +114,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Build and push aperf image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: power-tools
           file: power-tools/aperf/Dockerfile
@@ -127,7 +127,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Build and push tcpdump image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: power-tools
           file: power-tools/tcpdump/Dockerfile
@@ -140,7 +140,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Build and push chaos image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: power-tools
           file: power-tools/chaos/Dockerfile
@@ -193,7 +193,7 @@ jobs:
             echo "CHAOS_IMAGE=ghcr.io/codriverlabs/ce/toe-chaos" >> $GITHUB_OUTPUT
 
       - name: Build and push controller image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: true
@@ -207,7 +207,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Build and push collector image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: build/collector/Dockerfile
@@ -222,7 +222,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Build and push aperf image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: power-tools
           file: power-tools/aperf/Dockerfile
@@ -235,7 +235,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Build and push tcpdump image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: power-tools
           file: power-tools/tcpdump/Dockerfile
@@ -248,7 +248,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Build and push chaos image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: power-tools
           file: power-tools/chaos/Dockerfile
