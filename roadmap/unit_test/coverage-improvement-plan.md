@@ -40,8 +40,8 @@
 2. **Default Values Applied**
    ```go
    TestHandleProfile_DefaultValues
-   - Missing X-PowerTool-Matching-Labels → defaults to "unknown"
-   - Missing X-PowerTool-Filename → defaults to "{job-id}.profile"
+   - Missing X-CoDriverJob-Matching-Labels → defaults to "unknown"
+   - Missing X-CoDriverJob-Filename → defaults to "{job-id}.profile"
    - Verify metadata has correct defaults
    ```
    **Why missing:** Requires successful auth flow
@@ -181,7 +181,7 @@ type mockAuthV1 struct {
 - `SetupWithManager()` - 0%
 
 #### B. Partially Covered Functions
-- `buildPowerToolEnvVars()` - 60%
+- `buildCoDriverJobEnvVars()` - 60%
 - `createEphemeralContainerForPod()` - 47.6%
 - `validateNamespaceAccess()` - 33.3%
 
@@ -189,7 +189,7 @@ type mockAuthV1 struct {
 
 1. **Tool Args Parsing**
    ```go
-   TestBuildPowerToolEnvVars_ToolArgs
+   TestBuildCoDriverJobEnvVars_ToolArgs
    - Valid JSON args
    - Invalid JSON (error handling)
    - Nested args
@@ -200,7 +200,7 @@ type mockAuthV1 struct {
 
 2. **PVC Configuration**
    ```go
-   TestBuildPowerToolEnvVars_PVCPath
+   TestBuildCoDriverJobEnvVars_PVCPath
    - PVC mode with path
    - PVC mode without path
    - Non-PVC mode
@@ -296,7 +296,7 @@ type mockAuthV1 struct {
 1. **Complete Profile Upload Flow**
    ```go
    TestE2E_ProfileUpload
-   - Create PowerTool
+   - Create CoDriverJob
    - Simulate power-tool upload
    - Verify file in correct path
    - Verify hierarchical structure

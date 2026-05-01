@@ -8,30 +8,30 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	toev1alpha1 "toe/api/v1alpha1"
+	kubecodriverv1alpha1 "github.com/codriverlabs/KubeCoDriver/api/v1alpha1"
 )
 
 func TestGetToolConfig(t *testing.T) {
 	scheme := runtime.NewScheme()
-	_ = toev1alpha1.AddToScheme(scheme)
+	_ = kubecodriverv1alpha1.AddToScheme(scheme)
 
 	tests := []struct {
 		name        string
 		toolName    string
-		configs     []toev1alpha1.PowerToolConfig
+		configs     []kubecodriverv1alpha1.CoDriverTool
 		expectFound bool
 		expectError bool
 	}{
 		{
-			name:     "config found in toe-system",
+			name:     "config found in kubecodriver-system",
 			toolName: "perf",
-			configs: []toev1alpha1.PowerToolConfig{
+			configs: []kubecodriverv1alpha1.CoDriverTool{
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "perf-config",
-						Namespace: "toe-system",
+						Namespace: "kubecodriver-system",
 					},
-					Spec: toev1alpha1.PowerToolConfigSpec{
+					Spec: kubecodriverv1alpha1.CoDriverToolSpec{
 						Image: "test:latest",
 					},
 				},
@@ -42,13 +42,13 @@ func TestGetToolConfig(t *testing.T) {
 		{
 			name:     "config found in default",
 			toolName: "strace",
-			configs: []toev1alpha1.PowerToolConfig{
+			configs: []kubecodriverv1alpha1.CoDriverTool{
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "strace-config",
 						Namespace: "default",
 					},
-					Spec: toev1alpha1.PowerToolConfigSpec{
+					Spec: kubecodriverv1alpha1.CoDriverToolSpec{
 						Image: "test:latest",
 					},
 				},
@@ -59,7 +59,7 @@ func TestGetToolConfig(t *testing.T) {
 		{
 			name:        "config not found",
 			toolName:    "nonexistent",
-			configs:     []toev1alpha1.PowerToolConfig{},
+			configs:     []kubecodriverv1alpha1.CoDriverTool{},
 			expectFound: false,
 			expectError: true,
 		},
@@ -77,7 +77,7 @@ func TestGetToolConfig(t *testing.T) {
 				WithRuntimeObjects(objects...).
 				Build()
 
-			r := &PowerToolReconciler{
+			r := &CoDriverJobReconciler{
 				Client: client,
 				Scheme: scheme,
 			}

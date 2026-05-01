@@ -17,12 +17,12 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	toev1alpha1 "toe/api/v1alpha1"
+	kubecodriverv1alpha1 "github.com/codriverlabs/KubeCoDriver/api/v1alpha1"
 )
 
-var _ = Describe("PowerTool Controller", func() {
-	Context("When reconciling a PowerTool resource", func() {
-		const resourceName = "test-powertool"
+var _ = Describe("CoDriverJob Controller", func() {
+	Context("When reconciling a CoDriverJob resource", func() {
+		const resourceName = "test-codriverjob"
 		const configName = "aperf-config"
 
 		ctx := context.Background()
@@ -34,62 +34,62 @@ var _ = Describe("PowerTool Controller", func() {
 
 		configNamespacedName := types.NamespacedName{
 			Name:      configName,
-			Namespace: "toe-system",
+			Namespace: "kubecodriver-system",
 		}
 
 		BeforeEach(func() {
-			By("creating the toe-system namespace")
+			By("creating the kubecodriver-system namespace")
 			namespace := &corev1.Namespace{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "toe-system",
+					Name: "kubecodriver-system",
 				},
 			}
-			err := k8sClient.Get(ctx, types.NamespacedName{Name: "toe-system"}, &corev1.Namespace{})
+			err := k8sClient.Get(ctx, types.NamespacedName{Name: "kubecodriver-system"}, &corev1.Namespace{})
 			if err != nil && errors.IsNotFound(err) {
 				Expect(k8sClient.Create(ctx, namespace)).To(Succeed())
 			}
 
-			By("creating the PowerToolConfig")
-			config := &toev1alpha1.PowerToolConfig{
+			By("creating the CoDriverTool")
+			config := &kubecodriverv1alpha1.CoDriverTool{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      configName,
-					Namespace: "toe-system",
+					Namespace: "kubecodriver-system",
 				},
-				Spec: toev1alpha1.PowerToolConfigSpec{
+				Spec: kubecodriverv1alpha1.CoDriverToolSpec{
 					Name:  "aperf",
 					Image: "test-registry/aperf:latest",
-					SecurityContext: toev1alpha1.SecuritySpec{
+					SecurityContext: kubecodriverv1alpha1.SecuritySpec{
 						AllowPrivileged: boolPtr(true),
 					},
 				},
 			}
-			err = k8sClient.Get(ctx, configNamespacedName, &toev1alpha1.PowerToolConfig{})
+			err = k8sClient.Get(ctx, configNamespacedName, &kubecodriverv1alpha1.CoDriverTool{})
 			if err != nil && errors.IsNotFound(err) {
 				Expect(k8sClient.Create(ctx, config)).To(Succeed())
 			}
 
-			By("creating the PowerTool resource")
-			powerTool := &toev1alpha1.PowerTool{}
-			err = k8sClient.Get(ctx, typeNamespacedName, powerTool)
+			By("creating the CoDriverJob resource")
+			coDriverJob := &kubecodriverv1alpha1.CoDriverJob{}
+			err = k8sClient.Get(ctx, typeNamespacedName, coDriverJob)
 			if err != nil && errors.IsNotFound(err) {
-				resource := &toev1alpha1.PowerTool{
+				resource := &kubecodriverv1alpha1.CoDriverJob{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      resourceName,
 						Namespace: "default",
 					},
-					Spec: toev1alpha1.PowerToolSpec{
-						Targets: toev1alpha1.TargetSpec{
+					Spec: kubecodriverv1alpha1.CoDriverJobSpec{
+						Targets: kubecodriverv1alpha1.TargetSpec{
 							LabelSelector: &metav1.LabelSelector{
 								MatchLabels: map[string]string{
 									"app": "test-app",
 								},
 							},
 						},
-						Tool: toev1alpha1.ToolSpec{
+						Tool: kubecodriverv1alpha1.ToolSpec{
 							Name:     "aperf",
 							Duration: "30s",
 						},
-						Output: toev1alpha1.OutputSpec{
+						Output: kubecodriverv1alpha1.OutputSpec{
 							Mode: "ephemeral",
 						},
 					},
@@ -99,15 +99,15 @@ var _ = Describe("PowerTool Controller", func() {
 		})
 
 		AfterEach(func() {
-			By("cleaning up the PowerTool resource")
-			resource := &toev1alpha1.PowerTool{}
+			By("cleaning up the CoDriverJob resource")
+			resource := &kubecodriverv1alpha1.CoDriverJob{}
 			err := k8sClient.Get(ctx, typeNamespacedName, resource)
 			if err == nil {
 				Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
 			}
 
-			By("cleaning up the PowerToolConfig")
-			config := &toev1alpha1.PowerToolConfig{}
+			By("cleaning up the CoDriverTool")
+			config := &kubecodriverv1alpha1.CoDriverTool{}
 			err = k8sClient.Get(ctx, configNamespacedName, config)
 			if err == nil {
 				Expect(k8sClient.Delete(ctx, config)).To(Succeed())
@@ -116,7 +116,7 @@ var _ = Describe("PowerTool Controller", func() {
 
 		It("should successfully reconcile and initialize status", func() {
 			By("reconciling the created resource")
-			controllerReconciler := &PowerToolReconciler{
+			controllerReconciler := &CoDriverJobReconciler{
 				Client: k8sClient,
 				Scheme: k8sClient.Scheme(),
 			}
@@ -127,34 +127,34 @@ var _ = Describe("PowerTool Controller", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			By("checking that status is initialized")
-			powerTool := &toev1alpha1.PowerTool{}
-			err = k8sClient.Get(ctx, typeNamespacedName, powerTool)
+			coDriverJob := &kubecodriverv1alpha1.CoDriverJob{}
+			err = k8sClient.Get(ctx, typeNamespacedName, coDriverJob)
 			Expect(err).NotTo(HaveOccurred())
 
 			// Verify status initialization
-			Expect(powerTool.Status.Phase).NotTo(BeNil())
-			Expect(*powerTool.Status.Phase).To(Equal("Pending"))
-			Expect(powerTool.Status.StartedAt).NotTo(BeNil())
-			Expect(powerTool.Status.SelectedPods).NotTo(BeNil())
-			Expect(*powerTool.Status.SelectedPods).To(Equal(int32(0))) // No matching pods
+			Expect(coDriverJob.Status.Phase).NotTo(BeNil())
+			Expect(*coDriverJob.Status.Phase).To(Equal("Pending"))
+			Expect(coDriverJob.Status.StartedAt).NotTo(BeNil())
+			Expect(coDriverJob.Status.SelectedPods).NotTo(BeNil())
+			Expect(*coDriverJob.Status.SelectedPods).To(Equal(int32(0))) // No matching pods
 
 			// Verify conditions
-			Expect(powerTool.Status.Conditions).NotTo(BeEmpty())
-			readyCondition := findCondition(powerTool.Status.Conditions, toev1alpha1.PowerToolConditionReady)
+			Expect(coDriverJob.Status.Conditions).NotTo(BeEmpty())
+			readyCondition := findCondition(coDriverJob.Status.Conditions, kubecodriverv1alpha1.CoDriverJobConditionReady)
 			Expect(readyCondition).NotTo(BeNil())
 			Expect(readyCondition.Status).To(Equal("False"))
-			Expect(readyCondition.Reason).To(Equal(toev1alpha1.ReasonTargetsSelected))
+			Expect(readyCondition.Reason).To(Equal(kubecodriverv1alpha1.ReasonTargetsSelected))
 		})
 
-		It("should handle missing PowerToolConfig gracefully", func() {
-			By("deleting the PowerToolConfig")
-			config := &toev1alpha1.PowerToolConfig{}
+		It("should handle missing CoDriverTool gracefully", func() {
+			By("deleting the CoDriverTool")
+			config := &kubecodriverv1alpha1.CoDriverTool{}
 			err := k8sClient.Get(ctx, configNamespacedName, config)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(k8sClient.Delete(ctx, config)).To(Succeed())
 
 			By("reconciling without config")
-			controllerReconciler := &PowerToolReconciler{
+			controllerReconciler := &CoDriverJobReconciler{
 				Client: k8sClient,
 				Scheme: k8sClient.Scheme(),
 			}
@@ -163,10 +163,10 @@ var _ = Describe("PowerTool Controller", func() {
 				NamespacedName: typeNamespacedName,
 			})
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("PowerToolConfig not found"))
+			Expect(err.Error()).To(ContainSubstring("CoDriverTool not found"))
 		})
 
-		It("should detect conflicts with other PowerTools", func() {
+		It("should detect conflicts with other CoDriverJobs", func() {
 			By("creating a target pod")
 			pod := &corev1.Pod{
 				ObjectMeta: metav1.ObjectMeta{
@@ -187,46 +187,46 @@ var _ = Describe("PowerTool Controller", func() {
 			}
 			Expect(k8sClient.Create(ctx, pod)).To(Succeed())
 
-			By("creating a second PowerTool targeting the same pod")
-			conflictingPowerTool := &toev1alpha1.PowerTool{
+			By("creating a second CoDriverJob targeting the same pod")
+			conflictingCoDriverJob := &kubecodriverv1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "conflicting-powertool",
+					Name:      "conflicting-codriverjob",
 					Namespace: "default",
 				},
-				Spec: toev1alpha1.PowerToolSpec{
-					Targets: toev1alpha1.TargetSpec{
+				Spec: kubecodriverv1alpha1.CoDriverJobSpec{
+					Targets: kubecodriverv1alpha1.TargetSpec{
 						LabelSelector: &metav1.LabelSelector{
 							MatchLabels: map[string]string{
 								"app": "test-app",
 							},
 						},
 					},
-					Tool: toev1alpha1.ToolSpec{
+					Tool: kubecodriverv1alpha1.ToolSpec{
 						Name:     "aperf",
 						Duration: "30s",
 					},
-					Output: toev1alpha1.OutputSpec{
+					Output: kubecodriverv1alpha1.OutputSpec{
 						Mode: "ephemeral",
 					},
 				},
 			}
-			Expect(k8sClient.Create(ctx, conflictingPowerTool)).To(Succeed())
+			Expect(k8sClient.Create(ctx, conflictingCoDriverJob)).To(Succeed())
 
-			By("reconciling both PowerTools")
-			controllerReconciler := &PowerToolReconciler{
+			By("reconciling both CoDriverJobs")
+			controllerReconciler := &CoDriverJobReconciler{
 				Client: k8sClient,
 				Scheme: k8sClient.Scheme(),
 			}
 
-			// First PowerTool should succeed
+			// First CoDriverJob should succeed
 			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
 				NamespacedName: typeNamespacedName,
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			// Second PowerTool should detect conflict
+			// Second CoDriverJob should detect conflict
 			conflictingNamespacedName := types.NamespacedName{
-				Name:      "conflicting-powertool",
+				Name:      "conflicting-codriverjob",
 				Namespace: "default",
 			}
 			_, err = controllerReconciler.Reconcile(ctx, reconcile.Request{
@@ -235,7 +235,7 @@ var _ = Describe("PowerTool Controller", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			By("checking conflict detection")
-			conflictingResource := &toev1alpha1.PowerTool{}
+			conflictingResource := &kubecodriverv1alpha1.CoDriverJob{}
 			err = k8sClient.Get(ctx, conflictingNamespacedName, conflictingResource)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -251,14 +251,14 @@ var _ = Describe("PowerTool Controller", func() {
 			}, time.Second*5, time.Millisecond*100).Should(Equal("Conflicted"))
 
 			// Cleanup
-			Expect(k8sClient.Delete(ctx, conflictingPowerTool)).To(Succeed())
+			Expect(k8sClient.Delete(ctx, conflictingCoDriverJob)).To(Succeed())
 			Expect(k8sClient.Delete(ctx, pod)).To(Succeed())
 		})
 	})
 })
 
 // Helper functions
-func findCondition(conditions []toev1alpha1.PowerToolCondition, conditionType string) *toev1alpha1.PowerToolCondition {
+func findCondition(conditions []kubecodriverv1alpha1.CoDriverJobCondition, conditionType string) *kubecodriverv1alpha1.CoDriverJobCondition {
 	for _, condition := range conditions {
 		if condition.Type == conditionType {
 			return &condition

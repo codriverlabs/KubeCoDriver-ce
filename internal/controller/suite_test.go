@@ -21,7 +21,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	toerunv1alpha1 "toe/api/v1alpha1"
+	kubecodriverv1alpha1 "github.com/codriverlabs/KubeCoDriver/api/v1alpha1"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -48,7 +48,7 @@ var _ = BeforeSuite(func() {
 	ctx, cancel = context.WithCancel(context.TODO())
 
 	var err error
-	err = toerunv1alpha1.AddToScheme(scheme.Scheme)
+	err = kubecodriverv1alpha1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	// +kubebuilder:scaffold:scheme

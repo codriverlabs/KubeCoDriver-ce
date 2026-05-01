@@ -1,19 +1,19 @@
 #!/bin/bash
 set -euo pipefail
 
-# TOE Kind E2E Cluster Setup Script
-# This script creates a Kind cluster and prepares it for TOE E2E testing
+# KubeCoDriver Kind E2E Cluster Setup Script
+# This script creates a Kind cluster and prepares it for KubeCoDriver E2E testing
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 
 # Commit-based cluster naming for parallel test runs
 COMMIT_HASH="${GITHUB_SHA:-$(git rev-parse --short HEAD 2>/dev/null || echo 'local')}"
-CLUSTER_NAME="${CLUSTER_NAME:-toe-e2e-${COMMIT_HASH}}"
+CLUSTER_NAME="${CLUSTER_NAME:-kubecodriver-e2e-${COMMIT_HASH}}"
 
 KUBECTL_VERSION="${KUBECTL_VERSION:-v1.34.0}"
 
-echo "🚀 Setting up Kind cluster for TOE E2E testing..."
+echo "🚀 Setting up Kind cluster for KubeCoDriver E2E testing..."
 
 # Function to check if command exists
 command_exists() {
@@ -122,33 +122,33 @@ create_cluster() {
 
 # Load container images
 load_images() {
-    echo "📦 Loading TOE container images..."
+    echo "📦 Loading KubeCoDriver container images..."
     
     cd "$PROJECT_ROOT"
     
     # Build images if they don't exist
-    if ! docker images | grep -q "toe-controller"; then
-        echo "🔨 Building TOE controller image..."
-        make docker-build IMG=toe-controller:e2e
+    if ! docker images | grep -q "kubecodriver-controller"; then
+        echo "🔨 Building KubeCoDriver controller image..."
+        make docker-build IMG=kubecodriver-controller:e2e
     fi
     
-    if ! docker images | grep -q "toe-collector"; then
-        echo "🔨 Building TOE collector image..."
-        make collector-build IMG=toe-collector:e2e
+    if ! docker images | grep -q "kubecodriver-collector"; then
+        echo "🔨 Building KubeCoDriver collector image..."
+        make collector-build IMG=kubecodriver-collector:e2e
     fi
     
     # Load images into Kind cluster
     echo "⬆️ Loading images into Kind cluster..."
-    kind load docker-image toe-controller:e2e --name "$CLUSTER_NAME"
-    kind load docker-image toe-collector:e2e --name "$CLUSTER_NAME"
+    kind load docker-image kubecodriver-controller:e2e --name "$CLUSTER_NAME"
+    kind load docker-image kubecodriver-collector:e2e --name "$CLUSTER_NAME"
     
     # Verify images are loaded
-    docker exec -it "${CLUSTER_NAME}-control-plane" crictl images | grep toe || {
-        echo "❌ Failed to load TOE images"
+    docker exec -it "${CLUSTER_NAME}-control-plane" crictl images | grep kubecodriver || {
+        echo "❌ Failed to load KubeCoDriver images"
         exit 1
     }
     
-    echo "✅ TOE images loaded successfully"
+    echo "✅ KubeCoDriver images loaded successfully"
 }
 
 # Setup cluster networking
@@ -197,21 +197,21 @@ EOF
 setup_security() {
     echo "🔐 Setting up RBAC and security..."
     
-    # Create TOE system namespace
-    kubectl create namespace toe-system --dry-run=client -o yaml | kubectl apply -f -
+    # Create KubeCoDriver system namespace
+    kubectl create namespace kubecodriver-system --dry-run=client -o yaml | kubectl apply -f -
     
-    # Apply basic RBAC (will be enhanced by TOE manifests)
+    # Apply basic RBAC (will be enhanced by KubeCoDriver manifests)
     kubectl apply -f - <<EOF
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: toe-e2e-sa
-  namespace: toe-system
+  name: kubecodriver-e2e-sa
+  namespace: kubecodriver-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: toe-e2e-role
+  name: kubecodriver-e2e-role
 rules:
 - apiGroups: [""]
   resources: ["pods", "pods/ephemeralcontainers", "pods/status"]
@@ -219,22 +219,22 @@ rules:
 - apiGroups: ["apps"]
   resources: ["deployments", "replicasets"]
   verbs: ["get", "list", "watch"]
-- apiGroups: ["codriverlabs.ai.toe.run"]
+- apiGroups: ["kubecodriver.codriverlabs.ai"]
   resources: ["powertools", "powertoolconfigs"]
   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: toe-e2e-binding
+  name: kubecodriver-e2e-binding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: toe-e2e-role
+  name: kubecodriver-e2e-role
 subjects:
 - kind: ServiceAccount
-  name: toe-e2e-sa
-  namespace: toe-system
+  name: kubecodriver-e2e-sa
+  namespace: kubecodriver-system
 EOF
     
     echo "✅ Security setup complete"
@@ -261,7 +261,7 @@ verify_cluster() {
 
 # Main execution
 main() {
-    echo "🎯 TOE Kind E2E Cluster Setup"
+    echo "🎯 KubeCoDriver Kind E2E Cluster Setup"
     echo "Cluster Name: $CLUSTER_NAME"
     echo "Kubectl Version: $KUBECTL_VERSION"
     echo ""
@@ -281,7 +281,7 @@ main() {
     echo "Context: kind-$CLUSTER_NAME"
     echo ""
     echo "Next steps:"
-    echo "  1. Deploy TOE components: kubectl apply -f test/e2e-kind/manifests/"
+    echo "  1. Deploy KubeCoDriver components: kubectl apply -f test/e2e-kind/manifests/"
     echo "  2. Run E2E tests: make test-e2e-kind"
     echo "  3. Cleanup: ./test/e2e-kind/cluster/teardown-cluster.sh"
 }

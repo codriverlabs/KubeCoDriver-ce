@@ -7,13 +7,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	toev1alpha1 "toe/api/v1alpha1"
+	kubecodriverv1alpha1 "github.com/codriverlabs/KubeCoDriver/api/v1alpha1"
 )
 
 func TestSetCondition_Comprehensive(t *testing.T) {
 	tests := []struct {
 		name            string
-		initialStatus   toev1alpha1.PowerToolStatus
+		initialStatus   kubecodriverv1alpha1.CoDriverJobStatus
 		conditionType   string
 		status          string
 		reason          string
@@ -26,7 +26,7 @@ func TestSetCondition_Comprehensive(t *testing.T) {
 	}{
 		{
 			name:            "add new condition to empty status",
-			initialStatus:   toev1alpha1.PowerToolStatus{},
+			initialStatus:   kubecodriverv1alpha1.CoDriverJobStatus{},
 			conditionType:   "Ready",
 			status:          "True",
 			reason:          "PodFound",
@@ -39,8 +39,8 @@ func TestSetCondition_Comprehensive(t *testing.T) {
 		},
 		{
 			name: "update existing condition",
-			initialStatus: toev1alpha1.PowerToolStatus{
-				Conditions: []toev1alpha1.PowerToolCondition{
+			initialStatus: kubecodriverv1alpha1.CoDriverJobStatus{
+				Conditions: []kubecodriverv1alpha1.CoDriverJobCondition{
 					{
 						Type:    "Ready",
 						Status:  "False",
@@ -61,8 +61,8 @@ func TestSetCondition_Comprehensive(t *testing.T) {
 		},
 		{
 			name: "add second condition",
-			initialStatus: toev1alpha1.PowerToolStatus{
-				Conditions: []toev1alpha1.PowerToolCondition{
+			initialStatus: kubecodriverv1alpha1.CoDriverJobStatus{
+				Conditions: []kubecodriverv1alpha1.CoDriverJobCondition{
 					{
 						Type:   "Ready",
 						Status: "True",
@@ -84,20 +84,20 @@ func TestSetCondition_Comprehensive(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			powerTool := &toev1alpha1.PowerTool{
+			coDriverJob := &kubecodriverv1alpha1.CoDriverJob{
 				Status: tt.initialStatus,
 			}
 
-			reconciler := &PowerToolReconciler{}
-			reconciler.setCondition(powerTool, tt.conditionType, tt.status, tt.reason, tt.message)
+			reconciler := &CoDriverJobReconciler{}
+			reconciler.setCondition(coDriverJob, tt.conditionType, tt.status, tt.reason, tt.message)
 
-			assert.Len(t, powerTool.Status.Conditions, tt.expectedCount)
+			assert.Len(t, coDriverJob.Status.Conditions, tt.expectedCount)
 
 			// Find the condition we just set/updated
-			var foundCondition *toev1alpha1.PowerToolCondition
-			for i := range powerTool.Status.Conditions {
-				if powerTool.Status.Conditions[i].Type == tt.expectedType {
-					foundCondition = &powerTool.Status.Conditions[i]
+			var foundCondition *kubecodriverv1alpha1.CoDriverJobCondition
+			for i := range coDriverJob.Status.Conditions {
+				if coDriverJob.Status.Conditions[i].Type == tt.expectedType {
+					foundCondition = &coDriverJob.Status.Conditions[i]
 					break
 				}
 			}
@@ -112,9 +112,9 @@ func TestSetCondition_Comprehensive(t *testing.T) {
 }
 
 func TestSetCondition_TimestampUpdate(t *testing.T) {
-	powerTool := &toev1alpha1.PowerTool{
-		Status: toev1alpha1.PowerToolStatus{
-			Conditions: []toev1alpha1.PowerToolCondition{
+	coDriverJob := &kubecodriverv1alpha1.CoDriverJob{
+		Status: kubecodriverv1alpha1.CoDriverJobStatus{
+			Conditions: []kubecodriverv1alpha1.CoDriverJobCondition{
 				{
 					Type:               "Ready",
 					Status:             "False",
@@ -126,20 +126,20 @@ func TestSetCondition_TimestampUpdate(t *testing.T) {
 		},
 	}
 
-	oldTime := powerTool.Status.Conditions[0].LastTransitionTime
+	oldTime := coDriverJob.Status.Conditions[0].LastTransitionTime
 
-	reconciler := &PowerToolReconciler{}
-	reconciler.setCondition(powerTool, "Ready", "True", "PodFound", "Target pod found")
+	reconciler := &CoDriverJobReconciler{}
+	reconciler.setCondition(coDriverJob, "Ready", "True", "PodFound", "Target pod found")
 
-	newTime := powerTool.Status.Conditions[0].LastTransitionTime
+	newTime := coDriverJob.Status.Conditions[0].LastTransitionTime
 	assert.True(t, newTime.After(oldTime.Time), "LastTransitionTime should be updated")
 }
 
 func TestSetCondition_NoTimestampUpdateForSameStatus(t *testing.T) {
 	originalTime := metav1.Time{Time: time.Now().Add(-1 * time.Hour)}
-	powerTool := &toev1alpha1.PowerTool{
-		Status: toev1alpha1.PowerToolStatus{
-			Conditions: []toev1alpha1.PowerToolCondition{
+	coDriverJob := &kubecodriverv1alpha1.CoDriverJob{
+		Status: kubecodriverv1alpha1.CoDriverJobStatus{
+			Conditions: []kubecodriverv1alpha1.CoDriverJobCondition{
 				{
 					Type:               "Ready",
 					Status:             "True",
@@ -151,13 +151,13 @@ func TestSetCondition_NoTimestampUpdateForSameStatus(t *testing.T) {
 		},
 	}
 
-	reconciler := &PowerToolReconciler{}
-	reconciler.setCondition(powerTool, "Ready", "True", "PodFound", "Target pod found and ready")
+	reconciler := &CoDriverJobReconciler{}
+	reconciler.setCondition(coDriverJob, "Ready", "True", "PodFound", "Target pod found and ready")
 
 	// Status didn't change, so timestamp should remain the same
-	assert.Equal(t, originalTime, powerTool.Status.Conditions[0].LastTransitionTime)
+	assert.Equal(t, originalTime, coDriverJob.Status.Conditions[0].LastTransitionTime)
 	// But message should be updated
-	assert.Equal(t, "Target pod found and ready", powerTool.Status.Conditions[0].Message)
+	assert.Equal(t, "Target pod found and ready", coDriverJob.Status.Conditions[0].Message)
 }
 
 func TestGetRequeueInterval_AllPhases(t *testing.T) {
@@ -198,34 +198,34 @@ func TestGetRequeueInterval_AllPhases(t *testing.T) {
 		},
 	}
 
-	reconciler := &PowerToolReconciler{}
+	reconciler := &CoDriverJobReconciler{}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			powerTool := &toev1alpha1.PowerTool{
-				Status: toev1alpha1.PowerToolStatus{
+			coDriverJob := &kubecodriverv1alpha1.CoDriverJob{
+				Status: kubecodriverv1alpha1.CoDriverJobStatus{
 					Phase: tt.phase,
 				},
 			}
 
-			interval := reconciler.getRequeueInterval(powerTool)
+			interval := reconciler.getRequeueInterval(coDriverJob)
 			assert.Equal(t, tt.expectedInterval, interval)
 		})
 	}
 }
 
 func TestGetRequeueInterval_EdgeCases(t *testing.T) {
-	reconciler := &PowerToolReconciler{}
+	reconciler := &CoDriverJobReconciler{}
 
-	// Test with empty PowerTool
-	emptyTool := &toev1alpha1.PowerTool{}
+	// Test with empty CoDriverJob
+	emptyTool := &kubecodriverv1alpha1.CoDriverJob{}
 	interval := reconciler.getRequeueInterval(emptyTool)
 	assert.Equal(t, SetupTeardownInterval, interval)
 
 	// Test with empty string phase
 	emptyPhase := ""
-	toolWithEmptyPhase := &toev1alpha1.PowerTool{
-		Status: toev1alpha1.PowerToolStatus{
+	toolWithEmptyPhase := &kubecodriverv1alpha1.CoDriverJob{
+		Status: kubecodriverv1alpha1.CoDriverJobStatus{
 			Phase: &emptyPhase,
 		},
 	}

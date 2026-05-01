@@ -52,7 +52,7 @@ See detailed guide: `roadmap/non-root-security-context-fix.md`
 ## Test Files
 
 - `examples/test-nonroot-pod.yaml` - Test pod
-- `examples/test-nonroot-powertool.yaml` - Test PowerTool
+- `examples/test-nonroot-powertool.yaml` - Test CoDriverJob
 - `test-nonroot-scenario.sh` - Automated test script
 - `docs/test-nonroot-instructions.md` - Manual test guide
 
@@ -69,5 +69,5 @@ See detailed guide: `roadmap/non-root-security-context-fix.md`
 
 - ✅ No CRD regeneration needed
 - ✅ No API modifications
-- ✅ Works automatically for all existing PowerToolConfigs
+- ✅ Works automatically for all existing CoDriverTools
 - ✅ Simple, focused implementation

@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: collector-config
-  namespace: toe-system
+  namespace: kubecodriver-system
 data:
   # Go time format string for organizing profiles by date
   # Default creates separate folders: year/month/day

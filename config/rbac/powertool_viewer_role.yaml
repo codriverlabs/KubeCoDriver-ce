@@ -1,21 +1,21 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: powertool-viewer-role
+  name: codriverjob-viewer-role
 rules:
 - apiGroups:
-  - codriverlabs.ai.toe.run
+  - kubecodriver.codriverlabs.ai
   resources:
-  - powertools
-  - powertoolconfigs
+  - codriverjobs
+  - codrivertools
   verbs:
   - get
   - list
   - watch
 - apiGroups:
-  - codriverlabs.ai.toe.run
+  - kubecodriver.codriverlabs.ai
   resources:
-  - powertools/status
-  - powertoolconfigs/status
+  - codriverjobs/status
+  - codrivertools/status
   verbs:
   - get

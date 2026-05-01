@@ -1,14 +1,14 @@
 # Security Documentation
 
-This directory contains comprehensive security documentation for the toe-k8s-operator system.
+This directory contains comprehensive security documentation for the KubeCoDriver system.
 
 ## Files Overview
 
 - `security-model.md` - Overall security architecture and model
-- `controller-rbac.md` - RBAC permissions for the PowerTool controller
+- `controller-rbac.md` - RBAC permissions for the CoDriverJob controller
 - `collector-rbac.md` - RBAC permissions for the collector service
-- `powertoolconfig-security.md` - Security configuration through PowerToolConfig CRDs
-- `powertool-rbac-roles.md` - Built-in RBAC roles for PowerTool resources
+- `powertoolconfig-security.md` - Security configuration through CoDriverTool CRDs
+- `powertool-rbac-roles.md` - Built-in RBAC roles for CoDriverJob resources
 - `rbac-deployment.md` - Advanced RBAC deployment patterns and examples
 
 ## Security Principles
@@ -23,7 +23,7 @@ This directory contains comprehensive security documentation for the toe-k8s-ope
 
 | Component | Security Control | File |
 |-----------|------------------|------|
-| PowerTool Controller | RBAC, Service Account | `controller-rbac.md` |
+| CoDriverJob Controller | RBAC, Service Account | `controller-rbac.md` |
 | Collector Service | RBAC, TLS, Authentication | `collector-rbac.md` |
 | Tool Security | Capabilities, Privileges | `powertoolconfig-security.md` |
 | User Access Control | Built-in RBAC Roles | `powertool-rbac-roles.md` |
@@ -34,7 +34,7 @@ This directory contains comprehensive security documentation for the toe-k8s-ope
 
 For most deployments, use the built-in RBAC roles:
 
-- **Admin Role**: `powertool-admin-role` - Full access to PowerTool and PowerToolConfig
+- **Admin Role**: `powertool-admin-role` - Full access to CoDriverJob and CoDriverTool
 - **Editor Role**: `powertool-editor-role` - Can create profiling jobs, read-only tool configs  
 - **Viewer Role**: `powertool-viewer-role` - Read-only access for monitoring and auditing
 

@@ -6,15 +6,15 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
-	toev1alpha1 "toe/api/v1alpha1"
+	kubecodriverv1alpha1 "github.com/codriverlabs/KubeCoDriver/api/v1alpha1"
 )
 
 func TestBuildResourceRequirements(t *testing.T) {
-	reconciler := &PowerToolReconciler{}
+	reconciler := &CoDriverJobReconciler{}
 
 	tests := []struct {
 		name       string
-		resources  *toev1alpha1.ResourceSpec
+		resources  *kubecodriverv1alpha1.ResourceSpec
 		wantReqs   corev1.ResourceList
 		wantLimits corev1.ResourceList
 	}{
@@ -26,8 +26,8 @@ func TestBuildResourceRequirements(t *testing.T) {
 		},
 		{
 			name: "requests only",
-			resources: &toev1alpha1.ResourceSpec{
-				Requests: &toev1alpha1.ResourceList{
+			resources: &kubecodriverv1alpha1.ResourceSpec{
+				Requests: &kubecodriverv1alpha1.ResourceList{
 					CPU:    strPtr("100m"),
 					Memory: strPtr("64Mi"),
 				},
@@ -40,8 +40,8 @@ func TestBuildResourceRequirements(t *testing.T) {
 		},
 		{
 			name: "limits only",
-			resources: &toev1alpha1.ResourceSpec{
-				Limits: &toev1alpha1.ResourceList{
+			resources: &kubecodriverv1alpha1.ResourceSpec{
+				Limits: &kubecodriverv1alpha1.ResourceList{
 					CPU:    strPtr("1000m"),
 					Memory: strPtr("512Mi"),
 				},
@@ -54,12 +54,12 @@ func TestBuildResourceRequirements(t *testing.T) {
 		},
 		{
 			name: "both requests and limits",
-			resources: &toev1alpha1.ResourceSpec{
-				Requests: &toev1alpha1.ResourceList{
+			resources: &kubecodriverv1alpha1.ResourceSpec{
+				Requests: &kubecodriverv1alpha1.ResourceList{
 					CPU:    strPtr("100m"),
 					Memory: strPtr("64Mi"),
 				},
-				Limits: &toev1alpha1.ResourceList{
+				Limits: &kubecodriverv1alpha1.ResourceList{
 					CPU:    strPtr("1000m"),
 					Memory: strPtr("512Mi"),
 				},
@@ -75,11 +75,11 @@ func TestBuildResourceRequirements(t *testing.T) {
 		},
 		{
 			name: "cpu only",
-			resources: &toev1alpha1.ResourceSpec{
-				Requests: &toev1alpha1.ResourceList{
+			resources: &kubecodriverv1alpha1.ResourceSpec{
+				Requests: &kubecodriverv1alpha1.ResourceList{
 					CPU: strPtr("200m"),
 				},
-				Limits: &toev1alpha1.ResourceList{
+				Limits: &kubecodriverv1alpha1.ResourceList{
 					CPU: strPtr("500m"),
 				},
 			},
@@ -92,11 +92,11 @@ func TestBuildResourceRequirements(t *testing.T) {
 		},
 		{
 			name: "memory only",
-			resources: &toev1alpha1.ResourceSpec{
-				Requests: &toev1alpha1.ResourceList{
+			resources: &kubecodriverv1alpha1.ResourceSpec{
+				Requests: &kubecodriverv1alpha1.ResourceList{
 					Memory: strPtr("128Mi"),
 				},
-				Limits: &toev1alpha1.ResourceList{
+				Limits: &kubecodriverv1alpha1.ResourceList{
 					Memory: strPtr("256Mi"),
 				},
 			},
@@ -111,8 +111,8 @@ func TestBuildResourceRequirements(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			toolConfig := &toev1alpha1.PowerToolConfig{
-				Spec: toev1alpha1.PowerToolConfigSpec{
+			toolConfig := &kubecodriverv1alpha1.CoDriverTool{
+				Spec: kubecodriverv1alpha1.CoDriverToolSpec{
 					Resources: tt.resources,
 				},
 			}

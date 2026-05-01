@@ -10,13 +10,13 @@ echo "🧪 Quick Phase 1 Test (using existing cluster)"
 echo ""
 
 # Check if cluster exists
-if ! kind get clusters 2>/dev/null | grep -q "toe-test-e2e"; then
+if ! kind get clusters 2>/dev/null | grep -q "kubecodriver-test-e2e"; then
     echo "❌ No cluster found. Please run setup-cluster.sh first"
     exit 1
 fi
 
 # Set context
-kubectl config use-context kind-toe-test-e2e
+kubectl config use-context kind-kubecodriver-test-e2e
 
 # Verify cluster is accessible
 echo "✅ Cluster: $(kubectl config current-context)"
@@ -26,15 +26,15 @@ kubectl get nodes
 # Check if CRDs are installed
 echo ""
 echo "📋 Checking CRDs..."
-if ! kubectl get crd powertools.codriverlabs.ai.toe.run 2>/dev/null; then
+if ! kubectl get crd codriverjobs.kubecodriver.codriverlabs.ai 2>/dev/null; then
     echo "⚠️ Installing CRDs..."
     kubectl apply -f "$PROJECT_ROOT/config/crd/bases/"
 fi
 
 # Check if controller is running
 echo ""
-echo "🔍 Checking TOE controller..."
-if ! kubectl get deployment -n toe-system toe-controller-manager 2>/dev/null; then
+echo "🔍 Checking KubeCoDriver controller..."
+if ! kubectl get deployment -n kubecodriver-system kubecodriver-controller-manager 2>/dev/null; then
     echo "⚠️ Controller not found - tests will run without controller"
     echo "   (This is OK for basic API tests)"
 fi
@@ -56,7 +56,7 @@ go test -v -tags=e2ekind -timeout=10m ./... \
     echo ""
     kubectl get all -A
     echo ""
-    kubectl get powertools -A 2>/dev/null || echo "No PowerTools found"
+    kubectl get codriverjobs -A 2>/dev/null || echo "No CoDriverJobs found"
     echo ""
     exit $TEST_EXIT
 }

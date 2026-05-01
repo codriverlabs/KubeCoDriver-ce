@@ -10,7 +10,7 @@ global:
     # Change this to your ECR repository base path
     repository: "ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/codriverlabs/ce"
     imagePullSecrets: []
-  namespace: toe-system
+  namespace: kubecodriver-system
 
 controller:
   enabled: true
@@ -35,7 +35,7 @@ serviceAccount:
   create: true
   annotations:
     # Replace with your actual IAM role ARN for IRSA
-    eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/TOE-IRSA-Role
+    eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/KubeCoDriver-IRSA-Role
 
 ecr:
   accountId: "ACCOUNT_ID"

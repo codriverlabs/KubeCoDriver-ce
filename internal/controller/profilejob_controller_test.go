@@ -15,12 +15,12 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	toev1alpha1 "toe/api/v1alpha1"
+	kubecodriverv1alpha1 "github.com/codriverlabs/KubeCoDriver/api/v1alpha1"
 )
 
-var _ = Describe("PowerTool Controller Integration", func() {
-	Context("When reconciling a PowerTool resource with comprehensive scenarios", func() {
-		const resourceName = "integration-test-powertool"
+var _ = Describe("CoDriverJob Controller Integration", func() {
+	Context("When reconciling a CoDriverJob resource with comprehensive scenarios", func() {
+		const resourceName = "integration-test-codriverjob"
 
 		ctx := context.Background()
 
@@ -30,28 +30,28 @@ var _ = Describe("PowerTool Controller Integration", func() {
 		}
 
 		BeforeEach(func() {
-			By("creating the custom resource for the Kind PowerTool")
-			powerTool := &toev1alpha1.PowerTool{}
-			err := k8sClient.Get(ctx, typeNamespacedName, powerTool)
+			By("creating the custom resource for the Kind CoDriverJob")
+			coDriverJob := &kubecodriverv1alpha1.CoDriverJob{}
+			err := k8sClient.Get(ctx, typeNamespacedName, coDriverJob)
 			if err != nil && errors.IsNotFound(err) {
-				resource := &toev1alpha1.PowerTool{
+				resource := &kubecodriverv1alpha1.CoDriverJob{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      resourceName,
 						Namespace: "default",
 					},
-					Spec: toev1alpha1.PowerToolSpec{
-						Targets: toev1alpha1.TargetSpec{
+					Spec: kubecodriverv1alpha1.CoDriverJobSpec{
+						Targets: kubecodriverv1alpha1.TargetSpec{
 							LabelSelector: &metav1.LabelSelector{
 								MatchLabels: map[string]string{
 									"app": "integration-test",
 								},
 							},
 						},
-						Tool: toev1alpha1.ToolSpec{
+						Tool: kubecodriverv1alpha1.ToolSpec{
 							Name:     "nonexistent-tool",
 							Duration: "30s",
 						},
-						Output: toev1alpha1.OutputSpec{
+						Output: kubecodriverv1alpha1.OutputSpec{
 							Mode: "ephemeral",
 						},
 					},
@@ -61,17 +61,17 @@ var _ = Describe("PowerTool Controller Integration", func() {
 		})
 
 		AfterEach(func() {
-			resource := &toev1alpha1.PowerTool{}
+			resource := &kubecodriverv1alpha1.CoDriverJob{}
 			err := k8sClient.Get(ctx, typeNamespacedName, resource)
 			if err == nil {
-				By("Cleanup the specific resource instance PowerTool")
+				By("Cleanup the specific resource instance CoDriverJob")
 				Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
 			}
 		})
 
 		It("should successfully reconcile the resource", func() {
 			By("Reconciling the created resource")
-			controllerReconciler := &PowerToolReconciler{
+			controllerReconciler := &CoDriverJobReconciler{
 				Client: k8sClient,
 				Scheme: k8sClient.Scheme(),
 			}
@@ -80,9 +80,9 @@ var _ = Describe("PowerTool Controller Integration", func() {
 				NamespacedName: typeNamespacedName,
 			})
 
-			// Should fail due to missing PowerToolConfig, which is expected behavior
+			// Should fail due to missing CoDriverTool, which is expected behavior
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("PowerToolConfig not found for tool: nonexistent-tool"))
+			Expect(err.Error()).To(ContainSubstring("CoDriverTool not found for tool: nonexistent-tool"))
 		})
 	})
 })

@@ -1,5 +1,5 @@
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerTool
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverJob
 metadata:
   name: chaos-process-terminate-force
   namespace: default

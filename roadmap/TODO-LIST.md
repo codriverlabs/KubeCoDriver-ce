@@ -1,4 +1,4 @@
-# TOE Project - TODO List
+# KubeCoDriver Project - TODO List
 
 **Last Updated**: 2025-11-01  
 **Current Version**: v1.0.47
@@ -10,9 +10,9 @@
 - ✅ Security context inheritance from target pods/containers
 - ✅ runAsRoot feature for tools requiring root access
 - ✅ Unit tests for all new features (coverage: 72.4%)
-- ✅ PowerToolConfig examples updated with runAsRoot
+- ✅ CoDriverTool examples updated with runAsRoot
 - ✅ Examples folder reorganized into categorized subdirectories
-- ✅ PowerToolConfig files moved to power-tools/*/config/
+- ✅ CoDriverTool files moved to power-tools/*/config/
 - ✅ Makefile updated to bundle configs with versioned images
 
 ## 🔴 High Priority - Pending
@@ -26,7 +26,7 @@
 - [ ] Set up envtest-based E2E tests for controller logic
 - [ ] Implement Kind-based E2E tests for actual pod profiling
 - [ ] Add test cases for:
-  - [ ] PowerTool lifecycle (create/update/delete)
+  - [ ] CoDriverJob lifecycle (create/update/delete)
   - [ ] Multi-container pod targeting
   - [ ] Non-root pod profiling
   - [ ] runAsRoot feature validation
@@ -105,7 +105,7 @@
 
 **Tasks**:
 - [ ] Add Prometheus metrics for:
-  - [ ] PowerTool execution duration
+  - [ ] CoDriverJob execution duration
   - [ ] Success/failure rates
   - [ ] Resource usage
   - [ ] Queue depth
@@ -156,7 +156,7 @@
 **Effort**: 4-6 weeks
 
 **Tasks**:
-- [ ] Web-based dashboard for PowerTool management
+- [ ] Web-based dashboard for CoDriverJob management
 - [ ] Real-time profiling status visualization
 - [ ] Profile data viewer
 - [ ] Configuration management UI

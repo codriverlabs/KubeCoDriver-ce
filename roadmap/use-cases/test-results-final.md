@@ -18,7 +18,7 @@ Both implemented features are working correctly:
 - Pod-level security context: `runAsUser: 1001`, `runAsGroup: 1001`, `runAsNonRoot: true`
 - Image: busybox
 
-**PowerTool Configuration**:
+**CoDriverJob Configuration**:
 - Target container: `main-container`
 - Output mode: collector
 
@@ -62,7 +62,7 @@ Both implemented features are working correctly:
 - Container 2: `main-app` - runs as user 1001:1001
 - Image: busybox
 
-**PowerTool Configuration**:
+**CoDriverJob Configuration**:
 - Target container: `main-app` (explicitly specified)
 - Output mode: ephemeral
 
@@ -120,7 +120,7 @@ if targetContainer != nil && targetContainer.SecurityContext != nil {
 ```
 
 **Inheritance Priority**:
-1. PowerToolConfig security context (highest)
+1. CoDriverTool security context (highest)
 2. Target container security context
 3. Pod-level security context (lowest)
 
@@ -132,7 +132,7 @@ if targetContainer != nil && targetContainer.SecurityContext != nil {
 
 **Implementation**:
 ```go
-func (r *PowerToolReconciler) getTargetContainer(pod corev1.Pod, targetContainerName *string) *corev1.Container {
+func (r *CoDriverJobReconciler) getTargetContainer(pod corev1.Pod, targetContainerName *string) *corev1.Container {
     // If no container specified, use first container
     if targetContainerName == nil || *targetContainerName == "" {
         if len(pod.Spec.Containers) > 0 {
@@ -182,7 +182,7 @@ New environment variable added:
 - Single-container pods work exactly as before
 - Multi-container pods without `container` field use first container (same as before)
 - Multi-container pods with `container` field now work correctly (new feature)
-- No breaking changes to existing PowerTool configurations
+- No breaking changes to existing CoDriverJob configurations
 
 ---
 
@@ -214,27 +214,27 @@ New environment variable added:
 
 ### Verify Security Context
 ```bash
-kubectl get pod <pod-name> -n toe-test -o jsonpath='{.spec.ephemeralContainers[0].securityContext}' | jq .
+kubectl get pod <pod-name> -n kubecodriver-test -o jsonpath='{.spec.ephemeralContainers[0].securityContext}' | jq .
 ```
 
 ### Verify Target Container Name
 ```bash
-kubectl get pod <pod-name> -n toe-test -o jsonpath='{.spec.ephemeralContainers[0].env[?(@.name=="TARGET_CONTAINER_NAME")]}' | jq .
+kubectl get pod <pod-name> -n kubecodriver-test -o jsonpath='{.spec.ephemeralContainers[0].env[?(@.name=="TARGET_CONTAINER_NAME")]}' | jq .
 ```
 
 ### Verify Container User
 ```bash
-kubectl exec <pod-name> -n toe-test -c <container-name> -- id
+kubectl exec <pod-name> -n kubecodriver-test -c <container-name> -- id
 ```
 
 ### Test Write Permissions
 ```bash
-kubectl exec <pod-name> -n toe-test -c <container-name> -- sh -c "echo 'test' > /tmp/test.txt && cat /tmp/test.txt"
+kubectl exec <pod-name> -n kubecodriver-test -c <container-name> -- sh -c "echo 'test' > /tmp/test.txt && cat /tmp/test.txt"
 ```
 
 ### Create Debug Ephemeral Container
 ```bash
-kubectl debug <pod-name> -n toe-test -it --image=busybox --target=<container-name> -- sh
+kubectl debug <pod-name> -n kubecodriver-test -it --image=busybox --target=<container-name> -- sh
 ```
 
 ---
@@ -243,7 +243,7 @@ kubectl debug <pod-name> -n toe-test -it --image=busybox --target=<container-nam
 
 1. `internal/controller/powertool_controller.go`
    - Added `getTargetContainer()` helper function
-   - Updated `buildPowerToolEnvVars()` to add `TARGET_CONTAINER_NAME`
+   - Updated `buildCoDriverJobEnvVars()` to add `TARGET_CONTAINER_NAME`
    - Updated `createEphemeralContainerForPod()` to inherit security context
 
 2. `internal/controller/container_selection_test.go` (new)

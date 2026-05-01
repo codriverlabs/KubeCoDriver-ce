@@ -9,12 +9,12 @@ Comprehensive unit tests for the hierarchical path structure implementation.
 ### Before
 - `pkg/collector/storage`: **0.0%** coverage
 - `extractMatchingLabels`: **0.0%** coverage  
-- `buildPowerToolEnvVars`: **60.0%** coverage (partial)
+- `buildCoDriverJobEnvVars`: **60.0%** coverage (partial)
 
 ### After
 - `pkg/collector/storage`: **72.2%** coverage ✅
 - `extractMatchingLabels`: **100.0%** coverage ✅
-- `buildPowerToolEnvVars`: **60.0%** coverage (improved test quality)
+- `buildCoDriverJobEnvVars`: **60.0%** coverage (improved test quality)
 
 ## Test Files Created
 
@@ -37,7 +37,7 @@ Tests for storage manager with hierarchical path structure.
 **Coverage:** 72.2%
 
 ### 2. `internal/controller/label_matching_test.go`
-Tests for dynamic label matching from PowerTool selectors.
+Tests for dynamic label matching from CoDriverJob selectors.
 
 **Test Cases:**
 - `TestExtractMatchingLabels` - Label extraction logic
@@ -61,13 +61,13 @@ Tests for dynamic label matching from PowerTool selectors.
 Tests for environment variable building with dynamic labels.
 
 **Test Cases:**
-- `TestBuildPowerToolEnvVars` - Environment variable generation
+- `TestBuildCoDriverJobEnvVars` - Environment variable generation
   - Basic configuration with app label
   - Environment label
   - No matching labels (defaults to unknown)
   - Custom tier label
   
-- `TestBuildPowerToolEnvVars_WithPVCPath` - PVC path handling
+- `TestBuildCoDriverJobEnvVars_WithPVCPath` - PVC path handling
 
 **Coverage:** Improved quality, validates POD_MATCHING_LABELS
 
@@ -175,7 +175,7 @@ Result: "unknown"
    - Real K8s cluster scenarios
 
 4. **Controller Tests** (Priority: Medium)
-   - Improve buildPowerToolEnvVars coverage
+   - Improve buildCoDriverJobEnvVars coverage
    - Test PVC path handling
    - Test tool args parsing
 

@@ -11,19 +11,19 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	toev1alpha1 "toe/api/v1alpha1"
+	kubecodriverv1alpha1 "github.com/codriverlabs/KubeCoDriver/api/v1alpha1"
 )
 
-func TestPowerToolConfigReconciler_Reconcile(t *testing.T) {
+func TestCoDriverToolReconciler_Reconcile(t *testing.T) {
 	scheme := runtime.NewScheme()
-	_ = toev1alpha1.AddToScheme(scheme)
+	_ = kubecodriverv1alpha1.AddToScheme(scheme)
 
-	config := &toev1alpha1.PowerToolConfig{
+	config := &kubecodriverv1alpha1.CoDriverTool{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-config",
 			Namespace: "default",
 		},
-		Spec: toev1alpha1.PowerToolConfigSpec{
+		Spec: kubecodriverv1alpha1.CoDriverToolSpec{
 			Name:  "test-tool",
 			Image: "test-image:latest",
 		},
@@ -35,7 +35,7 @@ func TestPowerToolConfigReconciler_Reconcile(t *testing.T) {
 		WithStatusSubresource(config).
 		Build()
 
-	reconciler := &PowerToolConfigReconciler{
+	reconciler := &CoDriverToolReconciler{
 		Client: fakeClient,
 		Scheme: scheme,
 	}
@@ -53,7 +53,7 @@ func TestPowerToolConfigReconciler_Reconcile(t *testing.T) {
 	assert.NotNil(t, result)
 
 	// Verify status was updated
-	var updated toev1alpha1.PowerToolConfig
+	var updated kubecodriverv1alpha1.CoDriverTool
 	err = fakeClient.Get(context.Background(), req.NamespacedName, &updated)
 	assert.NoError(t, err)
 	assert.NotNil(t, updated.Status.LastValidated)
@@ -63,13 +63,13 @@ func TestPowerToolConfigReconciler_Reconcile(t *testing.T) {
 	assert.Equal(t, "Ready", updated.Status.Conditions[0].Type)
 }
 
-func TestPowerToolConfigReconciler_NotFound(t *testing.T) {
+func TestCoDriverToolReconciler_NotFound(t *testing.T) {
 	scheme := runtime.NewScheme()
-	_ = toev1alpha1.AddToScheme(scheme)
+	_ = kubecodriverv1alpha1.AddToScheme(scheme)
 
 	fakeClient := fake.NewClientBuilder().WithScheme(scheme).Build()
 
-	reconciler := &PowerToolConfigReconciler{
+	reconciler := &CoDriverToolReconciler{
 		Client: fakeClient,
 		Scheme: scheme,
 	}
@@ -92,15 +92,15 @@ func TestUpdateCondition(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		existing   []toev1alpha1.PowerToolConfigCondition
-		new        toev1alpha1.PowerToolConfigCondition
+		existing   []kubecodriverv1alpha1.CoDriverToolCondition
+		new        kubecodriverv1alpha1.CoDriverToolCondition
 		expectLen  int
 		expectType string
 	}{
 		{
 			name:     "add new condition",
-			existing: []toev1alpha1.PowerToolConfigCondition{},
-			new: toev1alpha1.PowerToolConfigCondition{
+			existing: []kubecodriverv1alpha1.CoDriverToolCondition{},
+			new: kubecodriverv1alpha1.CoDriverToolCondition{
 				Type:               "Ready",
 				Status:             "True",
 				LastTransitionTime: now,
@@ -110,14 +110,14 @@ func TestUpdateCondition(t *testing.T) {
 		},
 		{
 			name: "update existing condition",
-			existing: []toev1alpha1.PowerToolConfigCondition{
+			existing: []kubecodriverv1alpha1.CoDriverToolCondition{
 				{
 					Type:               "Ready",
 					Status:             "False",
 					LastTransitionTime: now,
 				},
 			},
-			new: toev1alpha1.PowerToolConfigCondition{
+			new: kubecodriverv1alpha1.CoDriverToolCondition{
 				Type:               "Ready",
 				Status:             "True",
 				LastTransitionTime: now,

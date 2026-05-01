@@ -1,17 +1,17 @@
-# TOE Roadmap
+# KubeCoDriver Roadmap
 
-This document outlines the planned features and improvements for the TOE (Temporary Observability Engine) project.
+This document outlines the planned features and improvements for the KubeCoDriver (Temporary Observability Engine) project.
 
-## PowerTool Schema Enhancements
+## CoDriverJob Schema Enhancements
 
 ### 1. Ephemeral Container Attachment
-- **Goal**: Enable PowerTool to attach ephemeral containers at the start of selected containers from pods
-- **Approach**: Enhance PowerTool schema to support container-level targeting and ephemeral container specifications
+- **Goal**: Enable CoDriverJob to attach ephemeral containers at the start of selected containers from pods
+- **Approach**: Enhance CoDriverJob schema to support container-level targeting and ephemeral container specifications
 - **Priority**: High
 - **Status**: Planned
 
 ### 2. Command Line Arguments Field
-- **Goal**: Add commandLineArguments field to PowerTool schema
+- **Goal**: Add commandLineArguments field to CoDriverJob schema
 - **Approach**: Allow end users to specify extra command line arguments for profiling tools
 - **Priority**: High
 - **Status**: Planned
@@ -20,19 +20,19 @@ This document outlines the planned features and improvements for the TOE (Tempor
 
 ### 3. Storage Fault Injection
 - **Goal**: Implement PV (Persistent Volume) fill-up fault injection
-- **Approach**: Create PowerTool examples that can fill up storage to test application resilience
+- **Approach**: Create CoDriverJob examples that can fill up storage to test application resilience
 - **Priority**: Medium
 - **Status**: Planned
 
 ### 4. CPU Usage Fault Injection
 - **Goal**: Implement CPU stress fault injection
-- **Approach**: Create PowerTool examples that can raise CPU usage in target pods
+- **Approach**: Create CoDriverJob examples that can raise CPU usage in target pods
 - **Priority**: Medium
 - **Status**: Planned
 
 ### 5. Memory Usage Fault Injection
 - **Goal**: Implement memory stress fault injection
-- **Approach**: Create PowerTool examples that can raise memory usage in target pods
+- **Approach**: Create CoDriverJob examples that can raise memory usage in target pods
 - **Priority**: Medium
 - **Status**: Planned
 
@@ -49,35 +49,35 @@ This document outlines the planned features and improvements for the TOE (Tempor
 ## Security & Safety Enhancements
 
 ### 7. Command Line Argument Sanitization
-- **Goal**: Implement extra sanitization for command line arguments in PowerTool
+- **Goal**: Implement extra sanitization for command line arguments in CoDriverJob
 - **Approach**: Define sub-CRD that will limit the vector of attack
 - **Priority**: High
 - **Status**: Planned
 
-### 8. PowerToolConfig Argument Enforcement
-- **Goal**: Enforce acceptable command line arguments in PowerToolConfig
+### 8. CoDriverTool Argument Enforcement
+- **Goal**: Enforce acceptable command line arguments in CoDriverTool
 - **Approach**: Implement validation rules and whitelisting mechanisms
 - **Priority**: High
 - **Status**: Planned
 
 ## Reliability & Resource Management
 
-### 9. Signal Handling for PowerTool
-- **Goal**: Add handling and trapping termination signals for each PowerTool
+### 9. Signal Handling for CoDriverJob
+- **Goal**: Add handling and trapping termination signals for each CoDriverJob
 - **Approach**: Implement graceful shutdown to save work when collection pod gets interrupted
 - **Priority**: Medium
 - **Status**: Planned
 
 ### 10. Default Resource Specifications
-- **Goal**: PowerToolConfig should specify default CPU and memory requests and limits
+- **Goal**: CoDriverTool should specify default CPU and memory requests and limits
 - **Approach**: Define resource templates and defaults in configuration
 - **Priority**: Medium
 - **Status**: Planned
 
 ## Data Processing & Visualization
 
-### 11. PowerToolProcessing CRD
-- **Goal**: Define PowerToolProcessingCRD for each collector
+### 11. CoDriverJobProcessing CRD
+- **Goal**: Define CoDriverJobProcessingCRD for each collector
 - **Features**:
   - Specify frequency of processing collected data
   - Define how to expose processed data
@@ -103,7 +103,7 @@ This document outlines the planned features and improvements for the TOE (Tempor
 ## User Experience & Adoption
 
 ### 14. Interactive Tutorial
-- **Goal**: Implement "Hello PowerTool" interactive tutorial
+- **Goal**: Implement "Hello CoDriverJob" interactive tutorial
 - **Approach**: Create step-by-step guided experience for new users
 - **Priority**: Low
 - **Status**: Planned
@@ -116,7 +116,7 @@ This document outlines the planned features and improvements for the TOE (Tempor
 
 ## Implementation Timeline
 
-- **Phase 1**: PowerTool Schema Enhancements (Items 1-2)
+- **Phase 1**: CoDriverJob Schema Enhancements (Items 1-2)
 - **Phase 2**: Security & Safety (Items 7-8)
 - **Phase 3**: Fault Injection Capabilities (Items 3-6)
 - **Phase 4**: Reliability & Resources (Items 9-10)

@@ -4,7 +4,7 @@ import (
 	"context"
 	"io"
 
-	"toe/pkg/collector/storage"
+	"github.com/codriverlabs/KubeCoDriver/pkg/collector/storage"
 
 	authv1 "k8s.io/api/authentication/v1"
 )

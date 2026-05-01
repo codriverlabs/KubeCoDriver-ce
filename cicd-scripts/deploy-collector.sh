@@ -34,7 +34,7 @@ done
 
 cd "$PROJECT_ROOT"
 
-echo "=== Deploying TOE Collector ==="
+echo "=== Deploying KubeCoDriver Collector ==="
 echo "Registry Type: $REGISTRY_TYPE"
 echo "Version: $VERSION"
 echo "Clean Deploy: $CLEAN_DEPLOY"
@@ -62,8 +62,8 @@ fi
 
 # Ensure controller is deployed first (contains RBAC and ServiceAccount)
 echo "Ensuring controller is deployed (contains collector RBAC)..."
-if ! kubectl get serviceaccount toe-collector -n "$NAMESPACE" &>/dev/null; then
-    echo "❌ Error: Controller must be deployed first (contains toe-collector ServiceAccount)"
+if ! kubectl get serviceaccount kubecodriver-collector -n "$NAMESPACE" &>/dev/null; then
+    echo "❌ Error: Controller must be deployed first (contains kubecodriver-collector ServiceAccount)"
     echo "Run: make install && make deploy IMG=<your-image>"
     exit 1
 fi
@@ -78,9 +78,9 @@ echo "✅ Collector deployed successfully"
 
 # Wait for deployment to be ready
 echo "Waiting for collector to be ready..."
-if ! kubectl wait --for=condition=available --timeout=120s deployment/toe-collector -n "$NAMESPACE"; then
+if ! kubectl wait --for=condition=available --timeout=120s deployment/kubecodriver-collector -n "$NAMESPACE"; then
     echo "❌ Error: Collector deployment failed to become ready"
-    kubectl get pods -n "$NAMESPACE" -l app=toe-collector
+    kubectl get pods -n "$NAMESPACE" -l app=kubecodriver-collector
     exit 1
 fi
 echo "✅ Collector is ready"
@@ -89,10 +89,10 @@ echo "✅ Collector is ready"
 echo ""
 echo "🎉 Collector deployed successfully!"
 echo "🔍 Status:"
-kubectl get pods -n "$NAMESPACE" -l app=toe-collector
+kubectl get pods -n "$NAMESPACE" -l app=kubecodriver-collector
 echo ""
 echo "📝 Service endpoint:"
-kubectl get service toe-collector -n "$NAMESPACE"
+kubectl get service kubecodriver-collector -n "$NAMESPACE"
 echo ""
 echo "💾 Storage:"
 kubectl get pvc profiles-pvc -n "$NAMESPACE"

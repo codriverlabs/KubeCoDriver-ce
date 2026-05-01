@@ -58,22 +58,22 @@ kubectl debug multi-container-test \
 
 ### Unit Test Results
 ```
-ok  	toe/internal/controller	6.388s	coverage: 72.4% of statements
+ok  	github.com/codriverlabs/KubeCoDriver/internal/controller	6.388s	coverage: 72.4% of statements
 ```
 
 All tests passing, coverage maintained at 72.4%.
 
 ## Usage Example
 
-### PowerToolConfig with runAsRoot
+### CoDriverTool with runAsRoot
 ```yaml
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerToolConfig
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverTool
 metadata:
   name: aperf
 spec:
   name: "aperf"
-  image: "localhost:32000/codriverlabs/toe/aperf:v1.0.47"
+  image: "localhost:32000/codriverlabs/ce/kubecodriver-aperf:v1.0.47"
   securityContext:
     runAsRoot: true  # Enable root access
     capabilities:
@@ -107,9 +107,9 @@ securityContext:
 - `api/v1alpha1/common_types.go` - Added RunAsRoot field
 - `internal/controller/powertool_controller.go` - Implemented runAsRoot logic
 - `internal/controller/runasroot_test.go` - Added unit tests
-- `config/crd/bases/codriverlabs.ai.toe.run_powertoolconfigs.yaml` - Generated CRD
+- `config/crd/bases/kubecodriver.codriverlabs.ai_powertoolconfigs.yaml` - Generated CRD
 
 ## Next Steps
-1. Update PowerToolConfig examples to use runAsRoot for aperf
+1. Update CoDriverTool examples to use runAsRoot for aperf
 2. Document the feature in user-facing documentation
 3. Test with real workloads in cluster

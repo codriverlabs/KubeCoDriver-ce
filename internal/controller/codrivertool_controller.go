@@ -9,32 +9,32 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	toev1alpha1 "toe/api/v1alpha1"
+	kubecodriverv1alpha1 "github.com/codriverlabs/KubeCoDriver/api/v1alpha1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-//+kubebuilder:rbac:groups=codriverlabs.ai.toe.run,resources=powertoolconfigs,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=codriverlabs.ai.toe.run,resources=powertoolconfigs/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=codriverlabs.ai.toe.run,resources=powertoolconfigs/finalizers,verbs=update
+//+kubebuilder:rbac:groups=kubecodriver.codriverlabs.ai,resources=codrivertools,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=kubecodriver.codriverlabs.ai,resources=codrivertools/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=kubecodriver.codriverlabs.ai,resources=codrivertools/finalizers,verbs=update
 
-type PowerToolConfigReconciler struct {
+type CoDriverToolReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 }
 
 // Reconcile is part of the main kubernetes reconciliation loop
-func (r *PowerToolConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *CoDriverToolReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
-	// Fetch the PowerToolConfig instance
-	var toolConfig toev1alpha1.PowerToolConfig
+	// Fetch the CoDriverTool instance
+	var toolConfig kubecodriverv1alpha1.CoDriverTool
 	if err := r.Get(ctx, req.NamespacedName, &toolConfig); err != nil {
-		logger.Error(err, "unable to fetch PowerToolConfig")
+		logger.Error(err, "unable to fetch CoDriverTool")
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	logger.Info("Reconciling PowerToolConfig", "name", toolConfig.Name, "tool", toolConfig.Spec.Name)
+	logger.V(1).Info("Reconciling CoDriverTool", "name", toolConfig.Name, "tool", toolConfig.Spec.Name)
 
 	// Update status to indicate validation
 	now := metav1.Now()
@@ -42,19 +42,19 @@ func (r *PowerToolConfigReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	toolConfig.Status.Phase = stringPtr("Ready")
 
 	// Add condition
-	condition := toev1alpha1.PowerToolConfigCondition{
+	condition := kubecodriverv1alpha1.CoDriverToolCondition{
 		Type:               "Ready",
 		Status:             "True",
 		LastTransitionTime: now,
 		Reason:             "ConfigurationValid",
-		Message:            "PowerToolConfig is valid and ready for use",
+		Message:            "CoDriverTool is valid and ready for use",
 	}
 
 	// Update or add the condition
 	toolConfig.Status.Conditions = updateCondition(toolConfig.Status.Conditions, condition)
 
 	if err := r.Status().Update(ctx, &toolConfig); err != nil {
-		logger.Error(err, "failed to update PowerToolConfig status")
+		logger.Error(err, "failed to update CoDriverTool status")
 		return ctrl.Result{}, err
 	}
 
@@ -62,7 +62,7 @@ func (r *PowerToolConfigReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 }
 
 // Helper function to update conditions
-func updateCondition(conditions []toev1alpha1.PowerToolConfigCondition, newCondition toev1alpha1.PowerToolConfigCondition) []toev1alpha1.PowerToolConfigCondition {
+func updateCondition(conditions []kubecodriverv1alpha1.CoDriverToolCondition, newCondition kubecodriverv1alpha1.CoDriverToolCondition) []kubecodriverv1alpha1.CoDriverToolCondition {
 	for i, condition := range conditions {
 		if condition.Type == newCondition.Type {
 			conditions[i] = newCondition
@@ -78,8 +78,8 @@ func stringPtr(s string) *string {
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *PowerToolConfigReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *CoDriverToolReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&toev1alpha1.PowerToolConfig{}).
+		For(&kubecodriverv1alpha1.CoDriverTool{}).
 		Complete(r)
 }

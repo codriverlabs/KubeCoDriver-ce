@@ -1,11 +1,11 @@
 # TLS Setup for Collector
 
-The toe-sdk-collector uses cert-manager for TLS certificate management and secure HTTPS communication with ephemeral containers.
+The kubecodriver-sdk-collector uses cert-manager for TLS certificate management and secure HTTPS communication with ephemeral containers.
 
 ## Architecture
 
 ```
-cert-manager                    PowerTool Controller
+cert-manager                    CoDriverJob Controller
      |                                 |
      |                                 |
 [1]  |     +-----------------+        |
@@ -27,7 +27,7 @@ cert-manager                    PowerTool Controller
 ## Components
 
 1. **Certificate CR**: Defines the certificate requirements
-   - Common Name: toe-sdk-collector.toe-system.svc
+   - Common Name: kubecodriver-sdk-collector.kubecodriver-system.svc
    - DNS Names: Include cluster-local service names
    - Duration: 1 year with 30-day renewal
 
@@ -57,9 +57,9 @@ kubectl apply -f config/certmanager/collector-certificate.yaml
 
 3. Verify setup:
 ```bash
-kubectl get certificate -n toe-system collector-cert
-kubectl get secret -n toe-system collector-tls
-kubectl get configmap -n toe-system collector-ca
+kubectl get certificate -n kubecodriver-system collector-cert
+kubectl get secret -n kubecodriver-system collector-tls
+kubectl get configmap -n kubecodriver-system collector-ca
 ```
 
 ## Security Considerations

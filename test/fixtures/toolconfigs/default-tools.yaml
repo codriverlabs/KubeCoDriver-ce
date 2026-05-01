@@ -1,11 +1,11 @@
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerToolConfig
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverTool
 metadata:
   name: aperf-config
-  namespace: toe-system
+  namespace: kubecodriver-system
 spec:
   name: aperf
-  image: ghcr.io/codriverlabs/toe-aperf:latest
+  image: ghcr.io/codriverlabs/kubecodriver-aperf:latest
   securityContext:
     privileged: true
     capabilities:

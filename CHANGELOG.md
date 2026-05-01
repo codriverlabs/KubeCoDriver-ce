@@ -17,15 +17,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Network chaos: connectivity, DNS, latency, bandwidth testing
   - Memory chaos: pressure testing with multiple patterns
 - **tcpdump Tool**: Network packet capture for debugging and analysis
-- PowerTool examples directory with ready-to-use manifests
+- CoDriverJob examples directory with ready-to-use manifests
 - Chaos tool examples with detailed usage documentation
 
 #### Resource Management
-- Resource configuration support in PowerToolConfig CRD
+- Resource configuration support in CoDriverTool CRD
   - CPU and memory requests/limits for ephemeral containers
   - Configurable per power tool
 - `runAsRoot` field in SecuritySpec for tools requiring root access
-- Security context inheritance from PowerToolConfig to ephemeral containers
+- Security context inheritance from CoDriverTool to ephemeral containers
 
 #### Testing & Quality
 - Kind-based E2E testing with complete cluster isolation
@@ -35,7 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Documentation
 - Chaos tool comprehensive usage guide (USAGE.md)
-- Examples directory with categorized PowerTool manifests
+- Examples directory with categorized CoDriverJob manifests
 - Resource configuration documentation
 - Roadmap for experimental OOM via nsenter approach
 - Build tools documentation
@@ -52,7 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Refactoring
 - Reorganized documentation into categorized subdirectories
-- Moved PowerToolConfig files to `power-tools/*/config/` directories
+- Moved CoDriverTool files to `power-tools/*/config/` directories
 - Restructured power-tools Docker setup with common scripts
 - Separated build tools from output binaries
 - Improved collector build structure
@@ -63,10 +63,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated dependencies to Kubernetes 1.34
 - Updated to stable Kubernetes v1.31 for E2E tests
 - Chaos tool now uses al2023 base image with stress-ng
-- Makefile bundles PowerToolConfig files with image references
+- Makefile bundles CoDriverTool files with image references
 
 #### Improvements
-- Enhanced PowerTool CRD argument handling (TOOL_ARG_* environment variables)
+- Enhanced CoDriverJob CRD argument handling (TOOL_ARG_* environment variables)
 - Improved file naming for ephemeral containers
 - Better container selection logic
 - Enhanced collector storage with hierarchical paths
@@ -97,14 +97,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 - Added SYS_ADMIN and SYS_PTRACE capabilities for chaos tool
-- Privileged mode support in PowerToolConfig
+- Privileged mode support in CoDriverTool
 - Enhanced security context configuration
 - Fixed CVEs through Go 1.25.3 upgrade
 
 ### Infrastructure
 - Release workflow builds all 5 images (controller, collector, aperf, tcpdump, chaos)
 - Conditional image naming: `ghcr.io/codriverlabs/ce/*` for public, `ghcr.io/codriverlabs/*` for private
-- Helm chart packaging includes all PowerToolConfig files
+- Helm chart packaging includes all CoDriverTool files
 - ECR sync script supports all power-tool images
 
 ## [v1.0.48] - Previous Release
@@ -131,5 +131,5 @@ No migration needed from v1.0.48 to v1.0.55.
 
 To use new features:
 1. Update CRDs: `kubectl apply -f config/crd/bases/`
-2. Deploy new PowerToolConfigs: `kubectl apply -f power-tools/*/config/`
+2. Deploy new CoDriverTools: `kubectl apply -f power-tools/*/config/`
 3. Update controller and collector images to v1.0.55

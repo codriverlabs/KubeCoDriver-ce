@@ -10,8 +10,8 @@ The `run-tests.sh` script provides **complete end-to-end automation** with **ful
 
 ### Complete Isolation
 
-**Cluster:** `toe-e2e-<commit-hash>`  
-**Image:** `toe-controller:e2e-<commit-hash>`
+**Cluster:** `kubecodriver-e2e-<commit-hash>`  
+**Image:** `kubecodriver-controller:e2e-<commit-hash>`
 
 Both cluster and image use the same commit hash for complete isolation.
 
@@ -34,12 +34,12 @@ Step 1: Cluster Setup (setup-cluster.sh)
 
 Step 2: Build & Load Images
 ├── Build controller image (make docker-build)
-│   Image: toe-controller:e2e-<commit-hash>
+│   Image: kubecodriver-controller:e2e-<commit-hash>
 ├── Load image into Kind cluster
 └── Verify image availability
 
-Step 3: Deploy TOE Components
-├── Install CRDs (PowerTool, PowerToolConfig)
+Step 3: Deploy KubeCoDriver Components
+├── Install CRDs (CoDriverJob, CoDriverTool)
 ├── Deploy controller (deployment, RBAC)
 ├── Wait for controller ready (300s timeout)
 └── Verify deployment status
@@ -51,7 +51,7 @@ Step 4: Run Tests
 
 Step 5: Cleanup (teardown-cluster.sh)
 ├── Collect artifacts (logs, resources)
-├── Delete PowerTools
+├── Delete CoDriverJobs
 ├── Delete cluster
 └── Prune container images
 ```
@@ -64,9 +64,9 @@ Step 5: Cleanup (teardown-cluster.sh)
 ```
 
 **What happens:**
-1. Creates cluster: `toe-e2e-<commit-hash>`
+1. Creates cluster: `kubecodriver-e2e-<commit-hash>`
 2. Builds controller image
-3. Deploys TOE stack
+3. Deploys KubeCoDriver stack
 4. Runs all test phases
 5. Cleans up everything
 
@@ -126,8 +126,8 @@ jobs:
 
 The script automatically:
 1. Checks if image exists
-2. Builds if missing: `make docker-build IMG=toe-controller:e2e`
-3. Loads into Kind: `kind load docker-image toe-controller:e2e`
+2. Builds if missing: `make docker-build IMG=kubecodriver-controller:e2e`
+3. Loads into Kind: `kind load docker-image kubecodriver-controller:e2e`
 4. Verifies availability
 
 ### Build Cache
@@ -135,7 +135,7 @@ The script automatically:
 To speed up repeated runs:
 ```bash
 # Pre-build image
-make docker-build IMG=toe-controller:e2e
+make docker-build IMG=kubecodriver-controller:e2e
 
 # Run tests (will skip build)
 ./test/e2e-kind/run-tests.sh
@@ -144,7 +144,7 @@ make docker-build IMG=toe-controller:e2e
 ### Force Rebuild
 ```bash
 # Remove cached image
-docker rmi toe-controller:e2e
+docker rmi kubecodriver-controller:e2e
 
 # Run tests (will rebuild)
 ./test/e2e-kind/run-tests.sh
@@ -161,21 +161,21 @@ docker rmi toe-controller:e2e
 
 2. **Controller Deployment**
    ```bash
-   kubectl apply -f test/e2e-kind/manifests/toe-controller.yaml
+   kubectl apply -f test/e2e-kind/manifests/kubecodriver-controller.yaml
    ```
 
 3. **Wait for Ready**
    ```bash
    kubectl wait --for=condition=available --timeout=300s \
-       deployment/toe-controller-manager -n toe-system
+       deployment/kubecodriver-controller-manager -n kubecodriver-system
    ```
 
 ### Deployment Manifest
 
-The script uses: `test/e2e-kind/manifests/toe-controller.yaml`
+The script uses: `test/e2e-kind/manifests/kubecodriver-controller.yaml`
 
 Includes:
-- Namespace (toe-system)
+- Namespace (kubecodriver-system)
 - ServiceAccount
 - ClusterRole
 - ClusterRoleBinding
@@ -220,8 +220,8 @@ After tests complete:
 
 ```bash
 # Cleanup specific commit
-docker rmi toe-controller:e2e-<commit-hash>
-kind delete cluster --name toe-e2e-<commit-hash>
+docker rmi kubecodriver-controller:e2e-<commit-hash>
+kind delete cluster --name kubecodriver-e2e-<commit-hash>
 
 # Cleanup all E2E resources
 ./test/e2e-kind/cleanup-old-images.sh
@@ -238,7 +238,7 @@ CLEANUP_IMAGES=true ./test/e2e-kind/cluster/teardown-cluster.sh
 
 On test completion (success or failure):
 1. Collect artifacts (logs, resources, events)
-2. Delete PowerTools
+2. Delete CoDriverJobs
 3. Delete cluster
 4. Prune container images
 
@@ -246,17 +246,17 @@ On test completion (success or failure):
 
 ```bash
 # Cleanup specific cluster
-kind delete cluster --name toe-e2e-<commit>
+kind delete cluster --name kubecodriver-e2e-<commit>
 
-# Cleanup all TOE clusters
-kind get clusters | grep "^toe-e2e-" | xargs -I {} kind delete cluster --name {}
+# Cleanup all KubeCoDriver clusters
+kind get clusters | grep "^kubecodriver-e2e-" | xargs -I {} kind delete cluster --name {}
 ```
 
 ## Environment Variables
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `CLUSTER_NAME` | `toe-e2e-<commit>` | Cluster name |
+| `CLUSTER_NAME` | `kubecodriver-e2e-<commit>` | Cluster name |
 | `KEEP_CLUSTER` | `false` | Keep cluster after tests |
 | `TEST_PHASE` | `all` | Test phase to run |
 | `TEST_TIMEOUT` | `30m` | Test timeout |
@@ -274,7 +274,7 @@ docker version
 go version
 
 # Manual build
-make docker-build IMG=toe-controller:e2e
+make docker-build IMG=kubecodriver-controller:e2e
 ```
 
 ### Deployment Failures
@@ -284,10 +284,10 @@ make docker-build IMG=toe-controller:e2e
 kubectl get nodes
 
 # Check controller logs
-kubectl logs -n toe-system -l app=toe-controller
+kubectl logs -n kubecodriver-system -l app=kubecodriver-controller
 
 # Check events
-kubectl get events -n toe-system
+kubectl get events -n kubecodriver-system
 ```
 
 ### Test Failures

@@ -15,22 +15,22 @@ Example:
 
 The date structure uses separate folders for year/month/day for better organization and performance with large datasets.
 
-The `matching-labels` component is dynamically extracted from the PowerTool's `labelSelector.matchLabels` - it uses the first label that matched the target pod in `key-value` format (POSIX-compliant).
+The `matching-labels` component is dynamically extracted from the CoDriverJob's `labelSelector.matchLabels` - it uses the first label that matched the target pod in `key-value` format (POSIX-compliant).
 
 ## Changes Made
 
 ### 1. Storage Manager (`pkg/collector/storage/manager.go`)
-- Added `ProfileMetadata` struct to capture namespace, app label, PowerTool name, and filename
+- Added `ProfileMetadata` struct to capture namespace, app label, CoDriverJob name, and filename
 - Added `dateFormat` field to Manager for configurable date formatting
 - Updated `SaveProfile()` to build hierarchical paths and create directories
 
 ### 2. Collector Server (`pkg/collector/server/server.go`)
 - Added `DateFormat` to Config struct
 - Updated `handleProfile()` to extract metadata from HTTP headers:
-  - `X-PowerTool-Namespace`
-  - `X-PowerTool-Matching-Labels` (dynamic label from selector)
-  - `X-PowerTool-Job-ID`
-  - `X-PowerTool-Filename`
+  - `X-CoDriverJob-Namespace`
+  - `X-CoDriverJob-Matching-Labels` (dynamic label from selector)
+  - `X-CoDriverJob-Job-ID`
+  - `X-CoDriverJob-Filename`
 - Defaults `matching-labels` to "unknown" if not provided
 
 ### 3. Collector Main (`cmd/collector/main.go`)
@@ -38,7 +38,7 @@ The `matching-labels` component is dynamically extracted from the PowerTool's `l
 - Defaults to "2006-01-02" (ISO 8601 format)
 
 ### 4. Controller (`internal/controller/powertool_controller.go`)
-- Updated `buildPowerToolEnvVars()` to extract matching labels dynamically
+- Updated `buildCoDriverJobEnvVars()` to extract matching labels dynamically
 - Added `extractMatchingLabels()` helper function
 - Passes first matching label as `POD_MATCHING_LABELS` environment variable
 - Format: `key=value` (e.g., `app=nginx`, `env=prod`)
@@ -48,8 +48,8 @@ The `matching-labels` component is dynamically extracted from the PowerTool's `l
 - Updated `power-tools/aperf/send-profile.sh`
 - Updated `power-tools/common/send-profile.sh`
 - Added metadata headers to curl requests:
-  - `X-PowerTool-Namespace: $TARGET_NAMESPACE`
-  - `X-PowerTool-Matching-Labels: ${POD_MATCHING_LABELS:-unknown}`
+  - `X-CoDriverJob-Namespace: $TARGET_NAMESPACE`
+  - `X-CoDriverJob-Matching-Labels: ${POD_MATCHING_LABELS:-unknown}`
 - Added validation for `TARGET_NAMESPACE` environment variable
 
 ### 6. Deployment Configuration
@@ -68,7 +68,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: collector-config
-  namespace: toe-system
+  namespace: kubecodriver-system
 data:
   dateFormat: "2006/01/02"  # Default: creates year/month/day folders
 ```
@@ -88,7 +88,7 @@ Uses Go time format strings.
 
 ### Matching Labels
 
-The collector uses the actual labels from the PowerTool's `labelSelector.matchLabels` that matched the target pod.
+The collector uses the actual labels from the CoDriverJob's `labelSelector.matchLabels` that matched the target pod.
 
 Examples:
 ```yaml
@@ -129,7 +129,7 @@ kubectl apply -f deploy/collector/configmap.yaml
 2. Rebuild and deploy collector:
 ```bash
 make docker-build-collector docker-push-collector
-kubectl rollout restart deployment/toe-collector -n toe-system
+kubectl rollout restart deployment/kubecodriver-collector -n kubecodriver-system
 ```
 
 3. Rebuild and deploy power-tools:
@@ -141,8 +141,8 @@ docker push your-registry/aperf:latest
 
 4. Rebuild and deploy controller:
 ```bash
-make docker-build docker-push IMG=your-registry/toe:tag
-make deploy IMG=your-registry/toe:tag
+make docker-build docker-push IMG=your-registry/kubecodriver:tag
+make deploy IMG=your-registry/kubecodriver:tag
 ```
 
 ## Testing
@@ -162,10 +162,10 @@ spec:
     image: nginx
 ```
 
-2. Create PowerTool with collector output:
+2. Create CoDriverJob with collector output:
 ```yaml
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerTool
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverJob
 metadata:
   name: test-profile
 spec:
@@ -179,12 +179,12 @@ spec:
   output:
     mode: collector
     collector:
-      endpoint: https://toe-collector.toe-system.svc:8443
+      endpoint: https://kubecodriver-collector.kubecodriver-system.svc:8443
 ```
 
 3. Verify hierarchical structure:
 ```bash
-kubectl exec -n toe-system deployment/toe-collector -- ls -R /data
+kubectl exec -n kubecodriver-system deployment/kubecodriver-collector -- ls -R /data
 ```
 
 Expected output:

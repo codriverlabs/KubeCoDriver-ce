@@ -3,11 +3,11 @@ package server
 import (
 	"context"
 	"fmt"
+	"github.com/codriverlabs/KubeCoDriver/pkg/collector/auth"
+	"github.com/codriverlabs/KubeCoDriver/pkg/collector/storage"
 	"log"
 	"net/http"
 	"strings"
-	"toe/pkg/collector/auth"
-	"toe/pkg/collector/storage"
 
 	"k8s.io/client-go/kubernetes"
 )
@@ -37,7 +37,7 @@ func NewServer(cfg *Config, k8sClient kubernetes.Interface) (*Server, error) {
 	s := &Server{
 		config:  cfg,
 		storage: storageManager,
-		auth:    auth.NewK8sTokenValidator(k8sClient, "toe-sdk-collector"),
+		auth:    auth.NewK8sTokenValidator(k8sClient, "kubecodriver-sdk-collector"),
 	}
 
 	mux := http.NewServeMux()
@@ -85,12 +85,12 @@ func (s *Server) handleProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Extract metadata from headers
-	namespace := r.Header.Get("X-PowerTool-Namespace")
-	matchingLabels := r.Header.Get("X-PowerTool-Matching-Labels")
-	powerToolName := r.Header.Get("X-PowerTool-Job-ID")
-	filename := r.Header.Get("X-PowerTool-Filename")
+	namespace := r.Header.Get("X-CoDriverJob-Namespace")
+	matchingLabels := r.Header.Get("X-CoDriverJob-Matching-Labels")
+	coDriverJobName := r.Header.Get("X-CoDriverJob-Job-ID")
+	filename := r.Header.Get("X-CoDriverJob-Filename")
 
-	if namespace == "" || powerToolName == "" {
+	if namespace == "" || coDriverJobName == "" {
 		http.Error(w, "Missing required headers", http.StatusBadRequest)
 		return
 	}
@@ -100,18 +100,18 @@ func (s *Server) handleProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if filename == "" {
-		filename = fmt.Sprintf("%s.profile", powerToolName)
+		filename = fmt.Sprintf("%s.profile", coDriverJobName)
 	}
 
 	metadata := storage.ProfileMetadata{
-		Namespace:     namespace,
-		AppLabel:      matchingLabels,
-		PowerToolName: powerToolName,
-		Filename:      filename,
+		Namespace:       namespace,
+		AppLabel:        matchingLabels,
+		CoDriverJobName: coDriverJobName,
+		Filename:        filename,
 	}
 
 	log.Printf("Authenticated request from %s for job %s, saving to %s/%s/%s",
-		userInfo.Username, powerToolName, namespace, matchingLabels, powerToolName)
+		userInfo.Username, coDriverJobName, namespace, matchingLabels, coDriverJobName)
 
 	if err := s.storage.SaveProfile(r.Body, metadata); err != nil {
 		http.Error(w, fmt.Sprintf("Failed to save profile: %v", err), http.StatusInternalServerError)

@@ -1,12 +1,12 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: powertool-editor-role
+  name: codriverjob-editor-role
 rules:
 - apiGroups:
-  - codriverlabs.ai.toe.run
+  - kubecodriver.codriverlabs.ai
   resources:
-  - powertools
+  - codriverjobs
   verbs:
   - create
   - delete
@@ -16,24 +16,24 @@ rules:
   - update
   - watch
 - apiGroups:
-  - codriverlabs.ai.toe.run
+  - kubecodriver.codriverlabs.ai
   resources:
-  - powertools/status
+  - codriverjobs/status
   verbs:
   - get
   - patch
   - update
 - apiGroups:
-  - codriverlabs.ai.toe.run
+  - kubecodriver.codriverlabs.ai
   resources:
-  - powertoolconfigs
+  - codrivertools
   verbs:
   - get
   - list
   - watch
 - apiGroups:
-  - codriverlabs.ai.toe.run
+  - kubecodriver.codriverlabs.ai
   resources:
-  - powertoolconfigs/status
+  - codrivertools/status
   verbs:
   - get

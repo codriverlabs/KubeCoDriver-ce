@@ -38,8 +38,8 @@ func TestGenerateToken_Success(t *testing.T) {
 	// Create service account
 	sa := &corev1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "toe-collector",
-			Namespace: "toe-system",
+			Name:      "kubecodriver-collector",
+			Namespace: "kubecodriver-system",
 		},
 	}
 
@@ -57,7 +57,7 @@ func TestGenerateToken_Success(t *testing.T) {
 		return false, nil, nil
 	})
 
-	manager := NewK8sTokenManager(client, "toe-system", "toe-sdk-collector")
+	manager := NewK8sTokenManager(client, "kubecodriver-system", "kubecodriver-sdk-collector")
 	token, err := manager.GenerateToken(context.Background(), "test-job", 10*time.Minute)
 
 	if err != nil {
@@ -72,8 +72,8 @@ func TestGenerateToken_Success(t *testing.T) {
 func TestGenerateToken_Duration(t *testing.T) {
 	sa := &corev1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "toe-collector",
-			Namespace: "toe-system",
+			Name:      "kubecodriver-collector",
+			Namespace: "kubecodriver-system",
 		},
 	}
 
@@ -96,7 +96,7 @@ func TestGenerateToken_Duration(t *testing.T) {
 		return false, nil, nil
 	})
 
-	manager := NewK8sTokenManager(client, "toe-system", "toe-sdk-collector")
+	manager := NewK8sTokenManager(client, "kubecodriver-system", "kubecodriver-sdk-collector")
 	duration := 15 * time.Minute
 	_, err := manager.GenerateToken(context.Background(), "test-job", duration)
 
@@ -121,7 +121,7 @@ func TestGenerateToken_ServiceAccountNotFound(t *testing.T) {
 		return false, nil, nil
 	})
 
-	manager := NewK8sTokenManager(client, "toe-system", "toe-sdk-collector")
+	manager := NewK8sTokenManager(client, "kubecodriver-system", "kubecodriver-sdk-collector")
 	token, err := manager.GenerateToken(context.Background(), "test-job", 10*time.Minute)
 
 	if err == nil {
@@ -136,8 +136,8 @@ func TestGenerateToken_ServiceAccountNotFound(t *testing.T) {
 func TestGenerateToken_K8sAPIError(t *testing.T) {
 	sa := &corev1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "toe-collector",
-			Namespace: "toe-system",
+			Name:      "kubecodriver-collector",
+			Namespace: "kubecodriver-system",
 		},
 	}
 
@@ -150,7 +150,7 @@ func TestGenerateToken_K8sAPIError(t *testing.T) {
 		return false, nil, nil
 	})
 
-	manager := NewK8sTokenManager(client, "toe-system", "toe-sdk-collector")
+	manager := NewK8sTokenManager(client, "kubecodriver-system", "kubecodriver-sdk-collector")
 	token, err := manager.GenerateToken(context.Background(), "test-job", 10*time.Minute)
 
 	if err == nil {

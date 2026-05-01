@@ -1,5 +1,5 @@
 #!/bin/bash
-# TOE Complete Deployment Script
+# KubeCoDriver Complete Deployment Script
 # Usage: ./deploy-all.sh [local|ecr]
 
 set -euo pipefail
@@ -50,7 +50,7 @@ case "$REGISTRY_TYPE" in
         ;;
 esac
 
-log_info "Starting TOE deployment with registry: $REGISTRY_TYPE, version: $VERSION"
+log_info "Starting KubeCoDriver deployment with registry: $REGISTRY_TYPE, version: $VERSION"
 
 # Function to run script with error handling
 run_script() {
@@ -105,8 +105,8 @@ cleanup_deployment() {
             kubectl delete namespace "$NAMESPACE" --ignore-not-found=true
             kubectl delete clusterrole manager-role --ignore-not-found=true
             kubectl delete clusterrolebinding manager-rolebinding --ignore-not-found=true
-            kubectl delete crd powertools.codriverlabs.ai.toe.run --ignore-not-found=true
-            kubectl delete crd powertoolconfigs.codriverlabs.ai.toe.run --ignore-not-found=true
+            kubectl delete crd codriverjobs.kubecodriver.codriverlabs.ai --ignore-not-found=true
+            kubectl delete crd codrivertools.kubecodriver.codriverlabs.ai --ignore-not-found=true
         fi
         
         # Wait for namespace deletion
@@ -126,7 +126,7 @@ main() {
     cd "$SCRIPT_DIR"
     
     echo "========================================"
-    echo "TOE Complete Deployment Script"
+    echo "KubeCoDriver Complete Deployment Script"
     echo "========================================"
     echo "Registry Type: $REGISTRY_TYPE"
     echo "Version: $VERSION"
@@ -147,8 +147,8 @@ main() {
     log_info "Phase 2: Building Collector"
     run_script "build-collector.sh" "Build collector image"
     
-    log_info "Phase 3: Building PowerTool Images"
-    run_script "build-powertool-tool.sh" "Build PowerTool images" "aperf"
+    log_info "Phase 3: Building CoDriverJob Images"
+    run_script "build-powertool-tool.sh" "Build CoDriverJob images" "aperf"
     
     echo ""
     log_info "All builds completed successfully! Starting deployment phase..."
@@ -163,7 +163,7 @@ main() {
     
     echo ""
     echo "========================================"
-    log_success "TOE Deployment Completed Successfully!"
+    log_success "KubeCoDriver Deployment Completed Successfully!"
     echo "========================================"
     echo ""
     
@@ -172,15 +172,15 @@ main() {
     echo ""
     
     log_info "Checking controller status:"
-    kubectl get pods -n "$NAMESPACE" -l app.kubernetes.io/name=toe
+    kubectl get pods -n "$NAMESPACE" -l app.kubernetes.io/name=kubecodriver
     echo ""
     
     log_info "Checking collector status:"
-    kubectl get pods -n "$NAMESPACE" -l app=toe-collector
+    kubectl get pods -n "$NAMESPACE" -l app=kubecodriver-collector
     echo ""
     
     log_info "Checking CRDs:"
-    kubectl get crds | grep codriverlabs.ai.toe.run
+    kubectl get crds | grep kubecodriver.codriverlabs.ai
     echo ""
     
     log_info "Checking ServiceAccounts:"
@@ -191,9 +191,9 @@ main() {
     log_success "Deployment verification completed!"
     echo ""
     log_info "Next steps:"
-    echo "1. Create PowerToolConfig resources for your profiling tools"
+    echo "1. Create CoDriverTool resources for your profiling tools"
     echo "2. Deploy target applications to profile"
-    echo "3. Create PowerTool resources to start profiling"
+    echo "3. Create CoDriverJob resources to start profiling"
     echo ""
     log_info "For examples, see the main project README.md"
     echo "========================================"

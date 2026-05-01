@@ -32,7 +32,7 @@ type TargetSpec struct {
 The controller always uses the **first container** (`pod.Spec.Containers[0]`) when inheriting security context:
 
 ```go
-// Line 109 in buildPowerToolEnvVars - uses first matching label, not container
+// Line 109 in buildCoDriverJobEnvVars - uses first matching label, not container
 matchingLabels := r.extractMatchingLabels(job.Spec.Targets.LabelSelector, targetPod.Labels)
 
 // Security context inheritance (in our proposed fix) would use:
@@ -69,7 +69,7 @@ spec:
         runAsUser: 1001
 ```
 
-**PowerTool spec**:
+**CoDriverJob spec**:
 ```yaml
 spec:
   targets:
@@ -93,7 +93,7 @@ spec:
 Update the security context inheritance logic to use the specified target container:
 
 ```go
-func (r *PowerToolReconciler) getTargetContainer(pod corev1.Pod, targetContainerName *string) *corev1.Container {
+func (r *CoDriverJobReconciler) getTargetContainer(pod corev1.Pod, targetContainerName *string) *corev1.Container {
     // If no container specified, use first container
     if targetContainerName == nil || *targetContainerName == "" {
         if len(pod.Spec.Containers) > 0 {
@@ -120,7 +120,7 @@ func (r *PowerToolReconciler) getTargetContainer(pod corev1.Pod, targetContainer
 Then use it in `createEphemeralContainerForPod`:
 
 ```go
-func (r *PowerToolReconciler) createEphemeralContainerForPod(ctx context.Context, powerTool *toev1alpha1.PowerTool, toolConfig *toev1alpha1.PowerToolConfig, pod corev1.Pod, containerName string) error {
+func (r *CoDriverJobReconciler) createEphemeralContainerForPod(ctx context.Context, powerTool *toev1alpha1.CoDriverJob, toolConfig *toev1alpha1.CoDriverTool, pod corev1.Pod, containerName string) error {
     logger := log.FromContext(ctx)
 
     // Get target container
@@ -163,7 +163,7 @@ func (r *PowerToolReconciler) createEphemeralContainerForPod(ctx context.Context
 The profiling tools may need to know which container to profile:
 
 ```go
-func (r *PowerToolReconciler) buildPowerToolEnvVars(job *toev1alpha1.PowerTool, targetPod corev1.Pod) []corev1.EnvVar {
+func (r *CoDriverJobReconciler) buildCoDriverJobEnvVars(job *toev1alpha1.CoDriverJob, targetPod corev1.Pod) []corev1.EnvVar {
     // ... existing code ...
     
     // Add target container name
@@ -209,8 +209,8 @@ func (r *PowerToolReconciler) buildPowerToolEnvVars(job *toev1alpha1.PowerTool, 
 
 ### Single Container (Current behavior works)
 ```yaml
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerTool
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverJob
 metadata:
   name: profile-single
 spec:
@@ -223,8 +223,8 @@ spec:
 
 ### Multi-Container (Needs fix)
 ```yaml
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerTool
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverJob
 metadata:
   name: profile-multi
 spec:

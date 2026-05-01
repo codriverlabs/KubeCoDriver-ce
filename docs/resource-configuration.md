@@ -2,23 +2,23 @@
 
 ## Overview
 
-PowerToolConfig now supports configuring resource requests and limits for ephemeral containers. This allows administrators to control the CPU and memory resources allocated to profiling and chaos engineering tools.
+CoDriverTool now supports configuring resource requests and limits for ephemeral containers. This allows administrators to control the CPU and memory resources allocated to profiling and chaos engineering tools.
 
 ## Configuration
 
-### PowerToolConfig Spec
+### CoDriverTool Spec
 
-Add a `resources` field to your PowerToolConfig:
+Add a `resources` field to your CoDriverTool:
 
 ```yaml
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerToolConfig
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverTool
 metadata:
   name: chaos-config
-  namespace: toe-system
+  namespace: kubecodriver-system
 spec:
   name: "chaos"
-  image: ghcr.io/codriverlabs/toe-chaos:v1.0.47
+  image: ghcr.io/codriverlabs/kubecodriver-chaos:v1.0.47
   securityContext:
     capabilities:
       add:
@@ -131,7 +131,7 @@ resources:
 
 ### When Resources Are Not Specified
 
-If the `resources` field is omitted from PowerToolConfig, the ephemeral container will be created without resource requests or limits, inheriting the cluster's default resource policies.
+If the `resources` field is omitted from CoDriverTool, the ephemeral container will be created without resource requests or limits, inheriting the cluster's default resource policies.
 
 ### Resource Enforcement
 
@@ -185,7 +185,7 @@ resources:
 
 ### Pod Fails to Schedule
 
-**Symptom**: PowerTool remains in pending state
+**Symptom**: CoDriverJob remains in pending state
 
 **Cause**: Resource requests exceed available node capacity
 

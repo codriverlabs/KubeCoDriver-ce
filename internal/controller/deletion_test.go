@@ -6,21 +6,21 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	toev1alpha1 "toe/api/v1alpha1"
+	kubecodriverv1alpha1 "github.com/codriverlabs/KubeCoDriver/api/v1alpha1"
 )
 
 func TestHandleDeletion(t *testing.T) {
-	r := &PowerToolReconciler{}
+	r := &CoDriverJobReconciler{}
 	ctx := context.Background()
 
 	tests := []struct {
-		name      string
-		powerTool *toev1alpha1.PowerTool
-		wantErr   bool
+		name        string
+		coDriverJob *kubecodriverv1alpha1.CoDriverJob
+		wantErr     bool
 	}{
 		{
 			name: "no finalizer - returns nil",
-			powerTool: &toev1alpha1.PowerTool{
+			coDriverJob: &kubecodriverv1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:       "test-tool",
 					Namespace:  "default",
@@ -31,18 +31,18 @@ func TestHandleDeletion(t *testing.T) {
 		},
 		{
 			name: "with finalizer - cleanup executed",
-			powerTool: &toev1alpha1.PowerTool{
+			coDriverJob: &kubecodriverv1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:       "test-tool",
 					Namespace:  "default",
-					Finalizers: []string{"toe.run/finalizer"},
+					Finalizers: []string{"kubecodriver.codriverlabs.ai/finalizer"},
 				},
 			},
 			wantErr: false,
 		},
 		{
 			name: "with other finalizer - returns nil",
-			powerTool: &toev1alpha1.PowerTool{
+			coDriverJob: &kubecodriverv1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:       "test-tool",
 					Namespace:  "default",
@@ -55,7 +55,7 @@ func TestHandleDeletion(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := r.handleDeletion(ctx, tt.powerTool)
+			_, err := r.handleDeletion(ctx, tt.coDriverJob)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("handleDeletion() error = %v, wantErr %v", err, tt.wantErr)
 			}

@@ -1,10 +1,10 @@
-# TOE (Tactical Operations Engine) - Community Edition
+# KubeCoDriver - Community Edition
 
 A Kubernetes operator for running performance profiling and diagnostic tools on target pods in a secure, controlled manner.
 
 ## Description
 
-TOE provides a declarative way to run profiling tools like `perf`, `strace`, and other diagnostic utilities against running pods in Kubernetes clusters. It uses a secure architecture with separate controller and collector components to ensure proper isolation and access control.
+KubeCoDriver provides a declarative way to run profiling tools like `perf`, `strace`, and other diagnostic utilities against running pods in Kubernetes clusters. It uses a secure architecture with separate controller and collector components to ensure proper isolation and access control.
 
 **Use Cases:**
 - **Performance Profiling**: CPU, memory, and I/O analysis of running applications
@@ -25,17 +25,17 @@ TOE provides a declarative way to run profiling tools like `perf`, `strace`, and
 
 ## Architecture
 
-TOE consists of two main components that work together:
+KubeCoDriver consists of two main components that work together:
 
 ### Controller
-- Manages PowerTool resources and orchestrates profiling jobs
+- Manages CoDriverJob resources and orchestrates profiling jobs
 - Handles target pod selection and container identification
 - Provides secure token-based authentication
 - Supports non-root user analysis and container selection logic
 
 ### Collector
 - Securely receives and stores profiling data from tools
-- **Hierarchical Storage**: Organizes files by namespace, labels, date, and PowerTool name
+- **Hierarchical Storage**: Organizes files by namespace, labels, date, and CoDriverJob name
 - **Configurable Date Formats**: Uses ConfigMap for i18n and date structure customization
 - **Path Structure**: `/data/{namespace}/{matching-labels}/{powertool-name}/{year}/{month}/{day}/{filename}`
 - **Performance Optimized**: Handles thousands of profiles efficiently with proper directory structure
@@ -60,14 +60,14 @@ kubectl version --client
 Install using the pre-built YAML manifests:
 
 ```sh
-kubectl apply -f https://github.com/codriverlabs/toe-run-ce/releases/latest/download/toe-operator-v1.1.0-public-preview.yaml
+kubectl apply -f https://github.com/codriverlabs/KubeCoDriver/releases/latest/download/kubecodriver-operator-v1.1.0-public-preview.yaml
 ```
 
 Or using Helm with centralized version management:
 
 ```sh
-helm install toe-operator \
-  https://github.com/codriverlabs/toe-run-ce/releases/latest/download/toe-operator-v1.1.0-public-preview.tgz \
+helm install kubecodriver-operator \
+  https://github.com/codriverlabs/KubeCoDriver/releases/latest/download/kubecodriver-operator-v1.1.0-public-preview.tgz \
   --set global.version=v1.1.0 \
   --set powertools.enabled=true
 ```
@@ -89,10 +89,10 @@ make install
 **Deploy the operator:**
 
 ```sh
-make deploy IMG=<your-registry>/toe:tag
+make deploy IMG=<your-registry>/kubecodriver:tag
 ```
 
-**Generate and deploy PowerTool configurations:**
+**Generate and deploy CoDriverJob configurations:**
 
 ```sh
 make generate-configs
@@ -110,11 +110,11 @@ For private registries like ECR, configure image pull secrets:
 
 ### Example Usage
 
-Create a PowerTool to profile a running application:
+Create a CoDriverJob to profile a running application:
 
 ```yaml
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerTool
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverJob
 metadata:
   name: profile-my-app
 spec:
@@ -141,31 +141,31 @@ The collector organizes data in a hierarchical structure for efficient querying:
 
 ```bash
 # View profiles by application
-kubectl exec -n toe-system deployment/toe-collector -- ls /data/default/app-my-application/
+kubectl exec -n kubecodriver-system deployment/kubecodriver-collector -- ls /data/default/app-my-application/
 
 # View today's profiles
-kubectl exec -n toe-system deployment/toe-collector -- find /data -path "*/$(date +%Y/%m/%d)/*"
+kubectl exec -n kubecodriver-system deployment/kubecodriver-collector -- find /data -path "*/$(date +%Y/%m/%d)/*"
 
-# View specific PowerTool results
-kubectl exec -n toe-system deployment/toe-collector -- ls /data/default/app-my-application/profile-my-app/
+# View specific CoDriverJob results
+kubectl exec -n kubecodriver-system deployment/kubecodriver-collector -- ls /data/default/app-my-application/profile-my-app/
 ```
 
 ## Container Images
 
-All TOE components use centralized version management:
+All KubeCoDriver components use centralized version management:
 
-- **Controller**: `ghcr.io/codriverlabs/ce/toe-controller:v1.1.0`
-- **Collector**: `ghcr.io/codriverlabs/ce/toe-collector:v1.1.0`
-- **Aperf Tool**: `ghcr.io/codriverlabs/ce/toe-aperf:v1.1.0`
-- **Tcpdump Tool**: `ghcr.io/codriverlabs/ce/toe-tcpdump:v1.1.0`
-- **Chaos Tool**: `ghcr.io/codriverlabs/ce/toe-chaos:v1.1.0`
+- **Controller**: `ghcr.io/codriverlabs/ce/kubecodriver-controller:v1.1.0`
+- **Collector**: `ghcr.io/codriverlabs/ce/kubecodriver-collector:v1.1.0`
+- **Aperf Tool**: `ghcr.io/codriverlabs/ce/kubecodriver-aperf:v1.1.0`
+- **Tcpdump Tool**: `ghcr.io/codriverlabs/ce/kubecodriver-tcpdump:v1.1.0`
+- **Chaos Tool**: `ghcr.io/codriverlabs/ce/kubecodriver-chaos:v1.1.0`
 
 ## Documentation
 
 ### Getting Started
 - [Deployment Guide](DEPLOYMENT.md) - Complete deployment instructions
 - [EKS Deployment](DEPLOYMENT-EKS.md) - Amazon EKS specific deployment
-- [Examples](examples/README.md) - PowerTool usage examples
+- [Examples](examples/README.md) - CoDriverJob usage examples
 
 ### Architecture & Components
 - [Architecture Overview](docs/architecture/) - System design and TLS setup
@@ -193,7 +193,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: collector-config
-  namespace: toe-system
+  namespace: kubecodriver-system
 data:
   dateFormat: "2006/01/02"  # Creates hierarchical year/month/day structure
 ```
@@ -212,12 +212,12 @@ We welcome contributions! Please see our contributing guidelines for more inform
 
 ```sh
 # Using Helm
-helm uninstall toe-operator -n toe-system
+helm uninstall kubecodriver-operator -n kubecodriver-system
 
 # Using YAML
-kubectl delete -f https://github.com/codriverlabs/toe-run-ce/releases/download/v1.1.0/toe-operator-v1.1.0.yaml
+kubectl delete -f https://github.com/codriverlabs/KubeCoDriver/releases/download/v1.1.0/kubecodriver-operator-v1.1.0.yaml
 
-# Remove CRDs (this will delete all PowerTool resources!)
+# Remove CRDs (this will delete all CoDriverJob resources!)
 make uninstall
 ```
 

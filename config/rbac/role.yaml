@@ -31,10 +31,10 @@ rules:
   verbs:
   - create
 - apiGroups:
-  - codriverlabs.ai.toe.run
+  - kubecodriver.codriverlabs.ai
   resources:
-  - powertoolconfigs
-  - powertools
+  - codriverjobs
+  - codrivertools
   verbs:
   - create
   - delete
@@ -44,17 +44,17 @@ rules:
   - update
   - watch
 - apiGroups:
-  - codriverlabs.ai.toe.run
+  - kubecodriver.codriverlabs.ai
   resources:
-  - powertoolconfigs/finalizers
-  - powertools/finalizers
+  - codriverjobs/finalizers
+  - codrivertools/finalizers
   verbs:
   - update
 - apiGroups:
-  - codriverlabs.ai.toe.run
+  - kubecodriver.codriverlabs.ai
   resources:
-  - powertoolconfigs/status
-  - powertools/status
+  - codriverjobs/status
+  - codrivertools/status
   verbs:
   - get
   - patch

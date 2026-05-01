@@ -8,12 +8,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func TestNewPowerToolReconciler(t *testing.T) {
+func TestNewCoDriverJobReconciler(t *testing.T) {
 	scheme := runtime.NewScheme()
 	var mockClient client.Client
 	var mockK8sClient kubernetes.Interface
 
-	r := NewPowerToolReconciler(mockClient, scheme, mockK8sClient)
+	r := NewCoDriverJobReconciler(mockClient, scheme, mockK8sClient)
 
 	if r == nil {
 		t.Fatal("expected non-nil reconciler")

@@ -259,12 +259,12 @@ tool:
 
 ---
 
-## Complete PowerTool Examples
+## Complete CoDriverJob Examples
 
 ### Process Suspension Test
 ```yaml
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerTool
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverJob
 metadata:
   name: chaos-process-suspend
 spec:
@@ -282,8 +282,8 @@ spec:
 
 ### CPU Stress Test
 ```yaml
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerTool
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverJob
 metadata:
   name: chaos-cpu-stress
 spec:
@@ -301,8 +301,8 @@ spec:
 
 ### Storage Pressure Test
 ```yaml
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerTool
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverJob
 metadata:
   name: chaos-storage-fill
 spec:
@@ -321,8 +321,8 @@ spec:
 
 ### Network Connectivity Test
 ```yaml
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerTool
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverJob
 metadata:
   name: chaos-network-test
 spec:
@@ -340,8 +340,8 @@ spec:
 
 ### Memory Pressure Test
 ```yaml
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerTool
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverJob
 metadata:
   name: chaos-memory-pressure
 spec:
@@ -361,7 +361,7 @@ spec:
 
 ## Environment Variables
 
-The chaos tool supports these environment variables (set automatically by TOE):
+The chaos tool supports these environment variables (set automatically by KubeCoDriver):
 
 - `CHAOS_TYPE` - Type of chaos experiment (process, cpu, storage, network, memory)
 - `DURATION` - Experiment duration (default: 30s)
@@ -420,7 +420,7 @@ All chaos experiments generate detailed logs including:
 - Success/failure rates for network tests
 - Cleanup confirmation
 
-Results are automatically sent to the configured collector or stored according to the output mode specified in the PowerTool configuration.
+Results are automatically sent to the configured collector or stored according to the output mode specified in the CoDriverJob configuration.
 
 ---
 

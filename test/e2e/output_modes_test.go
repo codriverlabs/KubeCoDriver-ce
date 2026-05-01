@@ -6,7 +6,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"toe/api/v1alpha1"
+	"github.com/codriverlabs/KubeCoDriver/api/v1alpha1"
 )
 
 var _ = Describe("Output Mode Configuration", func() {
@@ -14,7 +14,7 @@ var _ = Describe("Output Mode Configuration", func() {
 
 	BeforeEach(func() {
 		namespace = CreateSimpleTestNamespace()
-		CreateSimpleTestPowerToolConfig("aperf-config", namespace.Name)
+		CreateSimpleTestCoDriverTool("aperf-config", namespace.Name)
 		CreateSimpleMockTargetPod(namespace.Name, "output-pod", map[string]string{
 			"app": "output-app",
 		})
@@ -26,8 +26,8 @@ var _ = Describe("Output Mode Configuration", func() {
 
 	Context("Ephemeral Mode", func() {
 		It("should configure ephemeral output correctly", func() {
-			By("creating PowerTool with ephemeral output")
-			spec := v1alpha1.PowerToolSpec{
+			By("creating CoDriverJob with ephemeral output")
+			spec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "output-app"},
@@ -41,19 +41,19 @@ var _ = Describe("Output Mode Configuration", func() {
 					Mode: "ephemeral",
 				},
 			}
-			powerTool := CreateSimpleTestPowerTool("ephemeral-output", namespace.Name, spec)
+			coDriverJob := CreateSimpleTestCoDriverJob("ephemeral-output", namespace.Name, spec)
 
-			By("verifying PowerTool accepts ephemeral configuration")
-			WaitForSimplePowerToolPhase(powerTool, "Pending")
+			By("verifying CoDriverJob accepts ephemeral configuration")
+			WaitForSimpleCoDriverJobPhase(coDriverJob, "Pending")
 
 			By("verifying output mode is correctly set")
-			updated := GetSimplePowerTool(powerTool)
+			updated := GetSimpleCoDriverJob(coDriverJob)
 			Expect(updated.Spec.Output.Mode).To(Equal("ephemeral"))
 		})
 
 		It("should handle ephemeral mode with custom path", func() {
-			By("creating PowerTool with custom ephemeral path")
-			spec := v1alpha1.PowerToolSpec{
+			By("creating CoDriverJob with custom ephemeral path")
+			spec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "output-app"},
@@ -67,19 +67,19 @@ var _ = Describe("Output Mode Configuration", func() {
 					Mode: "ephemeral",
 				},
 			}
-			powerTool := CreateSimpleTestPowerTool("ephemeral-custom-path", namespace.Name, spec)
+			coDriverJob := CreateSimpleTestCoDriverJob("ephemeral-custom-path", namespace.Name, spec)
 
 			By("verifying custom path configuration")
-			WaitForSimplePowerToolPhase(powerTool, "Pending")
-			updated := GetSimplePowerTool(powerTool)
+			WaitForSimpleCoDriverJobPhase(coDriverJob, "Pending")
+			updated := GetSimpleCoDriverJob(coDriverJob)
 			Expect(updated.Spec.Output.Mode).To(Equal("ephemeral"))
 		})
 	})
 
 	Context("PVC Mode", func() {
 		It("should validate PVC configuration", func() {
-			By("creating PowerTool with PVC output")
-			spec := v1alpha1.PowerToolSpec{
+			By("creating CoDriverJob with PVC output")
+			spec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "output-app"},
@@ -97,21 +97,21 @@ var _ = Describe("Output Mode Configuration", func() {
 					},
 				},
 			}
-			powerTool := CreateSimpleTestPowerTool("pvc-output", namespace.Name, spec)
+			coDriverJob := CreateSimpleTestCoDriverJob("pvc-output", namespace.Name, spec)
 
 			By("verifying PVC configuration is accepted")
-			WaitForSimplePowerToolPhase(powerTool, "Pending")
+			WaitForSimpleCoDriverJobPhase(coDriverJob, "Pending")
 
 			By("verifying PVC settings are correctly configured")
-			updated := GetSimplePowerTool(powerTool)
+			updated := GetSimpleCoDriverJob(coDriverJob)
 			Expect(updated.Spec.Output.Mode).To(Equal("pvc"))
 			Expect(updated.Spec.Output.PVC.ClaimName).To(Equal("test-pvc"))
 			Expect(updated.Spec.Output.PVC.Path).To(Equal("/data/profiles"))
 		})
 
 		It("should handle PVC mode with storage class", func() {
-			By("creating PowerTool with PVC and storage class")
-			spec := v1alpha1.PowerToolSpec{
+			By("creating CoDriverJob with PVC and storage class")
+			spec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "output-app"},
@@ -129,18 +129,18 @@ var _ = Describe("Output Mode Configuration", func() {
 					},
 				},
 			}
-			powerTool := CreateSimpleTestPowerTool("pvc-storage-class", namespace.Name, spec)
+			coDriverJob := CreateSimpleTestCoDriverJob("pvc-storage-class", namespace.Name, spec)
 
 			By("verifying PVC configuration")
-			updated := GetSimplePowerTool(powerTool)
+			updated := GetSimpleCoDriverJob(coDriverJob)
 			Expect(updated.Spec.Output.PVC.ClaimName).To(Equal("storage-pvc"))
 			Expect(updated.Spec.Output.PVC.Path).NotTo(BeNil())
 			Expect(*updated.Spec.Output.PVC.Path).To(Equal("/data/profiles"))
 		})
 
 		It("should reject invalid PVC configurations", func() {
-			By("attempting to create PowerTool with invalid PVC config")
-			spec := v1alpha1.PowerToolSpec{
+			By("attempting to create CoDriverJob with invalid PVC config")
+			spec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "output-app"},
@@ -156,7 +156,7 @@ var _ = Describe("Output Mode Configuration", func() {
 				},
 			}
 
-			powerTool := &v1alpha1.PowerTool{
+			coDriverJob := &v1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "invalid-pvc",
 					Namespace: namespace.Name,
@@ -165,15 +165,15 @@ var _ = Describe("Output Mode Configuration", func() {
 			}
 
 			By("expecting validation to fail")
-			err := simpleK8sClient.Create(simpleCtx, powerTool)
+			err := simpleK8sClient.Create(simpleCtx, coDriverJob)
 			Expect(err).To(HaveOccurred())
 		})
 	})
 
 	Context("Collector Mode", func() {
 		It("should configure collector endpoint correctly", func() {
-			By("creating PowerTool with collector output")
-			spec := v1alpha1.PowerToolSpec{
+			By("creating CoDriverJob with collector output")
+			spec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "output-app"},
@@ -186,22 +186,22 @@ var _ = Describe("Output Mode Configuration", func() {
 				Output: v1alpha1.OutputSpec{
 					Mode: "collector",
 					Collector: &v1alpha1.CollectorSpec{
-						Endpoint: "https://collector.toe-system.svc.cluster.local:8443",
+						Endpoint: "https://collector.kubecodriver-system.svc.cluster.local:8443",
 					},
 				},
 			}
-			powerTool := CreateSimpleTestPowerTool("collector-output", namespace.Name, spec)
+			coDriverJob := CreateSimpleTestCoDriverJob("collector-output", namespace.Name, spec)
 
 			By("verifying collector configuration")
-			WaitForSimplePowerToolPhase(powerTool, "Pending")
-			updated := GetSimplePowerTool(powerTool)
+			WaitForSimpleCoDriverJobPhase(coDriverJob, "Pending")
+			updated := GetSimpleCoDriverJob(coDriverJob)
 			Expect(updated.Spec.Output.Mode).To(Equal("collector"))
-			Expect(updated.Spec.Output.Collector.Endpoint).To(Equal("https://collector.toe-system.svc.cluster.local:8443"))
+			Expect(updated.Spec.Output.Collector.Endpoint).To(Equal("https://collector.kubecodriver-system.svc.cluster.local:8443"))
 		})
 
 		It("should handle collector mode with authentication", func() {
-			By("creating PowerTool with collector authentication")
-			spec := v1alpha1.PowerToolSpec{
+			By("creating CoDriverJob with collector authentication")
+			spec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "output-app"},
@@ -218,15 +218,15 @@ var _ = Describe("Output Mode Configuration", func() {
 					},
 				},
 			}
-			powerTool := CreateSimpleTestPowerTool("collector-auth", namespace.Name, spec)
+			coDriverJob := CreateSimpleTestCoDriverJob("collector-auth", namespace.Name, spec)
 
 			By("verifying authentication configuration")
-			_ = GetSimplePowerTool(powerTool)
+			_ = GetSimpleCoDriverJob(coDriverJob)
 		})
 
 		It("should validate collector endpoint format", func() {
-			By("attempting to create PowerTool with invalid collector endpoint")
-			spec := v1alpha1.PowerToolSpec{
+			By("attempting to create CoDriverJob with invalid collector endpoint")
+			spec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "output-app"},
@@ -244,7 +244,7 @@ var _ = Describe("Output Mode Configuration", func() {
 				},
 			}
 
-			powerTool := &v1alpha1.PowerTool{
+			coDriverJob := &v1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "invalid-collector",
 					Namespace: namespace.Name,
@@ -253,24 +253,24 @@ var _ = Describe("Output Mode Configuration", func() {
 			}
 
 			By("expecting validation to fail for invalid URL")
-			err := simpleK8sClient.Create(simpleCtx, powerTool)
+			err := simpleK8sClient.Create(simpleCtx, coDriverJob)
 			Expect(err).To(HaveOccurred())
 		})
 	})
 
 	Context("Output Mode Transitions", func() {
 		It("should handle output mode changes", func() {
-			By("creating PowerTool with ephemeral output")
-			spec := CreateSimpleBasicPowerToolSpec(map[string]string{"app": "output-app"})
-			powerTool := CreateSimpleTestPowerTool("mode-transition", namespace.Name, spec)
+			By("creating CoDriverJob with ephemeral output")
+			spec := CreateSimpleBasicCoDriverJobSpec(map[string]string{"app": "output-app"})
+			coDriverJob := CreateSimpleTestCoDriverJob("mode-transition", namespace.Name, spec)
 
 			By("verifying initial ephemeral mode")
-			WaitForSimplePowerToolPhase(powerTool, "Pending")
-			initial := GetSimplePowerTool(powerTool)
+			WaitForSimpleCoDriverJobPhase(coDriverJob, "Pending")
+			initial := GetSimpleCoDriverJob(coDriverJob)
 			Expect(initial.Spec.Output.Mode).To(Equal("ephemeral"))
 
 			By("updating to PVC mode")
-			updated := GetSimplePowerTool(powerTool)
+			updated := GetSimpleCoDriverJob(coDriverJob)
 			updated.Spec.Output.Mode = "pvc"
 			updated.Spec.Output.PVC = &v1alpha1.PVCSpec{
 				ClaimName: "transition-pvc",
@@ -280,7 +280,7 @@ var _ = Describe("Output Mode Configuration", func() {
 
 			By("verifying mode transition")
 			Eventually(func() string {
-				current := GetSimplePowerTool(powerTool)
+				current := GetSimpleCoDriverJob(coDriverJob)
 				return current.Spec.Output.Mode
 			}, "30s", "1s").Should(Equal("pvc"))
 		})
@@ -292,18 +292,18 @@ var _ = Describe("Output Mode Configuration", func() {
 			validPaths := []string{
 				"/tmp/profiles",
 				"/data/output",
-				"/var/log/toe",
+				"/var/log/kubecodriver",
 			}
 
 			for _, path := range validPaths {
-				spec := CreateSimpleBasicPowerToolSpec(map[string]string{"app": "output-app"})
-				powerTool := CreateSimpleTestPowerTool("path-test-"+path[1:], namespace.Name, spec)
+				spec := CreateSimpleBasicCoDriverJobSpec(map[string]string{"app": "output-app"})
+				coDriverJob := CreateSimpleTestCoDriverJob("path-test-"+path[1:], namespace.Name, spec)
 
 				By("verifying path is accepted: " + path)
-				_ = GetSimplePowerTool(powerTool)
+				_ = GetSimpleCoDriverJob(coDriverJob)
 
 				// Cleanup
-				Expect(simpleK8sClient.Delete(simpleCtx, powerTool)).To(Succeed())
+				Expect(simpleK8sClient.Delete(simpleCtx, coDriverJob)).To(Succeed())
 			}
 		})
 
@@ -316,9 +316,9 @@ var _ = Describe("Output Mode Configuration", func() {
 			}
 
 			for _, path := range invalidPaths {
-				spec := CreateSimpleBasicPowerToolSpec(map[string]string{"app": "output-app"})
+				spec := CreateSimpleBasicCoDriverJobSpec(map[string]string{"app": "output-app"})
 
-				powerTool := &v1alpha1.PowerTool{
+				coDriverJob := &v1alpha1.CoDriverJob{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "invalid-path-" + path,
 						Namespace: namespace.Name,
@@ -327,7 +327,7 @@ var _ = Describe("Output Mode Configuration", func() {
 				}
 
 				By("expecting validation to fail for path: " + path)
-				err := simpleK8sClient.Create(simpleCtx, powerTool)
+				err := simpleK8sClient.Create(simpleCtx, coDriverJob)
 				Expect(err).To(HaveOccurred())
 			}
 		})

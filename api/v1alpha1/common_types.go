@@ -9,7 +9,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// Common types shared across PowerTool, PowerToolConfig, and related resources
+// Common types shared across CoDriverJob, CoDriverTool, and related resources
 
 // TargetSpec defines the target for tool execution
 type TargetSpec struct {

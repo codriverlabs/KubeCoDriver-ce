@@ -14,14 +14,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"toe/api/v1alpha1"
+	"github.com/codriverlabs/KubeCoDriver/api/v1alpha1"
 )
 
 // CreateTestNamespace creates a unique test namespace
 func CreateTestNamespace() *corev1.Namespace {
 	ns := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: "toe-kind-e2e-",
+			GenerateName: "kubecodriver-kind-e2e-",
 		},
 	}
 	Expect(k8sClient.Create(ctx, ns)).To(Succeed())
@@ -68,9 +68,9 @@ func WaitForPodRunning(pod *corev1.Pod) {
 	}, "60s", "2s").Should(BeTrue())
 }
 
-// CreatePowerTool creates a PowerTool resource
-func CreatePowerTool(namespace, name string, spec v1alpha1.PowerToolSpec) *v1alpha1.PowerTool {
-	pt := &v1alpha1.PowerTool{
+// CreateCoDriverJob creates a CoDriverJob resource
+func CreateCoDriverJob(namespace, name string, spec v1alpha1.CoDriverJobSpec) *v1alpha1.CoDriverJob {
+	pt := &v1alpha1.CoDriverJob{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
@@ -81,17 +81,17 @@ func CreatePowerTool(namespace, name string, spec v1alpha1.PowerToolSpec) *v1alp
 	return pt
 }
 
-// CreatePowerToolConfig creates a PowerToolConfig resource
-func CreatePowerToolConfig(namespace, name string) *v1alpha1.PowerToolConfig {
+// CreateCoDriverTool creates a CoDriverTool resource
+func CreateCoDriverTool(namespace, name string) *v1alpha1.CoDriverTool {
 	allowPrivileged := true
-	ptc := &v1alpha1.PowerToolConfig{
+	ptc := &v1alpha1.CoDriverTool{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
-		Spec: v1alpha1.PowerToolConfigSpec{
+		Spec: v1alpha1.CoDriverToolSpec{
 			Name:  name,
-			Image: "ghcr.io/codriverlabs/toe-aperf:latest",
+			Image: "ghcr.io/codriverlabs/ce/kubecodriver-aperf:latest",
 			SecurityContext: v1alpha1.SecuritySpec{
 				AllowPrivileged: &allowPrivileged,
 				Capabilities: &v1alpha1.Capabilities{
@@ -154,10 +154,10 @@ func parseQuantity(s string) resource.Quantity {
 	return q
 }
 
-// WaitForPowerToolPhase waits for PowerTool to reach expected phase
-func WaitForPowerToolPhase(pt *v1alpha1.PowerTool, expectedPhase string) {
+// WaitForCoDriverJobPhase waits for CoDriverJob to reach expected phase
+func WaitForCoDriverJobPhase(pt *v1alpha1.CoDriverJob, expectedPhase string) {
 	Eventually(func() string {
-		updated := &v1alpha1.PowerTool{}
+		updated := &v1alpha1.CoDriverJob{}
 		err := k8sClient.Get(ctx, client.ObjectKeyFromObject(pt), updated)
 		if err != nil {
 			return ""
@@ -169,9 +169,9 @@ func WaitForPowerToolPhase(pt *v1alpha1.PowerTool, expectedPhase string) {
 	}, "120s", "2s").Should(Equal(expectedPhase))
 }
 
-// GetPowerTool retrieves the latest version of a PowerTool
-func GetPowerTool(pt *v1alpha1.PowerTool) *v1alpha1.PowerTool {
-	updated := &v1alpha1.PowerTool{}
+// GetCoDriverJob retrieves the latest version of a CoDriverJob
+func GetCoDriverJob(pt *v1alpha1.CoDriverJob) *v1alpha1.CoDriverJob {
+	updated := &v1alpha1.CoDriverJob{}
 	Expect(k8sClient.Get(ctx, client.ObjectKeyFromObject(pt), updated)).To(Succeed())
 	return updated
 }

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the strategy for implementing comprehensive E2E tests using Kind clusters for the TOE project. It identifies reusable test code, new test cases needed, and cluster management approach.
+This document outlines the strategy for implementing comprehensive E2E tests using Kind clusters for the KubeCoDriver project. It identifies reusable test code, new test cases needed, and cluster management approach.
 
 ## Cluster Naming Strategy
 
@@ -10,7 +10,7 @@ This document outlines the strategy for implementing comprehensive E2E tests usi
 For single GitHub runner environments, use commit hash in cluster name to enable parallel test runs:
 
 ```bash
-CLUSTER_NAME="toe-e2e-${GITHUB_SHA:0:8}"  # e.g., toe-e2e-a1b2c3d4
+CLUSTER_NAME="kubecodriver-e2e-${GITHUB_SHA:0:8}"  # e.g., kubecodriver-e2e-a1b2c3d4
 ```
 
 **Benefits:**
@@ -23,7 +23,7 @@ CLUSTER_NAME="toe-e2e-${GITHUB_SHA:0:8}"  # e.g., toe-e2e-a1b2c3d4
 ```bash
 # In setup-cluster.sh
 COMMIT_HASH="${GITHUB_SHA:-$(git rev-parse --short HEAD)}"
-CLUSTER_NAME="${CLUSTER_NAME:-toe-e2e-${COMMIT_HASH}}"
+CLUSTER_NAME="${CLUSTER_NAME:-kubecodriver-e2e-${COMMIT_HASH}}"
 ```
 
 ## Reusable Test Code from Existing E2E Suite
@@ -33,11 +33,11 @@ CLUSTER_NAME="${CLUSTER_NAME:-toe-e2e-${COMMIT_HASH}}"
 **1. Test Utilities (`simple_utils.go`)**
 - `CreateSimpleTestNamespace()` - Namespace creation
 - `CreateSimpleMockTargetPod()` - Mock pod generation
-- `CreateSimpleTestPowerTool()` - PowerTool creation
-- `CreateSimpleTestPowerToolConfig()` - PowerToolConfig creation
-- `CreateSimpleBasicPowerToolSpec()` - Spec generation
-- `GetSimplePowerTool()` / `GetSimplePod()` - Resource retrieval
-- `LogSimplePowerToolStatus()` - Debug logging
+- `CreateSimpleTestCoDriverJob()` - CoDriverJob creation
+- `CreateSimpleTestCoDriverTool()` - CoDriverTool creation
+- `CreateSimpleBasicCoDriverJobSpec()` - Spec generation
+- `GetSimpleCoDriverJob()` / `GetSimplePod()` - Resource retrieval
+- `LogSimpleCoDriverJobStatus()` - Debug logging
 
 **2. Test Scenarios (Logic Tests)**
 All controller logic tests from existing suite:
@@ -49,8 +49,8 @@ All controller logic tests from existing suite:
 - Performance and timing tests
 
 **3. Validation Tests**
-- PowerTool validation logic
-- PowerToolConfig validation
+- CoDriverJob validation logic
+- CoDriverTool validation
 - Tool configuration validation
 - Output mode configuration tests
 - RBAC security tests (partial)
@@ -79,7 +79,7 @@ var _ = BeforeSuite(func() {
 **2. Wait Functions**
 ```go
 // CHANGE: Increase timeouts for real cluster operations
-func WaitForSimplePowerToolPhase(powerTool *v1alpha1.PowerTool, expectedPhase string) {
+func WaitForSimpleCoDriverJobPhase(powerTool *v1alpha1.CoDriverJob, expectedPhase string) {
     Eventually(func() string {
         // ... existing logic ...
     }, "120s", "2s").Should(Equal(expectedPhase))  // Was: 30s, 1s
@@ -187,7 +187,7 @@ var _ = Describe("Storage Integration", func() {
     Context("PVC Output Mode", func() {
         It("should write profiling data to PVC", func() {
             // Create PVC
-            // Run PowerTool with PVC mode
+            // Run CoDriverJob with PVC mode
             // Verify data written to PVC
             // Verify data persists after pod deletion
         })
@@ -206,7 +206,7 @@ var _ = Describe("Storage Integration", func() {
     Context("Collector Output Mode", func() {
         It("should send data to collector service", func() {
             // Deploy collector
-            // Run PowerTool with collector mode
+            // Run CoDriverJob with collector mode
             // Verify data received by collector
             // Check collector storage
         })
@@ -258,12 +258,12 @@ var _ = Describe("Multi-Node Scenarios", func() {
 var _ = Describe("Security and RBAC", func() {
     Context("Namespace Isolation", func() {
         It("should enforce namespace boundaries", func() {
-            // Create PowerTool in namespace A
+            // Create CoDriverJob in namespace A
             // Try to target pod in namespace B
             // Verify access denied
         })
         
-        It("should respect PowerToolConfig namespace restrictions", func() {
+        It("should respect CoDriverTool namespace restrictions", func() {
             // Configure allowed namespaces
             // Test enforcement
         })
@@ -341,7 +341,7 @@ test/e2e-kind/
 ├── failure_scenarios_test.go        # NEW: Phase 6
 └── fixtures/
     ├── workloads/                   # Sample applications
-    ├── configs/                     # PowerToolConfigs
+    ├── configs/                     # CoDriverTools
     └── scenarios/                   # Test scenarios
 ```
 
@@ -356,22 +356,22 @@ set -euo pipefail
 
 # Get commit hash for cluster name
 COMMIT_HASH="${GITHUB_SHA:-$(git rev-parse --short HEAD)}"
-export CLUSTER_NAME="toe-e2e-${COMMIT_HASH}"
+export CLUSTER_NAME="kubecodriver-e2e-${COMMIT_HASH}"
 
 echo "🚀 Starting Kind E2E tests with cluster: $CLUSTER_NAME"
 
 # Setup cluster
 ./test/e2e-kind/cluster/setup-cluster.sh
 
-# Deploy TOE components
+# Deploy KubeCoDriver components
 kubectl apply -f config/crd/bases/
 kubectl apply -f test/e2e-kind/manifests/
 
 # Wait for deployments
 kubectl wait --for=condition=available --timeout=300s \
-    deployment/toe-controller -n toe-system
+    deployment/kubecodriver-controller -n kubecodriver-system
 kubectl wait --for=condition=available --timeout=300s \
-    deployment/toe-collector -n toe-system
+    deployment/kubecodriver-collector -n kubecodriver-system
 
 # Run tests
 go test -v -tags=e2e-kind ./test/e2e-kind/... \
@@ -437,8 +437,8 @@ jobs:
 
 **Manual Cleanup:**
 ```bash
-# Clean up all TOE E2E clusters
-kind get clusters | grep "^toe-e2e-" | xargs -I {} kind delete cluster --name {}
+# Clean up all KubeCoDriver E2E clusters
+kind get clusters | grep "^kubecodriver-e2e-" | xargs -I {} kind delete cluster --name {}
 ```
 
 ## Test Execution Strategy
@@ -446,13 +446,13 @@ kind get clusters | grep "^toe-e2e-" | xargs -I {} kind delete cluster --name {}
 ### Local Development
 ```bash
 # Quick test (single phase)
-CLUSTER_NAME=toe-e2e-dev make test-e2e-kind-phase1
+CLUSTER_NAME=kubecodriver-e2e-dev make test-e2e-kind-phase1
 
 # Full test suite
-CLUSTER_NAME=toe-e2e-dev make test-e2e-kind-all
+CLUSTER_NAME=kubecodriver-e2e-dev make test-e2e-kind-all
 
 # Keep cluster for debugging
-CLUSTER_NAME=toe-e2e-dev KEEP_CLUSTER=true make test-e2e-kind-all
+CLUSTER_NAME=kubecodriver-e2e-dev KEEP_CLUSTER=true make test-e2e-kind-all
 ```
 
 ### CI/CD Pipeline

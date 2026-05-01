@@ -1,8 +1,8 @@
-# Default values for toe-operator
+# Default values for kubecodriver-operator
 
 # Global settings
 global:
-  # Single version for all TOE components (controller, collector, powertools)
+  # Single version for all KubeCoDriver components (controller, collector, powertools)
   version: "1.1.10-beta"
   registry:
     type: ghcr  # local, ecr, ghcr
@@ -10,13 +10,13 @@ global:
     # Example: "123456789012.dkr.ecr.us-west-2.amazonaws.com/codriverlabs/ce"
     repository: "ghcr.io/codriverlabs/ce"
     imagePullSecrets: []
-  namespace: toe-system
+  namespace: kubecodriver-system
 
 # Controller configuration
 controller:
   enabled: true
   image:
-    # Repository will be: global.registry.repository + "/toe-controller"
+    # Repository will be: global.registry.repository + "/kubecodriver-controller"
     # Tag uses global.version
     pullPolicy: IfNotPresent
   replicas: 1
@@ -32,7 +32,7 @@ controller:
 collector:
   enabled: true
   image:
-    # Repository will be: global.registry.repository + "/toe-collector"
+    # Repository will be: global.registry.repository + "/kubecodriver-collector"
     # Tag uses global.version
     pullPolicy: IfNotPresent
   replicas: 1
@@ -52,30 +52,30 @@ collector:
     storageClass: ""
     fsGroup: 50002  # EFS access point group ID
 
-# PowerTool configurations
+# CoDriverJob configurations
 powertools:
   enabled: true
   aperf:
     image:
-      # Repository will be: global.registry.repository + "/toe-aperf"
+      # Repository will be: global.registry.repository + "/kubecodriver-aperf"
       # Tag uses global.version
     allowedNamespaces:
       - "production"
       - "staging"
       - "development"
-      - "toe-test"
+      - "kubecodriver-test"
     description: "Advanced performance profiling tool for CPU and memory analysis"
     version: "v1.0.12"
     defaultArgs: ["--cpu", "--memory"]
   tcpdump:
     image:
-      # Repository will be: global.registry.repository + "/toe-tcpdump"
+      # Repository will be: global.registry.repository + "/kubecodriver-tcpdump"
       # Tag uses global.version
     description: "Network packet capture using tcpdump"
     defaultArgs: ["-i", "any"]
   chaos:
     image:
-      # Repository will be: global.registry.repository + "/toe-chaos"
+      # Repository will be: global.registry.repository + "/kubecodriver-chaos"
       # Tag uses global.version
     description: "Comprehensive chaos engineering experiments: process, cpu, storage, network, memory"
     resources:
@@ -90,17 +90,17 @@ powertools:
     aperf:
       enabled: true
       image:
-        # Repository will be: global.registry.repository + "/toe-aperf"
+        # Repository will be: global.registry.repository + "/kubecodriver-aperf"
         # Tag uses global.version
     tcpdump:
       enabled: true
       image:
-        # Repository will be: global.registry.repository + "/toe-tcpdump"
+        # Repository will be: global.registry.repository + "/kubecodriver-tcpdump"
         # Tag uses global.version
     chaos:
       enabled: true
       image:
-        # Repository will be: global.registry.repository + "/toe-chaos"
+        # Repository will be: global.registry.repository + "/kubecodriver-chaos"
         # Tag uses global.version
 
 # RBAC configuration
@@ -115,7 +115,7 @@ serviceAccount:
   annotations: {}
   # For EKS with IRSA, add the role ARN annotation:
   # annotations:
-  #   eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT:role/TOE-IRSA-Role
+  #   eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT:role/KubeCoDriver-IRSA-Role
 
 # Security settings
 security:

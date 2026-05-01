@@ -13,45 +13,45 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	toev1alpha1 "toe/api/v1alpha1"
+	kubecodriverv1alpha1 "github.com/codriverlabs/KubeCoDriver/api/v1alpha1"
 )
 
 func TestCreateEphemeralContainerForPod(t *testing.T) {
 	scheme := runtime.NewScheme()
-	require.NoError(t, toev1alpha1.AddToScheme(scheme))
+	require.NoError(t, kubecodriverv1alpha1.AddToScheme(scheme))
 	require.NoError(t, corev1.AddToScheme(scheme))
 
 	tests := []struct {
 		name          string
-		powerTool     *toev1alpha1.PowerTool
-		toolConfig    *toev1alpha1.PowerToolConfig
+		coDriverJob   *kubecodriverv1alpha1.CoDriverJob
+		toolConfig    *kubecodriverv1alpha1.CoDriverTool
 		pod           corev1.Pod
 		containerName string
 		expectError   bool
 	}{
 		{
 			name: "successful ephemeral container creation",
-			powerTool: &toev1alpha1.PowerTool{
+			coDriverJob: &kubecodriverv1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-tool",
 					Namespace: "default",
 				},
-				Spec: toev1alpha1.PowerToolSpec{
-					Tool: toev1alpha1.ToolSpec{
+				Spec: kubecodriverv1alpha1.CoDriverJobSpec{
+					Tool: kubecodriverv1alpha1.ToolSpec{
 						Name:     "aperf",
 						Duration: "30s",
 					},
-					Output: toev1alpha1.OutputSpec{
+					Output: kubecodriverv1alpha1.OutputSpec{
 						Mode: "ephemeral",
 					},
 				},
 			},
-			toolConfig: &toev1alpha1.PowerToolConfig{
+			toolConfig: &kubecodriverv1alpha1.CoDriverTool{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "aperf",
-					Namespace: "toe-system",
+					Namespace: "kubecodriver-system",
 				},
-				Spec: toev1alpha1.PowerToolConfigSpec{
+				Spec: kubecodriverv1alpha1.CoDriverToolSpec{
 					Image: "test/aperf:latest",
 				},
 			},
@@ -70,30 +70,30 @@ func TestCreateEphemeralContainerForPod(t *testing.T) {
 		},
 		{
 			name: "ephemeral container with PVC output mode",
-			powerTool: &toev1alpha1.PowerTool{
+			coDriverJob: &kubecodriverv1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-tool",
 					Namespace: "default",
 				},
-				Spec: toev1alpha1.PowerToolSpec{
-					Tool: toev1alpha1.ToolSpec{
+				Spec: kubecodriverv1alpha1.CoDriverJobSpec{
+					Tool: kubecodriverv1alpha1.ToolSpec{
 						Name:     "aperf",
 						Duration: "30s",
 					},
-					Output: toev1alpha1.OutputSpec{
+					Output: kubecodriverv1alpha1.OutputSpec{
 						Mode: "pvc",
-						PVC: &toev1alpha1.PVCSpec{
+						PVC: &kubecodriverv1alpha1.PVCSpec{
 							ClaimName: "test-pvc",
 						},
 					},
 				},
 			},
-			toolConfig: &toev1alpha1.PowerToolConfig{
+			toolConfig: &kubecodriverv1alpha1.CoDriverTool{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "aperf",
-					Namespace: "toe-system",
+					Namespace: "kubecodriver-system",
 				},
-				Spec: toev1alpha1.PowerToolConfigSpec{
+				Spec: kubecodriverv1alpha1.CoDriverToolSpec{
 					Image: "test/aperf:latest",
 				},
 			},
@@ -124,27 +124,27 @@ func TestCreateEphemeralContainerForPod(t *testing.T) {
 		},
 		{
 			name: "ephemeral container with ephemeral output mode",
-			powerTool: &toev1alpha1.PowerTool{
+			coDriverJob: &kubecodriverv1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-tool",
 					Namespace: "default",
 				},
-				Spec: toev1alpha1.PowerToolSpec{
-					Tool: toev1alpha1.ToolSpec{
+				Spec: kubecodriverv1alpha1.CoDriverJobSpec{
+					Tool: kubecodriverv1alpha1.ToolSpec{
 						Name:     "aperf",
 						Duration: "30s",
 					},
-					Output: toev1alpha1.OutputSpec{
+					Output: kubecodriverv1alpha1.OutputSpec{
 						Mode: "ephemeral",
 					},
 				},
 			},
-			toolConfig: &toev1alpha1.PowerToolConfig{
+			toolConfig: &kubecodriverv1alpha1.CoDriverTool{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "aperf",
-					Namespace: "toe-system",
+					Namespace: "kubecodriver-system",
 				},
-				Spec: toev1alpha1.PowerToolConfigSpec{
+				Spec: kubecodriverv1alpha1.CoDriverToolSpec{
 					Image: "test/aperf:latest",
 				},
 			},
@@ -171,11 +171,11 @@ func TestCreateEphemeralContainerForPod(t *testing.T) {
 				Build()
 
 			k8sClient := k8sfake.NewSimpleClientset(&tt.pod)
-			reconciler := NewPowerToolReconciler(fakeClient, scheme, k8sClient)
+			reconciler := NewCoDriverJobReconciler(fakeClient, scheme, k8sClient)
 
 			err := reconciler.createEphemeralContainerForPod(
 				context.Background(),
-				tt.powerTool,
+				tt.coDriverJob,
 				tt.toolConfig,
 				tt.pod,
 				tt.containerName,
@@ -192,32 +192,32 @@ func TestCreateEphemeralContainerForPod(t *testing.T) {
 
 func TestCreateEphemeralContainer_WithToolArgs(t *testing.T) {
 	scheme := runtime.NewScheme()
-	require.NoError(t, toev1alpha1.AddToScheme(scheme))
+	require.NoError(t, kubecodriverv1alpha1.AddToScheme(scheme))
 	require.NoError(t, corev1.AddToScheme(scheme))
 
-	powerTool := &toev1alpha1.PowerTool{
+	coDriverJob := &kubecodriverv1alpha1.CoDriverJob{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-tool",
 			Namespace: "default",
 		},
-		Spec: toev1alpha1.PowerToolSpec{
-			Tool: toev1alpha1.ToolSpec{
+		Spec: kubecodriverv1alpha1.CoDriverJobSpec{
+			Tool: kubecodriverv1alpha1.ToolSpec{
 				Name:     "aperf",
 				Duration: "30s",
 				Args:     []string{"--verbose", "--output=/tmp/profile.out"},
 			},
-			Output: toev1alpha1.OutputSpec{
+			Output: kubecodriverv1alpha1.OutputSpec{
 				Mode: "ephemeral",
 			},
 		},
 	}
 
-	toolConfig := &toev1alpha1.PowerToolConfig{
+	toolConfig := &kubecodriverv1alpha1.CoDriverTool{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "aperf",
-			Namespace: "toe-system",
+			Namespace: "kubecodriver-system",
 		},
-		Spec: toev1alpha1.PowerToolConfigSpec{
+		Spec: kubecodriverv1alpha1.CoDriverToolSpec{
 			Image: "test/aperf:latest",
 		},
 	}
@@ -239,11 +239,11 @@ func TestCreateEphemeralContainer_WithToolArgs(t *testing.T) {
 		Build()
 
 	k8sClient := k8sfake.NewSimpleClientset(&pod)
-	reconciler := NewPowerToolReconciler(fakeClient, scheme, k8sClient)
+	reconciler := NewCoDriverJobReconciler(fakeClient, scheme, k8sClient)
 
 	err := reconciler.createEphemeralContainerForPod(
 		context.Background(),
-		powerTool,
+		coDriverJob,
 		toolConfig,
 		pod,
 		"test-container-args",
@@ -254,7 +254,7 @@ func TestCreateEphemeralContainer_WithToolArgs(t *testing.T) {
 
 func TestCreateEphemeralContainer_ErrorCases(t *testing.T) {
 	scheme := runtime.NewScheme()
-	require.NoError(t, toev1alpha1.AddToScheme(scheme))
+	require.NoError(t, kubecodriverv1alpha1.AddToScheme(scheme))
 	require.NoError(t, corev1.AddToScheme(scheme))
 
 	tests := []struct {
@@ -265,12 +265,12 @@ func TestCreateEphemeralContainer_ErrorCases(t *testing.T) {
 		{
 			name: "pod not found in k8s client",
 			setupClient: func() (client.Client, *k8sfake.Clientset) {
-				toolConfig := &toev1alpha1.PowerToolConfig{
+				toolConfig := &kubecodriverv1alpha1.CoDriverTool{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "aperf",
-						Namespace: "toe-system",
+						Namespace: "kubecodriver-system",
 					},
-					Spec: toev1alpha1.PowerToolConfigSpec{
+					Spec: kubecodriverv1alpha1.CoDriverToolSpec{
 						Image: "test/aperf:latest",
 					},
 				}
@@ -292,26 +292,26 @@ func TestCreateEphemeralContainer_ErrorCases(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			fakeClient, k8sClient := tt.setupClient()
-			reconciler := NewPowerToolReconciler(fakeClient, scheme, k8sClient)
+			reconciler := NewCoDriverJobReconciler(fakeClient, scheme, k8sClient)
 
-			powerTool := &toev1alpha1.PowerTool{
+			coDriverJob := &kubecodriverv1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-tool",
 					Namespace: "default",
 				},
-				Spec: toev1alpha1.PowerToolSpec{
-					Tool: toev1alpha1.ToolSpec{
+				Spec: kubecodriverv1alpha1.CoDriverJobSpec{
+					Tool: kubecodriverv1alpha1.ToolSpec{
 						Name: "aperf",
 					},
 				},
 			}
 
-			toolConfig := &toev1alpha1.PowerToolConfig{
+			toolConfig := &kubecodriverv1alpha1.CoDriverTool{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "aperf",
-					Namespace: "toe-system",
+					Namespace: "kubecodriver-system",
 				},
-				Spec: toev1alpha1.PowerToolConfigSpec{
+				Spec: kubecodriverv1alpha1.CoDriverToolSpec{
 					Image: "test/aperf:latest",
 				},
 			}
@@ -325,7 +325,7 @@ func TestCreateEphemeralContainer_ErrorCases(t *testing.T) {
 
 			err := reconciler.createEphemeralContainerForPod(
 				context.Background(),
-				powerTool,
+				coDriverJob,
 				toolConfig,
 				pod,
 				"test-container",

@@ -9,10 +9,10 @@ import (
 )
 
 type ProfileMetadata struct {
-	Namespace     string
-	AppLabel      string
-	PowerToolName string
-	Filename      string
+	Namespace       string
+	AppLabel        string
+	CoDriverJobName string
+	Filename        string
 }
 
 type Manager struct {
@@ -41,7 +41,7 @@ func (m *Manager) SaveProfile(r io.Reader, metadata ProfileMetadata) error {
 		m.basePath,
 		metadata.Namespace,
 		metadata.AppLabel,
-		metadata.PowerToolName,
+		metadata.CoDriverJobName,
 		datePath,
 		metadata.Filename,
 	)

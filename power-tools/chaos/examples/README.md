@@ -1,6 +1,6 @@
 # Chaos Tool Examples
 
-This directory contains example PowerTool manifests for the chaos engineering tool.
+This directory contains example CoDriverJob manifests for the chaos engineering tool.
 
 ## Supported Process Chaos Actions
 
@@ -68,7 +68,7 @@ Results are stored in the ephemeral container and lost when it terminates:
 kubectl logs <pod-name> -c <chaos-container-name>
 ```
 
-### Check PowerTool Status
+### Check CoDriverJob Status
 ```bash
 kubectl get powertool <name> -o yaml
 ```

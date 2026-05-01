@@ -9,11 +9,11 @@ IMAGE_VERSION=""
 
 # Images to sync
 IMAGES=(
-    "toe-controller"
-    "toe-collector"
-    "toe-aperf"
-    "toe-tcpdump"
-    "toe-chaos"
+    "kubecodriver-controller"
+    "kubecodriver-collector"
+    "kubecodriver-aperf"
+    "kubecodriver-tcpdump"
+    "kubecodriver-chaos"
 )
 
 usage() {

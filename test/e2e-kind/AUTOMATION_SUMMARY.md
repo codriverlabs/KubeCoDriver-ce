@@ -18,7 +18,7 @@ The E2E tests are **completely automated** from start to finish.
 - Verifies cluster health
 
 ### 2. ✅ Image Build
-- Builds controller image: `toe-controller:e2e`
+- Builds controller image: `kubecodriver-controller:e2e`
 - Uses Docker/Podman automatically
 - Caches builds for speed
 
@@ -79,10 +79,10 @@ Automatic cluster isolation using commit hashes:
 
 ```bash
 # PR #1 (commit: abc123)
-./test/e2e-kind/run-tests.sh  # cluster: toe-e2e-abc123
+./test/e2e-kind/run-tests.sh  # cluster: kubecodriver-e2e-abc123
 
 # PR #2 (commit: def456)  
-./test/e2e-kind/run-tests.sh  # cluster: toe-e2e-def456
+./test/e2e-kind/run-tests.sh  # cluster: kubecodriver-e2e-def456
 ```
 
 No conflicts, no manual coordination needed.
@@ -153,7 +153,7 @@ Repeatable: 100%
    - Deletes resources
    - Prunes images
 
-4. **`manifests/toe-controller.yaml`** - Deployment config
+4. **`manifests/kubecodriver-controller.yaml`** - Deployment config
    - Namespace, RBAC, Deployment
    - Used by run-tests.sh
 

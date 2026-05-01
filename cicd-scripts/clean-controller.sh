@@ -1,5 +1,5 @@
 #!/bin/bash
-# Clean script for toe-k8s-operator
+# Clean script for kubecodriver-k8s-operator
 # Usage: ./clean.sh
 
 set -euo pipefail
@@ -41,7 +41,7 @@ validate_cluster_access() {
 
 cd "$PROJECT_ROOT"
 
-echo "=== Cleaning toe-k8s-operator ==="
+echo "=== Cleaning kubecodriver-k8s-operator ==="
 
 # Validate environment
 validate_tools
@@ -75,19 +75,19 @@ echo "  Allowing time for controller resource cleanup..."
 sleep 2
 
 echo "  Checking for remaining controller resources in namespace '$NAMESPACE'..."
-if kubectl get deployment,service,configmap -n "$NAMESPACE" -l app.kubernetes.io/name=toe &> /dev/null; then
+if kubectl get deployment,service,configmap -n "$NAMESPACE" -l app.kubernetes.io/name=kubecodriver &> /dev/null; then
     echo "⚠️  Some controller resources may still exist:"
-    kubectl get deployment,service,configmap -n "$NAMESPACE" -l app.kubernetes.io/name=toe 2>/dev/null || true
+    kubectl get deployment,service,configmap -n "$NAMESPACE" -l app.kubernetes.io/name=kubecodriver 2>/dev/null || true
 else
     echo "✅ No controller resources found in namespace"
 fi
 
 echo "  Checking for CRDs..."
-if kubectl get crd | grep -q "codriverlabs.ai.toe.run"; then
+if kubectl get crd | grep -q "kubecodriver.codriverlabs.ai"; then
     echo "⚠️  Some CRDs may still exist:"
-    kubectl get crd | grep "codriverlabs.ai.toe.run" || true
+    kubectl get crd | grep "kubecodriver.codriverlabs.ai" || true
 else
-    echo "✅ No toe CRDs found"
+    echo "✅ No kubecodriver CRDs found"
 fi
 
 echo ""

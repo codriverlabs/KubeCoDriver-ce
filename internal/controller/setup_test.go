@@ -14,7 +14,7 @@ var _ = Describe("SetupWithManager", func() {
 		})
 		Expect(err).NotTo(HaveOccurred())
 
-		r := &PowerToolReconciler{
+		r := &CoDriverJobReconciler{
 			Client: mgr.GetClient(),
 			Scheme: mgr.GetScheme(),
 		}

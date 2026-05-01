@@ -6,38 +6,38 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	toev1alpha1 "toe/api/v1alpha1"
+	kubecodriverv1alpha1 "github.com/codriverlabs/KubeCoDriver/api/v1alpha1"
 )
 
-func TestBuildPowerToolEnvVars(t *testing.T) {
-	r := &PowerToolReconciler{}
+func TestBuildCoDriverJobEnvVars(t *testing.T) {
+	r := &CoDriverJobReconciler{}
 
 	tests := []struct {
-		name      string
-		powerTool *toev1alpha1.PowerTool
-		targetPod corev1.Pod
-		wantEnvs  map[string]string
+		name        string
+		coDriverJob *kubecodriverv1alpha1.CoDriverJob
+		targetPod   corev1.Pod
+		wantEnvs    map[string]string
 	}{
 		{
 			name: "basic configuration with app label",
-			powerTool: &toev1alpha1.PowerTool{
+			coDriverJob: &kubecodriverv1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-profile",
 					Namespace: "default",
 				},
-				Spec: toev1alpha1.PowerToolSpec{
-					Targets: toev1alpha1.TargetSpec{
+				Spec: kubecodriverv1alpha1.CoDriverJobSpec{
+					Targets: kubecodriverv1alpha1.TargetSpec{
 						LabelSelector: &metav1.LabelSelector{
 							MatchLabels: map[string]string{
 								"app": "nginx",
 							},
 						},
 					},
-					Tool: toev1alpha1.ToolSpec{
+					Tool: kubecodriverv1alpha1.ToolSpec{
 						Name:     "aperf",
 						Duration: "30s",
 					},
-					Output: toev1alpha1.OutputSpec{
+					Output: kubecodriverv1alpha1.OutputSpec{
 						Mode: "ephemeral",
 					},
 				},
@@ -62,24 +62,24 @@ func TestBuildPowerToolEnvVars(t *testing.T) {
 		},
 		{
 			name: "environment label",
-			powerTool: &toev1alpha1.PowerTool{
+			coDriverJob: &kubecodriverv1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "prod-profile",
 					Namespace: "production",
 				},
-				Spec: toev1alpha1.PowerToolSpec{
-					Targets: toev1alpha1.TargetSpec{
+				Spec: kubecodriverv1alpha1.CoDriverJobSpec{
+					Targets: kubecodriverv1alpha1.TargetSpec{
 						LabelSelector: &metav1.LabelSelector{
 							MatchLabels: map[string]string{
 								"env": "production",
 							},
 						},
 					},
-					Tool: toev1alpha1.ToolSpec{
+					Tool: kubecodriverv1alpha1.ToolSpec{
 						Name:     "perf",
 						Duration: "60s",
 					},
-					Output: toev1alpha1.OutputSpec{
+					Output: kubecodriverv1alpha1.OutputSpec{
 						Mode: "pvc",
 					},
 				},
@@ -104,24 +104,24 @@ func TestBuildPowerToolEnvVars(t *testing.T) {
 		},
 		{
 			name: "no matching labels - defaults to unknown",
-			powerTool: &toev1alpha1.PowerTool{
+			coDriverJob: &kubecodriverv1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-profile",
 					Namespace: "default",
 				},
-				Spec: toev1alpha1.PowerToolSpec{
-					Targets: toev1alpha1.TargetSpec{
+				Spec: kubecodriverv1alpha1.CoDriverJobSpec{
+					Targets: kubecodriverv1alpha1.TargetSpec{
 						LabelSelector: &metav1.LabelSelector{
 							MatchLabels: map[string]string{
 								"app": "nginx",
 							},
 						},
 					},
-					Tool: toev1alpha1.ToolSpec{
+					Tool: kubecodriverv1alpha1.ToolSpec{
 						Name:     "aperf",
 						Duration: "30s",
 					},
-					Output: toev1alpha1.OutputSpec{
+					Output: kubecodriverv1alpha1.OutputSpec{
 						Mode: "ephemeral",
 					},
 				},
@@ -146,24 +146,24 @@ func TestBuildPowerToolEnvVars(t *testing.T) {
 		},
 		{
 			name: "custom tier label",
-			powerTool: &toev1alpha1.PowerTool{
+			coDriverJob: &kubecodriverv1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "backend-profile",
 					Namespace: "default",
 				},
-				Spec: toev1alpha1.PowerToolSpec{
-					Targets: toev1alpha1.TargetSpec{
+				Spec: kubecodriverv1alpha1.CoDriverJobSpec{
+					Targets: kubecodriverv1alpha1.TargetSpec{
 						LabelSelector: &metav1.LabelSelector{
 							MatchLabels: map[string]string{
 								"tier": "backend",
 							},
 						},
 					},
-					Tool: toev1alpha1.ToolSpec{
+					Tool: kubecodriverv1alpha1.ToolSpec{
 						Name:     "aperf",
 						Duration: "45s",
 					},
-					Output: toev1alpha1.OutputSpec{
+					Output: kubecodriverv1alpha1.OutputSpec{
 						Mode: "collector",
 					},
 				},
@@ -190,7 +190,7 @@ func TestBuildPowerToolEnvVars(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			envVars := r.buildPowerToolEnvVars(tt.powerTool, tt.targetPod)
+			envVars := r.buildCoDriverJobEnvVars(tt.coDriverJob, tt.targetPod)
 
 			// Convert to map for easier comparison
 			gotEnvs := make(map[string]string)
@@ -202,46 +202,46 @@ func TestBuildPowerToolEnvVars(t *testing.T) {
 			for key, wantValue := range tt.wantEnvs {
 				gotValue, exists := gotEnvs[key]
 				if !exists {
-					t.Errorf("buildPowerToolEnvVars() missing env var %v", key)
+					t.Errorf("buildCoDriverJobEnvVars() missing env var %v", key)
 					continue
 				}
 				if gotValue != wantValue {
-					t.Errorf("buildPowerToolEnvVars() env var %v = %v, want %v", key, gotValue, wantValue)
+					t.Errorf("buildCoDriverJobEnvVars() env var %v = %v, want %v", key, gotValue, wantValue)
 				}
 			}
 
 			// Verify POD_MATCHING_LABELS is always present
 			if _, exists := gotEnvs["POD_MATCHING_LABELS"]; !exists {
-				t.Error("buildPowerToolEnvVars() missing POD_MATCHING_LABELS env var")
+				t.Error("buildCoDriverJobEnvVars() missing POD_MATCHING_LABELS env var")
 			}
 		})
 	}
 }
 
-func TestBuildPowerToolEnvVars_WithPVCPath(t *testing.T) {
-	r := &PowerToolReconciler{}
+func TestBuildCoDriverJobEnvVars_WithPVCPath(t *testing.T) {
+	r := &CoDriverJobReconciler{}
 
 	pvcPath := "/custom/path"
-	powerTool := &toev1alpha1.PowerTool{
+	coDriverJob := &kubecodriverv1alpha1.CoDriverJob{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-profile",
 			Namespace: "default",
 		},
-		Spec: toev1alpha1.PowerToolSpec{
-			Targets: toev1alpha1.TargetSpec{
+		Spec: kubecodriverv1alpha1.CoDriverJobSpec{
+			Targets: kubecodriverv1alpha1.TargetSpec{
 				LabelSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"app": "test",
 					},
 				},
 			},
-			Tool: toev1alpha1.ToolSpec{
+			Tool: kubecodriverv1alpha1.ToolSpec{
 				Name:     "aperf",
 				Duration: "30s",
 			},
-			Output: toev1alpha1.OutputSpec{
+			Output: kubecodriverv1alpha1.OutputSpec{
 				Mode: "pvc",
-				PVC: &toev1alpha1.PVCSpec{
+				PVC: &kubecodriverv1alpha1.PVCSpec{
 					ClaimName: "test-pvc",
 					Path:      &pvcPath,
 				},
@@ -259,7 +259,7 @@ func TestBuildPowerToolEnvVars_WithPVCPath(t *testing.T) {
 		},
 	}
 
-	envVars := r.buildPowerToolEnvVars(powerTool, targetPod)
+	envVars := r.buildCoDriverJobEnvVars(coDriverJob, targetPod)
 
 	// Convert to map
 	gotEnvs := make(map[string]string)
@@ -269,12 +269,12 @@ func TestBuildPowerToolEnvVars_WithPVCPath(t *testing.T) {
 
 	// Verify PVC_PATH is set
 	if gotEnvs["PVC_PATH"] != pvcPath {
-		t.Errorf("buildPowerToolEnvVars() PVC_PATH = %v, want %v", gotEnvs["PVC_PATH"], pvcPath)
+		t.Errorf("buildCoDriverJobEnvVars() PVC_PATH = %v, want %v", gotEnvs["PVC_PATH"], pvcPath)
 	}
 }
 
-func TestBuildPowerToolEnvVars_ToolArgs(t *testing.T) {
-	r := &PowerToolReconciler{}
+func TestBuildCoDriverJobEnvVars_ToolArgs(t *testing.T) {
+	r := &CoDriverJobReconciler{}
 
 	tests := []struct {
 		name     string
@@ -309,23 +309,23 @@ func TestBuildPowerToolEnvVars_ToolArgs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			powerTool := &toev1alpha1.PowerTool{
+			coDriverJob := &kubecodriverv1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-profile",
 					Namespace: "default",
 				},
-				Spec: toev1alpha1.PowerToolSpec{
-					Targets: toev1alpha1.TargetSpec{
+				Spec: kubecodriverv1alpha1.CoDriverJobSpec{
+					Targets: kubecodriverv1alpha1.TargetSpec{
 						LabelSelector: &metav1.LabelSelector{
 							MatchLabels: map[string]string{"app": "test"},
 						},
 					},
-					Tool: toev1alpha1.ToolSpec{
+					Tool: kubecodriverv1alpha1.ToolSpec{
 						Name:     "aperf",
 						Duration: "30s",
 						Args:     tt.args,
 					},
-					Output: toev1alpha1.OutputSpec{
+					Output: kubecodriverv1alpha1.OutputSpec{
 						Mode: "ephemeral",
 					},
 				},
@@ -339,7 +339,7 @@ func TestBuildPowerToolEnvVars_ToolArgs(t *testing.T) {
 				},
 			}
 
-			envVars := r.buildPowerToolEnvVars(powerTool, targetPod)
+			envVars := r.buildCoDriverJobEnvVars(coDriverJob, targetPod)
 
 			gotEnvs := make(map[string]string)
 			for _, env := range envVars {
@@ -360,26 +360,26 @@ func TestBuildPowerToolEnvVars_ToolArgs(t *testing.T) {
 	}
 }
 
-func TestBuildPowerToolEnvVars_NilArgs(t *testing.T) {
-	r := &PowerToolReconciler{}
+func TestBuildCoDriverJobEnvVars_NilArgs(t *testing.T) {
+	r := &CoDriverJobReconciler{}
 
-	powerTool := &toev1alpha1.PowerTool{
+	coDriverJob := &kubecodriverv1alpha1.CoDriverJob{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-profile",
 			Namespace: "default",
 		},
-		Spec: toev1alpha1.PowerToolSpec{
-			Targets: toev1alpha1.TargetSpec{
+		Spec: kubecodriverv1alpha1.CoDriverJobSpec{
+			Targets: kubecodriverv1alpha1.TargetSpec{
 				LabelSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{"app": "test"},
 				},
 			},
-			Tool: toev1alpha1.ToolSpec{
+			Tool: kubecodriverv1alpha1.ToolSpec{
 				Name:     "aperf",
 				Duration: "30s",
 				Args:     nil,
 			},
-			Output: toev1alpha1.OutputSpec{
+			Output: kubecodriverv1alpha1.OutputSpec{
 				Mode: "ephemeral",
 			},
 		},
@@ -394,7 +394,7 @@ func TestBuildPowerToolEnvVars_NilArgs(t *testing.T) {
 	}
 
 	// Should not panic with invalid JSON
-	envVars := r.buildPowerToolEnvVars(powerTool, targetPod)
+	envVars := r.buildCoDriverJobEnvVars(coDriverJob, targetPod)
 
 	// Verify basic env vars are still set
 	gotEnvs := make(map[string]string)

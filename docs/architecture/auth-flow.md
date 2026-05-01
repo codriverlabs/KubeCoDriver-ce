@@ -1,16 +1,16 @@
 # Authentication Flow
 
-The toe-sdk-collector uses Kubernetes TokenRequest API for secure authentication. Here's how it works:
+The kubecodriver-sdk-collector uses Kubernetes TokenRequest API for secure authentication. Here's how it works:
 
 ```
-Token Generation (When PowerTool is created):
+Token Generation (When CoDriverJob is created):
 
-PowerTool Controller                 K8s API Server
+CoDriverJob Controller                 K8s API Server
        |                                    |
        |---[1. TokenRequest]-------------->|
-       |   (PowerTool bound,              |
+       |   (CoDriverJob bound,              |
        |    Duration + 10s,                |
-       |    Audience: toe-sdk-collector)   |
+       |    Audience: kubecodriver-sdk-collector)   |
        |                                   |
        |<--[2. Signed Token]---------------|
        |                                   |
@@ -40,9 +40,9 @@ Profiler Pod          Collector           K8s API Server
 
 ## Security Features
 
-1. **Token Binding**: Each token is cryptographically bound to a specific PowerTool
+1. **Token Binding**: Each token is cryptographically bound to a specific CoDriverJob
 2. **Limited Lifetime**: Tokens expire automatically after job duration + 10 seconds
-3. **Audience Restriction**: Tokens can only be used with toe-sdk-collector
+3. **Audience Restriction**: Tokens can only be used with kubecodriver-sdk-collector
 4. **Audit Logging**: All token operations are logged in Kubernetes audit logs
 5. **Native Security**: Leverages Kubernetes built-in PKI infrastructure
 6. **No Shared Secrets**: No manual key management required

@@ -35,14 +35,14 @@ func TestValidateToken_Success(t *testing.T) {
 		tr.Status = authv1.TokenReviewStatus{
 			Authenticated: true,
 			User: authv1.UserInfo{
-				Username: "system:serviceaccount:toe-system:toe-sdk-collector",
+				Username: "system:serviceaccount:kubecodriver-system:kubecodriver-sdk-collector",
 				UID:      "test-uid",
 			},
 		}
 		return true, tr, nil
 	})
 
-	validator := NewK8sTokenValidator(client, "toe-sdk-collector")
+	validator := NewK8sTokenValidator(client, "kubecodriver-sdk-collector")
 	userInfo, err := validator.ValidateToken(context.Background(), "valid-token")
 
 	if err != nil {
@@ -53,8 +53,8 @@ func TestValidateToken_Success(t *testing.T) {
 		t.Fatal("expected userInfo, got nil")
 	}
 
-	if userInfo.Username != "system:serviceaccount:toe-system:toe-sdk-collector" {
-		t.Errorf("expected username 'system:serviceaccount:toe-system:toe-sdk-collector', got %v", userInfo.Username)
+	if userInfo.Username != "system:serviceaccount:kubecodriver-system:kubecodriver-sdk-collector" {
+		t.Errorf("expected username 'system:serviceaccount:kubecodriver-system:kubecodriver-sdk-collector', got %v", userInfo.Username)
 	}
 }
 
@@ -70,7 +70,7 @@ func TestValidateToken_NotAuthenticated(t *testing.T) {
 		return true, tr, nil
 	})
 
-	validator := NewK8sTokenValidator(client, "toe-sdk-collector")
+	validator := NewK8sTokenValidator(client, "kubecodriver-sdk-collector")
 	userInfo, err := validator.ValidateToken(context.Background(), "expired-token")
 
 	if err == nil {
@@ -89,7 +89,7 @@ func TestValidateToken_K8sAPIError(t *testing.T) {
 		return true, nil, errors.New("API server unavailable")
 	})
 
-	validator := NewK8sTokenValidator(client, "toe-sdk-collector")
+	validator := NewK8sTokenValidator(client, "kubecodriver-sdk-collector")
 	userInfo, err := validator.ValidateToken(context.Background(), "any-token")
 
 	if err == nil {

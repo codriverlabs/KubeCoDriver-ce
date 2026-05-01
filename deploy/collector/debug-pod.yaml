@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: collector-debug
-  namespace: toe-system
+  namespace: kubecodriver-system
 spec:
   containers:
   - name: debug

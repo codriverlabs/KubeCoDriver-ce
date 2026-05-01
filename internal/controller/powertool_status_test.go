@@ -4,42 +4,42 @@ import (
 	"testing"
 	"time"
 
-	toev1alpha1 "toe/api/v1alpha1"
+	kubecodriverv1alpha1 "github.com/codriverlabs/KubeCoDriver/api/v1alpha1"
 )
 
 func TestSetCondition(t *testing.T) {
-	reconciler := &PowerToolReconciler{}
-	powerTool := &toev1alpha1.PowerTool{
-		Status: toev1alpha1.PowerToolStatus{},
+	reconciler := &CoDriverJobReconciler{}
+	coDriverJob := &kubecodriverv1alpha1.CoDriverJob{
+		Status: kubecodriverv1alpha1.CoDriverJobStatus{},
 	}
 
 	// Test adding new condition
-	reconciler.setCondition(powerTool, toev1alpha1.PowerToolConditionReady, "True", toev1alpha1.ReasonTargetsSelected, "Test message")
+	reconciler.setCondition(coDriverJob, kubecodriverv1alpha1.CoDriverJobConditionReady, "True", kubecodriverv1alpha1.ReasonTargetsSelected, "Test message")
 
-	if len(powerTool.Status.Conditions) != 1 {
-		t.Errorf("Expected 1 condition, got %d", len(powerTool.Status.Conditions))
+	if len(coDriverJob.Status.Conditions) != 1 {
+		t.Errorf("Expected 1 condition, got %d", len(coDriverJob.Status.Conditions))
 	}
 
-	condition := powerTool.Status.Conditions[0]
-	if condition.Type != toev1alpha1.PowerToolConditionReady {
-		t.Errorf("Expected condition type %s, got %s", toev1alpha1.PowerToolConditionReady, condition.Type)
+	condition := coDriverJob.Status.Conditions[0]
+	if condition.Type != kubecodriverv1alpha1.CoDriverJobConditionReady {
+		t.Errorf("Expected condition type %s, got %s", kubecodriverv1alpha1.CoDriverJobConditionReady, condition.Type)
 	}
 	if condition.Status != "True" {
 		t.Errorf("Expected condition status True, got %s", condition.Status)
 	}
-	if condition.Reason != toev1alpha1.ReasonTargetsSelected {
-		t.Errorf("Expected reason %s, got %s", toev1alpha1.ReasonTargetsSelected, condition.Reason)
+	if condition.Reason != kubecodriverv1alpha1.ReasonTargetsSelected {
+		t.Errorf("Expected reason %s, got %s", kubecodriverv1alpha1.ReasonTargetsSelected, condition.Reason)
 	}
 
 	// Test updating existing condition
 	time.Sleep(time.Millisecond) // Ensure different timestamp
-	reconciler.setCondition(powerTool, toev1alpha1.PowerToolConditionReady, "False", toev1alpha1.ReasonFailed, "Updated message")
+	reconciler.setCondition(coDriverJob, kubecodriverv1alpha1.CoDriverJobConditionReady, "False", kubecodriverv1alpha1.ReasonFailed, "Updated message")
 
-	if len(powerTool.Status.Conditions) != 1 {
-		t.Errorf("Expected 1 condition after update, got %d", len(powerTool.Status.Conditions))
+	if len(coDriverJob.Status.Conditions) != 1 {
+		t.Errorf("Expected 1 condition after update, got %d", len(coDriverJob.Status.Conditions))
 	}
 
-	updatedCondition := powerTool.Status.Conditions[0]
+	updatedCondition := coDriverJob.Status.Conditions[0]
 	if updatedCondition.Status != "False" {
 		t.Errorf("Expected updated condition status False, got %s", updatedCondition.Status)
 	}
@@ -49,7 +49,7 @@ func TestSetCondition(t *testing.T) {
 }
 
 func TestGetRequeueInterval(t *testing.T) {
-	reconciler := &PowerToolReconciler{}
+	reconciler := &CoDriverJobReconciler{}
 
 	tests := []struct {
 		name     string
@@ -85,13 +85,13 @@ func TestGetRequeueInterval(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			powerTool := &toev1alpha1.PowerTool{
-				Status: toev1alpha1.PowerToolStatus{
+			coDriverJob := &kubecodriverv1alpha1.CoDriverJob{
+				Status: kubecodriverv1alpha1.CoDriverJobStatus{
 					Phase: tt.phase,
 				},
 			}
 
-			result := reconciler.getRequeueInterval(powerTool)
+			result := reconciler.getRequeueInterval(coDriverJob)
 			if result != tt.expected {
 				t.Errorf("Expected interval %v, got %v", tt.expected, result)
 			}

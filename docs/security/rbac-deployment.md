@@ -2,31 +2,31 @@
 
 ## Overview
 
-This guide defines how to deploy PowerTool with proper RBAC separation between administrators and users, including namespace restrictions for PowerToolConfig.
+This guide defines how to deploy CoDriverJob with proper RBAC separation between administrators and users, including namespace restrictions for CoDriverTool.
 
 ## User Roles
 
-### 1. PowerTool Administrators
-- Can create/modify PowerToolConfig CRDs
+### 1. CoDriverJob Administrators
+- Can create/modify CoDriverTool CRDs
 - Can define security contexts and capabilities
 - Can restrict tools to specific namespaces
 - Typically: Platform team, Security team
 
-### 2. PowerTool Users
-- Can create/modify PowerTool CRDs
+### 2. CoDriverJob Users
+- Can create/modify CoDriverJob CRDs
 - Cannot modify security settings
 - Limited to using approved tools
 - Typically: Application developers, DevOps engineers
 
 ### 3. Namespace Administrators
-- Can create PowerTool in specific namespaces
-- Cannot create PowerToolConfig
+- Can create CoDriverJob in specific namespaces
+- Cannot create CoDriverTool
 - Scoped to their managed namespaces
 - Typically: Team leads, Namespace owners
 
 ## RBAC Configuration
 
-### PowerTool Administrators
+### CoDriverJob Administrators
 
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -34,19 +34,19 @@ kind: ClusterRole
 metadata:
   name: powertool-admin
 rules:
-# PowerToolConfig management (admin-only)
-- apiGroups: ["codriverlabs.ai.toe.run"]
+# CoDriverTool management (admin-only)
+- apiGroups: ["kubecodriver.codriverlabs.ai"]
   resources: ["powertoolconfigs"]
   verbs: ["create", "update", "patch", "delete", "get", "list", "watch"]
-- apiGroups: ["codriverlabs.ai.toe.run"]
+- apiGroups: ["kubecodriver.codriverlabs.ai"]
   resources: ["powertoolconfigs/status"]
   verbs: ["get", "update", "patch"]
 
-# PowerTool management (for testing/debugging)
-- apiGroups: ["codriverlabs.ai.toe.run"]
+# CoDriverJob management (for testing/debugging)
+- apiGroups: ["kubecodriver.codriverlabs.ai"]
   resources: ["powertools"]
   verbs: ["create", "update", "patch", "delete", "get", "list", "watch"]
-- apiGroups: ["codriverlabs.ai.toe.run"]
+- apiGroups: ["kubecodriver.codriverlabs.ai"]
   resources: ["powertools/status"]
   verbs: ["get", "update", "patch"]
 
@@ -72,7 +72,7 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 ```
 
-### PowerTool Users (Cluster-wide)
+### CoDriverJob Users (Cluster-wide)
 
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -80,16 +80,16 @@ kind: ClusterRole
 metadata:
   name: powertool-user
 rules:
-# PowerTool management (user access)
-- apiGroups: ["codriverlabs.ai.toe.run"]
+# CoDriverJob management (user access)
+- apiGroups: ["kubecodriver.codriverlabs.ai"]
   resources: ["powertools"]
   verbs: ["create", "update", "patch", "delete", "get", "list", "watch"]
-- apiGroups: ["codriverlabs.ai.toe.run"]
+- apiGroups: ["kubecodriver.codriverlabs.ai"]
   resources: ["powertools/status"]
   verbs: ["get", "list", "watch"]
 
-# PowerToolConfig read-only (to see available tools)
-- apiGroups: ["codriverlabs.ai.toe.run"]
+# CoDriverTool read-only (to see available tools)
+- apiGroups: ["kubecodriver.codriverlabs.ai"]
   resources: ["powertoolconfigs"]
   verbs: ["get", "list", "watch"]
 
@@ -121,11 +121,11 @@ metadata:
   namespace: production
   name: powertool-namespace-user
 rules:
-# PowerTool management in specific namespace
-- apiGroups: ["codriverlabs.ai.toe.run"]
+# CoDriverJob management in specific namespace
+- apiGroups: ["kubecodriver.codriverlabs.ai"]
   resources: ["powertools"]
   verbs: ["create", "update", "patch", "delete", "get", "list", "watch"]
-- apiGroups: ["codriverlabs.ai.toe.run"]
+- apiGroups: ["kubecodriver.codriverlabs.ai"]
   resources: ["powertools/status"]
   verbs: ["get", "list", "watch"]
 
@@ -148,7 +148,7 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 
 ---
-# Separate RoleBinding for PowerToolConfig read access
+# Separate RoleBinding for CoDriverTool read access
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -168,23 +168,23 @@ kind: ClusterRole
 metadata:
   name: powertool-config-reader
 rules:
-- apiGroups: ["codriverlabs.ai.toe.run"]
+- apiGroups: ["kubecodriver.codriverlabs.ai"]
   resources: ["powertoolconfigs"]
   verbs: ["get", "list", "watch"]
 ```
 
-## PowerToolConfig Examples with Namespace Restrictions
+## CoDriverTool Examples with Namespace Restrictions
 
 ### Unrestricted Tool (Admin Use)
 
 ```yaml
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerToolConfig
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverTool
 metadata:
   name: admin-debugger-config
-  namespace: toe-system
+  namespace: kubecodriver-system
   annotations:
-    powertool.toe.run/access-level: "admin-only"
+    codriverjob.kubecodriver.codriverlabs.ai/access-level: "admin-only"
 spec:
   name: "admin-debugger"
   image: "registry/admin-debugger:latest"
@@ -200,11 +200,11 @@ spec:
 ### Production-Only Tool
 
 ```yaml
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerToolConfig
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverTool
 metadata:
   name: prod-profiler-config
-  namespace: toe-system
+  namespace: kubecodriver-system
 spec:
   name: "prod-profiler"
   image: "registry/prod-profiler:latest"
@@ -221,11 +221,11 @@ spec:
 ### Development Tool
 
 ```yaml
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerToolConfig
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverTool
 metadata:
   name: dev-analyzer-config
-  namespace: toe-system
+  namespace: kubecodriver-system
 spec:
   name: "dev-analyzer"
   image: "registry/dev-analyzer:latest"
@@ -243,11 +243,11 @@ spec:
 ### Team-Specific Tool
 
 ```yaml
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerToolConfig
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverTool
 metadata:
   name: team-a-profiler-config
-  namespace: toe-system
+  namespace: kubecodriver-system
 spec:
   name: "team-a-profiler"
   image: "registry/team-a-profiler:latest"
@@ -268,8 +268,8 @@ spec:
 
 ```yaml
 # Platform team creates restricted tools per tenant
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerToolConfig
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverTool
 metadata:
   name: tenant-1-profiler
 spec:
@@ -278,8 +278,8 @@ spec:
   # ... security config
 
 ---
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerToolConfig
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverTool
 metadata:
   name: tenant-2-profiler
 spec:
@@ -292,8 +292,8 @@ spec:
 
 ```yaml
 # High-privilege tool for production
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerToolConfig
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverTool
 metadata:
   name: prod-system-analyzer
 spec:
@@ -305,8 +305,8 @@ spec:
 
 ---
 # Lower-privilege version for development
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerToolConfig
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverTool
 metadata:
   name: dev-system-analyzer
 spec:
@@ -329,13 +329,13 @@ metadata:
   name: group-mapping
   namespace: kube-system
 data:
-  # Platform team = PowerTool admins
+  # Platform team = CoDriverJob admins
   "CN=Platform-Team,OU=Groups,DC=company,DC=com": "platform-team"
   
-  # Security team = PowerTool admins
+  # Security team = CoDriverJob admins
   "CN=Security-Team,OU=Groups,DC=company,DC=com": "security-team"
   
-  # Development teams = PowerTool users
+  # Development teams = CoDriverJob users
   "CN=Developers,OU=Groups,DC=company,DC=com": "developers"
   "CN=DevOps,OU=Groups,DC=company,DC=com": "devops-engineers"
   
@@ -381,26 +381,26 @@ kubectl auth can-i create powertools --as=user:prod-lead@company.com -n producti
 kubectl auth can-i create powertools --as=user:prod-lead@company.com -n development  # Should be false
 ```
 
-### Validate PowerToolConfig Restrictions
+### Validate CoDriverTool Restrictions
 
 ```bash
-# Create test PowerTool in allowed namespace
+# Create test CoDriverJob in allowed namespace
 kubectl apply -f - <<EOF
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerTool
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverJob
 metadata:
   name: test-restricted-tool
   namespace: production
 spec:
   tool:
-    name: "prod-profiler"  # References restricted PowerToolConfig
+    name: "prod-profiler"  # References restricted CoDriverTool
   # ... rest of spec
 EOF
 
 # Try to create in disallowed namespace (should fail)
 kubectl apply -f - <<EOF
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerTool
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverJob
 metadata:
   name: test-restricted-tool
   namespace: development  # Not in allowedNamespaces
@@ -416,7 +416,7 @@ EOF
 ### For Administrators
 
 1. **Principle of Least Privilege**:
-   - Create separate PowerToolConfig for different security levels
+   - Create separate CoDriverTool for different security levels
    - Use namespace restrictions to limit tool scope
    - Regular review of tool permissions
 
@@ -432,9 +432,9 @@ EOF
    ```yaml
    metadata:
      annotations:
-       powertool.toe.run/owner: "platform-team"
-       powertool.toe.run/approved-by: "security-team"
-       powertool.toe.run/allowed-users: "production-team"
+       codriverjob.kubecodriver.codriverlabs.ai/owner: "platform-team"
+       codriverjob.kubecodriver.codriverlabs.ai/approved-by: "security-team"
+       codriverjob.kubecodriver.codriverlabs.ai/allowed-users: "production-team"
    ```
 
 ### For Users
@@ -454,4 +454,4 @@ EOF
    kubectl get powertoolconfigs -o json | jq '.items[] | select(.spec.allowedNamespaces == null or (.spec.allowedNamespaces[] | contains("'$(kubectl config view --minify -o jsonpath='{..namespace}')'"))) | .spec.name'
    ```
 
-This RBAC model provides fine-grained control over who can create PowerToolConfig, define security contexts, and restrict tools to specific namespaces while maintaining usability for different user roles.
+This RBAC model provides fine-grained control over who can create CoDriverTool, define security contexts, and restrict tools to specific namespaces while maintaining usability for different user roles.

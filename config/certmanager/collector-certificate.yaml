@@ -2,26 +2,26 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: collector-cert
-  namespace: toe-system
+  namespace: kubecodriver-system
 spec:
-  secretName: toe-collector-certs
+  secretName: kubecodriver-collector-certs
   duration: 8760h # 1 year
   renewBefore: 720h # 30 days
   subject:
     organizations:
       - CoDriver Labs
-  commonName: toe-collector.toe-system.svc
+  commonName: kubecodriver-collector.kubecodriver-system.svc
   dnsNames:
-    - toe-collector.toe-system.svc
-    - toe-collector.toe-system.svc.cluster.local
+    - kubecodriver-collector.kubecodriver-system.svc
+    - kubecodriver-collector.kubecodriver-system.svc.cluster.local
   issuerRef:
-    name: toe-collector-issuer
+    name: kubecodriver-collector-issuer
     kind: Issuer
 ---
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
   name: collector-issuer
-  namespace: toe-system
+  namespace: kubecodriver-system
 spec:
   selfSigned: {} # For development; use CA issuer for production

@@ -3,7 +3,7 @@ package controller
 import (
 	"testing"
 
-	toev1alpha1 "toe/api/v1alpha1"
+	kubecodriverv1alpha1 "github.com/codriverlabs/KubeCoDriver/api/v1alpha1"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/utils/ptr"
@@ -12,7 +12,7 @@ import (
 func TestRunAsRootSecurityContext(t *testing.T) {
 	tests := []struct {
 		name                string
-		toolConfigSecurity  toev1alpha1.SecuritySpec
+		toolConfigSecurity  kubecodriverv1alpha1.SecuritySpec
 		podSecurityContext  *corev1.PodSecurityContext
 		containerSecContext *corev1.SecurityContext
 		expectedUser        *int64
@@ -21,7 +21,7 @@ func TestRunAsRootSecurityContext(t *testing.T) {
 	}{
 		{
 			name: "runAsRoot enabled with container group",
-			toolConfigSecurity: toev1alpha1.SecuritySpec{
+			toolConfigSecurity: kubecodriverv1alpha1.SecuritySpec{
 				RunAsRoot: ptr.To(true),
 			},
 			containerSecContext: &corev1.SecurityContext{
@@ -34,7 +34,7 @@ func TestRunAsRootSecurityContext(t *testing.T) {
 		},
 		{
 			name: "runAsRoot enabled with pod group",
-			toolConfigSecurity: toev1alpha1.SecuritySpec{
+			toolConfigSecurity: kubecodriverv1alpha1.SecuritySpec{
 				RunAsRoot: ptr.To(true),
 			},
 			podSecurityContext: &corev1.PodSecurityContext{
@@ -47,7 +47,7 @@ func TestRunAsRootSecurityContext(t *testing.T) {
 		},
 		{
 			name: "runAsRoot enabled, container group overrides pod group",
-			toolConfigSecurity: toev1alpha1.SecuritySpec{
+			toolConfigSecurity: kubecodriverv1alpha1.SecuritySpec{
 				RunAsRoot: ptr.To(true),
 			},
 			podSecurityContext: &corev1.PodSecurityContext{
@@ -62,7 +62,7 @@ func TestRunAsRootSecurityContext(t *testing.T) {
 		},
 		{
 			name: "runAsRoot disabled, normal inheritance",
-			toolConfigSecurity: toev1alpha1.SecuritySpec{
+			toolConfigSecurity: kubecodriverv1alpha1.SecuritySpec{
 				RunAsRoot: ptr.To(false),
 			},
 			containerSecContext: &corev1.SecurityContext{
@@ -74,7 +74,7 @@ func TestRunAsRootSecurityContext(t *testing.T) {
 		},
 		{
 			name:               "runAsRoot not set, normal inheritance",
-			toolConfigSecurity: toev1alpha1.SecuritySpec{},
+			toolConfigSecurity: kubecodriverv1alpha1.SecuritySpec{},
 			podSecurityContext: &corev1.PodSecurityContext{
 				RunAsUser:    ptr.To(int64(2000)),
 				RunAsGroup:   ptr.To(int64(2000)),
@@ -86,7 +86,7 @@ func TestRunAsRootSecurityContext(t *testing.T) {
 		},
 		{
 			name: "runAsRoot enabled overrides pod runAsNonRoot: true",
-			toolConfigSecurity: toev1alpha1.SecuritySpec{
+			toolConfigSecurity: kubecodriverv1alpha1.SecuritySpec{
 				RunAsRoot: ptr.To(true),
 			},
 			podSecurityContext: &corev1.PodSecurityContext{
@@ -115,13 +115,13 @@ func TestRunAsRootSecurityContext(t *testing.T) {
 				pod.Spec.Containers[0].SecurityContext = tt.containerSecContext
 			}
 
-			toolConfig := &toev1alpha1.PowerToolConfig{
-				Spec: toev1alpha1.PowerToolConfigSpec{
+			toolConfig := &kubecodriverv1alpha1.CoDriverTool{
+				Spec: kubecodriverv1alpha1.CoDriverToolSpec{
 					SecurityContext: tt.toolConfigSecurity,
 				},
 			}
 
-			r := &PowerToolReconciler{}
+			r := &CoDriverJobReconciler{}
 			targetContainer := r.getTargetContainer(pod, nil)
 
 			securityContext := r.buildSecurityContext(toolConfig.Spec.SecurityContext)

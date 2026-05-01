@@ -1,13 +1,13 @@
-# TOE Helper Scripts
+# KubeCoDriver Helper Scripts
 
-This directory contains utility scripts to help with TOE deployment, configuration, and maintenance.
+This directory contains utility scripts to help with KubeCoDriver deployment, configuration, and maintenance.
 
 ## Scripts Overview
 
 ### Image Management
 
 #### `ecr/sync-images-from-ghcr-to-ecr.sh`
-Synchronizes multi-architecture TOE images from ghcr.io to Amazon ECR.
+Synchronizes multi-architecture KubeCoDriver images from ghcr.io to Amazon ECR.
 
 **Usage:**
 ```bash
@@ -25,7 +25,7 @@ Synchronizes multi-architecture TOE images from ghcr.io to Amazon ECR.
 ```
 
 **Features:**
-- Syncs all TOE images (controller, collector, aperf)
+- Syncs all KubeCoDriver images (controller, collector, aperf)
 - Preserves multi-architecture support (ARM64 and AMD64)
 - Creates private ECR repositories automatically
 - Cleans up local images after sync
@@ -55,7 +55,7 @@ Generates and updates the collector authentication signing key.
 
 **Features:**
 - Generates secure 32-byte signing key
-- Updates collector-auth secret in toe-system namespace
+- Updates collector-auth secret in kubecodriver-system namespace
 - Automatically restarts collector deployment
 
 ### Debugging and Inspection
@@ -78,7 +78,7 @@ Inspects the contents of the collector PVC for debugging profiling data.
 - kubectl configured with cluster access
 - Docker installed and configured
 - AWS CLI configured with appropriate permissions
-- TOE operator deployed in cluster
+- KubeCoDriver operator deployed in cluster
 
 ## Common Workflows
 
@@ -94,7 +94,7 @@ Inspects the contents of the collector PVC for debugging profiling data.
 2. **Configure Helm values for your ECR:**
    ```bash
    # Copy the EKS values template
-   cp helm/toe-operator/values-eks.yaml my-values.yaml
+   cp helm/kubecodriver-operator/values-eks.yaml my-values.yaml
    
    # Edit my-values.yaml and replace:
    # - ACCOUNT_ID with your AWS account ID
@@ -104,7 +104,7 @@ Inspects the contents of the collector PVC for debugging profiling data.
 
 3. **Deploy with Helm:**
    ```bash
-   helm install toe-operator ./helm/toe-operator -f my-values.yaml
+   helm install kubecodriver-operator ./helm/kubecodriver-operator -f my-values.yaml
    ```
 
 ### For Non-EKS Clusters
@@ -113,7 +113,7 @@ Inspects the contents of the collector PVC for debugging profiling data.
 
 2. **Setup image pull secrets:**
    ```bash
-   ./k8s-secrets/setup-namespace-docker-secrets.sh toe-system YOUR_ACCOUNT_ID.dkr.ecr.YOUR_REGION.amazonaws.com YOUR_REGION
+   ./k8s-secrets/setup-namespace-docker-secrets.sh kubecodriver-system YOUR_ACCOUNT_ID.dkr.ecr.YOUR_REGION.amazonaws.com YOUR_REGION
    ```
 
 3. **Configure Helm values:**
@@ -133,7 +133,7 @@ Inspects the contents of the collector PVC for debugging profiling data.
 
 4. **Deploy with Helm:**
    ```bash
-   helm install toe-operator ./helm/toe-operator -f my-values.yaml
+   helm install kubecodriver-operator ./helm/kubecodriver-operator -f my-values.yaml
    ```
 
 ### Debugging Profiling Issues
@@ -147,4 +147,4 @@ Inspects the contents of the collector PVC for debugging profiling data.
 - All scripts include error handling and cleanup
 - ECR repositories are created as private by default
 - Multi-architecture images are properly preserved during sync
-- Scripts follow TOE security best practices
+- Scripts follow KubeCoDriver security best practices

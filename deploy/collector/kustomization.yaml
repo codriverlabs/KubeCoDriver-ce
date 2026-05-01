@@ -7,7 +7,7 @@ resources:
 # - debug-pod.yaml
 
 images:
-- name: localhost:32000/codriverlabs/toe-collector
+- name: localhost:32000/codriverlabs/kubecodriver-collector
   newTag: v1.0.47
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization

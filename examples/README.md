@@ -1,12 +1,12 @@
-# PowerTool Examples
+# CoDriverJob Examples
 
-This directory contains example PowerTool CRD configurations demonstrating how to use various power tools.
+This directory contains example CoDriverJob CRD configurations demonstrating how to use various power tools.
 
 ## Directory Structure
 
 ```
 examples/
-├── configs/                    # General PowerToolConfig examples
+├── configs/                    # General CoDriverTool examples
 │   └── powertoolconfig-examples.yaml
 ├── aperf/                      # Aperf performance profiling examples
 │   ├── powertool-aperf-ephemeral.yaml
@@ -40,16 +40,16 @@ examples/
     └── target-statefulset-spot.yaml
 ```
 
-## PowerToolConfig Location
+## CoDriverTool Location
 
-PowerToolConfig files (tool definitions) are located in the `power-tools/` directory:
+CoDriverTool files (tool definitions) are located in the `power-tools/` directory:
 - `power-tools/aperf/config/powertoolconfig-aperf.yaml`
 - `power-tools/chaos/config/powertoolconfig-chaos.yaml`
 - `power-tools/tcpdump/config/powertoolconfig-tcpdump.yaml`
 
 See `power-tools/README.md` for more information about tool configurations.
 
-## PowerTool Examples
+## CoDriverJob Examples
 
 ### Aperf (Performance Profiling)
 - `aperf/powertool-aperf-ephemeral.yaml` - Ephemeral execution
@@ -73,12 +73,12 @@ See `power-tools/README.md` for more information about tool configurations.
 
 ## Usage
 
-1. **Deploy PowerToolConfig first (from power-tools directory):**
+1. **Deploy CoDriverTool first (from power-tools directory):**
    ```bash
    kubectl apply -f power-tools/aperf/config/powertoolconfig-aperf.yaml
    ```
 
-2. **Deploy PowerTool (from examples directory):**
+2. **Deploy CoDriverJob (from examples directory):**
    ```bash
    kubectl apply -f examples/aperf/powertool-aperf-ephemeral.yaml
    ```
@@ -94,7 +94,7 @@ See `power-tools/README.md` for more information about tool configurations.
 The `testing/` directory contains resources for development and testing:
 - `test-nonroot-pod.yaml` - Non-root test pod (user 1001:1001)
 - `test-multicontainer-pod.yaml` - Multi-container test pod
-- `test-*-powertool.yaml` - PowerTools for testing scenarios
+- `test-*-powertool.yaml` - CoDriverJobs for testing scenarios
 
 ## Debug Profiles
 

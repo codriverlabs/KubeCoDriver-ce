@@ -3,7 +3,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: busybox-nonroot
-  namespace: toe-test
+  namespace: kubecodriver-test
   labels:
     app: "busybox-test"
 spec:

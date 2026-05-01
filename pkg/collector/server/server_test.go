@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"toe/pkg/collector/storage"
+	"github.com/codriverlabs/KubeCoDriver/pkg/collector/storage"
 
 	authv1 "k8s.io/api/authentication/v1"
 	"k8s.io/client-go/kubernetes/fake"
@@ -208,17 +208,17 @@ func TestHandleProfile_MissingRequiredHeaders(t *testing.T) {
 		{
 			name: "missing job ID",
 			headers: map[string]string{
-				"Authorization":               "Bearer token",
-				"X-PowerTool-Namespace":       "default",
-				"X-PowerTool-Matching-Labels": "app-nginx",
+				"Authorization":                 "Bearer token",
+				"X-CoDriverJob-Namespace":       "default",
+				"X-CoDriverJob-Matching-Labels": "app-nginx",
 			},
 		},
 		{
 			name: "missing namespace",
 			headers: map[string]string{
-				"Authorization":               "Bearer token",
-				"X-PowerTool-Job-ID":          "test-job",
-				"X-PowerTool-Matching-Labels": "app-nginx",
+				"Authorization":                 "Bearer token",
+				"X-CoDriverJob-Job-ID":          "test-job",
+				"X-CoDriverJob-Matching-Labels": "app-nginx",
 			},
 		},
 	}
@@ -259,9 +259,9 @@ func TestHandleProfile_LargeFile(t *testing.T) {
 	largeData := make([]byte, 1024*1024)
 	req := httptest.NewRequest("POST", "/api/v1/profile", bytes.NewReader(largeData))
 	req.Header.Set("Authorization", "Bearer token")
-	req.Header.Set("X-PowerTool-Job-ID", "test-job")
-	req.Header.Set("X-PowerTool-Namespace", "default")
-	req.Header.Set("X-PowerTool-Matching-Labels", "app-test")
+	req.Header.Set("X-CoDriverJob-Job-ID", "test-job")
+	req.Header.Set("X-CoDriverJob-Namespace", "default")
+	req.Header.Set("X-CoDriverJob-Matching-Labels", "app-test")
 
 	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(srv.handleProfile)
@@ -296,8 +296,8 @@ func TestHandleProfile_Success(t *testing.T) {
 			if metadata.AppLabel != "app-nginx" {
 				t.Errorf("expected appLabel 'app-nginx', got %v", metadata.AppLabel)
 			}
-			if metadata.PowerToolName != "test-job" {
-				t.Errorf("expected powerToolName 'test-job', got %v", metadata.PowerToolName)
+			if metadata.CoDriverJobName != "test-job" {
+				t.Errorf("expected coDriverJobName 'test-job', got %v", metadata.CoDriverJobName)
 			}
 			if metadata.Filename != "output.txt" {
 				t.Errorf("expected filename 'output.txt', got %v", metadata.Filename)
@@ -323,10 +323,10 @@ func TestHandleProfile_Success(t *testing.T) {
 	body := bytes.NewBufferString("test profile data")
 	req := httptest.NewRequest("POST", "/api/v1/profile", body)
 	req.Header.Set("Authorization", "Bearer valid-token")
-	req.Header.Set("X-PowerTool-Job-ID", "test-job")
-	req.Header.Set("X-PowerTool-Namespace", "default")
-	req.Header.Set("X-PowerTool-Matching-Labels", "app-nginx")
-	req.Header.Set("X-PowerTool-Filename", "output.txt")
+	req.Header.Set("X-CoDriverJob-Job-ID", "test-job")
+	req.Header.Set("X-CoDriverJob-Namespace", "default")
+	req.Header.Set("X-CoDriverJob-Matching-Labels", "app-nginx")
+	req.Header.Set("X-CoDriverJob-Filename", "output.txt")
 
 	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(srv.handleProfile)
@@ -360,9 +360,9 @@ func TestHandleProfile_DefaultValues(t *testing.T) {
 	body := bytes.NewBufferString("test data")
 	req := httptest.NewRequest("POST", "/api/v1/profile", body)
 	req.Header.Set("Authorization", "Bearer token")
-	req.Header.Set("X-PowerTool-Job-ID", "test-job")
-	req.Header.Set("X-PowerTool-Namespace", "default")
-	// Missing X-PowerTool-Matching-Labels and X-PowerTool-Filename
+	req.Header.Set("X-CoDriverJob-Job-ID", "test-job")
+	req.Header.Set("X-CoDriverJob-Namespace", "default")
+	// Missing X-CoDriverJob-Matching-Labels and X-CoDriverJob-Filename
 
 	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(srv.handleProfile)
@@ -390,9 +390,9 @@ func TestHandleProfile_StorageError(t *testing.T) {
 	body := bytes.NewBufferString("test data")
 	req := httptest.NewRequest("POST", "/api/v1/profile", body)
 	req.Header.Set("Authorization", "Bearer token")
-	req.Header.Set("X-PowerTool-Job-ID", "test-job")
-	req.Header.Set("X-PowerTool-Namespace", "default")
-	req.Header.Set("X-PowerTool-Matching-Labels", "app-test")
+	req.Header.Set("X-CoDriverJob-Job-ID", "test-job")
+	req.Header.Set("X-CoDriverJob-Namespace", "default")
+	req.Header.Set("X-CoDriverJob-Matching-Labels", "app-test")
 
 	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(srv.handleProfile)

@@ -10,31 +10,31 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	toev1alpha1 "toe/api/v1alpha1"
+	kubecodriverv1alpha1 "github.com/codriverlabs/KubeCoDriver/api/v1alpha1"
 )
 
 func TestCheckForConflicts_MultipleScenarios(t *testing.T) {
 	scheme := runtime.NewScheme()
-	_ = toev1alpha1.AddToScheme(scheme)
+	_ = kubecodriverv1alpha1.AddToScheme(scheme)
 	_ = corev1.AddToScheme(scheme)
 
 	tests := []struct {
 		name           string
-		currentTool    *toev1alpha1.PowerTool
-		otherTools     []toev1alpha1.PowerTool
+		currentTool    *kubecodriverv1alpha1.CoDriverJob
+		otherTools     []kubecodriverv1alpha1.CoDriverJob
 		targetPods     []corev1.Pod
 		expectConflict bool
 		conflictMsg    string
 	}{
 		{
 			name: "no other tools",
-			currentTool: &toev1alpha1.PowerTool{
+			currentTool: &kubecodriverv1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "tool1",
 					Namespace: "default",
 				},
 			},
-			otherTools: []toev1alpha1.PowerTool{},
+			otherTools: []kubecodriverv1alpha1.CoDriverJob{},
 			targetPods: []corev1.Pod{
 				{ObjectMeta: metav1.ObjectMeta{Name: "pod1", Namespace: "default"}},
 			},
@@ -42,19 +42,19 @@ func TestCheckForConflicts_MultipleScenarios(t *testing.T) {
 		},
 		{
 			name: "other tool with different pods",
-			currentTool: &toev1alpha1.PowerTool{
+			currentTool: &kubecodriverv1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "tool1",
 					Namespace: "default",
 				},
 			},
-			otherTools: []toev1alpha1.PowerTool{
+			otherTools: []kubecodriverv1alpha1.CoDriverJob{
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "tool2",
 						Namespace: "default",
 					},
-					Status: toev1alpha1.PowerToolStatus{
+					Status: kubecodriverv1alpha1.CoDriverJobStatus{
 						ActivePods: map[string]string{"pod2": "default"},
 					},
 				},
@@ -66,19 +66,19 @@ func TestCheckForConflicts_MultipleScenarios(t *testing.T) {
 		},
 		{
 			name: "conflict with same pod",
-			currentTool: &toev1alpha1.PowerTool{
+			currentTool: &kubecodriverv1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "tool1",
 					Namespace: "default",
 				},
 			},
-			otherTools: []toev1alpha1.PowerTool{
+			otherTools: []kubecodriverv1alpha1.CoDriverJob{
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "tool2",
 						Namespace: "default",
 					},
-					Status: toev1alpha1.PowerToolStatus{
+					Status: kubecodriverv1alpha1.CoDriverJobStatus{
 						ActivePods: map[string]string{"pod1": "default"},
 					},
 				},
@@ -91,19 +91,19 @@ func TestCheckForConflicts_MultipleScenarios(t *testing.T) {
 		},
 		{
 			name: "other tool with nil target pods",
-			currentTool: &toev1alpha1.PowerTool{
+			currentTool: &kubecodriverv1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "tool1",
 					Namespace: "default",
 				},
 			},
-			otherTools: []toev1alpha1.PowerTool{
+			otherTools: []kubecodriverv1alpha1.CoDriverJob{
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "tool2",
 						Namespace: "default",
 					},
-					Status: toev1alpha1.PowerToolStatus{
+					Status: kubecodriverv1alpha1.CoDriverJobStatus{
 						ActivePods: nil,
 					},
 				},
@@ -127,7 +127,7 @@ func TestCheckForConflicts_MultipleScenarios(t *testing.T) {
 				WithRuntimeObjects(objs...).
 				Build()
 
-			reconciler := &PowerToolReconciler{
+			reconciler := &CoDriverJobReconciler{
 				Client: fakeClient,
 				Scheme: scheme,
 			}

@@ -37,10 +37,10 @@ fi
 # Set image based on registry type
 case "$REGISTRY_TYPE" in
     "local")
-        IMAGE="$LOCAL_REGISTRY/codriverlabs/toe/$TOOL_NAME"
+        IMAGE="$LOCAL_REGISTRY/codriverlabs/kubecodriver/$TOOL_NAME"
         ;;
     "ecr")
-        IMAGE="$ECR_REGISTRY/codriverlabs/toe/$TOOL_NAME"
+        IMAGE="$ECR_REGISTRY/codriverlabs/kubecodriver/$TOOL_NAME"
         ;;
     *)
         echo "❌ Error: Invalid registry type '$REGISTRY_TYPE'. Use 'local' or 'ecr'"

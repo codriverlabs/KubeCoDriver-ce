@@ -4,7 +4,7 @@
 
 ### What the Controller Does Now
 
-The controller creates ephemeral containers with security context from `PowerToolConfig`:
+The controller creates ephemeral containers with security context from `CoDriverTool`:
 
 ```go
 ec := &corev1.EphemeralContainer{
@@ -91,7 +91,7 @@ Many profiling tools need:
 Modify the controller to **copy security context from the target container**:
 
 ```go
-func (r *PowerToolReconciler) createEphemeralContainerForPod(ctx context.Context, powerTool *toev1alpha1.PowerTool, toolConfig *toev1alpha1.PowerToolConfig, pod corev1.Pod, containerName string) error {
+func (r *CoDriverJobReconciler) createEphemeralContainerForPod(ctx context.Context, powerTool *toev1alpha1.CoDriverJob, toolConfig *toev1alpha1.CoDriverTool, pod corev1.Pod, containerName string) error {
     // ... existing code ...
     
     // Get target container's security context
@@ -145,7 +145,7 @@ type SecuritySpec struct {
 Then update `buildSecurityContext`:
 
 ```go
-func (r *PowerToolReconciler) buildSecurityContext(securitySpec toev1alpha1.SecuritySpec) *corev1.SecurityContext {
+func (r *CoDriverJobReconciler) buildSecurityContext(securitySpec toev1alpha1.SecuritySpec) *corev1.SecurityContext {
     securityContext := &corev1.SecurityContext{}
 
     if securitySpec.AllowPrivileged != nil {
@@ -174,8 +174,8 @@ func (r *PowerToolReconciler) buildSecurityContext(securitySpec toev1alpha1.Secu
 
 Combine both options:
 1. Extend `SecuritySpec` to support user/group settings
-2. Auto-inherit from target container if not explicitly set in `PowerToolConfig`
-3. Allow override via `PowerToolConfig` when needed
+2. Auto-inherit from target container if not explicitly set in `CoDriverTool`
+3. Allow override via `CoDriverTool` when needed
 
 ## Testing Recommendations
 

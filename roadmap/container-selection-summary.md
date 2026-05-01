@@ -25,7 +25,7 @@ Added `getTargetContainer()` function that:
 
 **File**: `internal/controller/powertool_controller.go`
 
-Modified `buildPowerToolEnvVars()` to add:
+Modified `buildCoDriverJobEnvVars()` to add:
 - `TARGET_CONTAINER_NAME` environment variable
 - Uses specified container name or defaults to first container name
 
@@ -40,7 +40,7 @@ Modified `createEphemeralContainerForPod()` to:
 - Add logging for all inherited values
 
 **Inheritance Priority**:
-1. PowerToolConfig security context (highest priority)
+1. CoDriverTool security context (highest priority)
 2. Target container security context
 3. Pod-level security context (lowest priority)
 
@@ -64,7 +64,7 @@ Tests cover:
 
 **Files**:
 - `examples/test-multicontainer-pod.yaml` - Pod with 2 containers (different users)
-- `examples/test-multicontainer-powertool.yaml` - PowerTool targeting specific container
+- `examples/test-multicontainer-powertool.yaml` - CoDriverJob targeting specific container
 
 ## Test Coverage
 
@@ -121,7 +121,7 @@ Controller now logs:
 1. `internal/controller/powertool_controller.go` - Core implementation
 2. `internal/controller/container_selection_test.go` - Unit tests (new)
 3. `examples/test-multicontainer-pod.yaml` - E2E test pod (new)
-4. `examples/test-multicontainer-powertool.yaml` - E2E test PowerTool (new)
+4. `examples/test-multicontainer-powertool.yaml` - E2E test CoDriverJob (new)
 
 ## Next Steps
 
@@ -144,16 +144,16 @@ GOTOOLCHAIN=go1.25.3 make test
 kubectl apply -f examples/test-multicontainer-pod.yaml
 
 # Wait for ready
-kubectl wait --for=condition=Ready pod/multi-container-test -n toe-test --timeout=60s
+kubectl wait --for=condition=Ready pod/multi-container-test -n kubecodriver-test --timeout=60s
 
-# Apply PowerTool
+# Apply CoDriverJob
 kubectl apply -f examples/test-multicontainer-powertool.yaml
 
 # Check logs
-kubectl logs -n toe-system -l control-plane=controller-manager | grep "Target container\|Inherited"
+kubectl logs -n kubecodriver-system -l control-plane=controller-manager | grep "Target container\|Inherited"
 
 # Verify ephemeral container
-kubectl get pod multi-container-test -n toe-test -o jsonpath='{.spec.ephemeralContainers[0].securityContext}' | jq .
+kubectl get pod multi-container-test -n kubecodriver-test -o jsonpath='{.spec.ephemeralContainers[0].securityContext}' | jq .
 ```
 
 **Expected**: Ephemeral container should have `runAsUser: 1001` (from main-app, not sidecar)

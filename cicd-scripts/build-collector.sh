@@ -18,10 +18,10 @@ fi
 # Set image based on registry type
 case "$REGISTRY_TYPE" in
     "local")
-        IMAGE="$LOCAL_REGISTRY/codriverlabs/toe-collector"
+        IMAGE="$LOCAL_REGISTRY/codriverlabs/kubecodriver-collector"
         ;;
     "ecr")
-        IMAGE="$ECR_REGISTRY/codriverlabs/toe-collector"
+        IMAGE="$ECR_REGISTRY/codriverlabs/kubecodriver-collector"
         ;;
     *)
         echo "❌ Error: Invalid registry type '$REGISTRY_TYPE'. Use 'local' or 'ecr'"
@@ -31,7 +31,7 @@ esac
 
 cd "$PROJECT_ROOT"
 
-echo "=== Building toe-collector ==="
+echo "=== Building kubecodriver-collector ==="
 echo "Image: $IMAGE:$VERSION"
 echo "Registry Type: $REGISTRY_TYPE"
 

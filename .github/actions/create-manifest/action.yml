@@ -3,7 +3,7 @@ description: 'Create multi-arch or single-arch Docker manifest'
 
 inputs:
   image:
-    description: 'Image name (e.g., ghcr.io/codriverlabs/toe-controller)'
+    description: 'Image name (e.g., ghcr.io/codriverlabs/kubecodriver-controller)'
     required: true
   version:
     description: 'Version tag (e.g., 1.0.52)'

@@ -7,13 +7,13 @@
 
 ## Test Setup
 
-- **Pod**: `busybox-nonroot` in `toe-test` namespace
+- **Pod**: `busybox-nonroot` in `kubecodriver-test` namespace
 - **Pod Security Context**: 
   - `runAsUser: 1001`
   - `runAsGroup: 1001`
   - `fsGroup: 1001`
   - `runAsNonRoot: true`
-- **PowerTool**: `aperf-nonroot-test`
+- **CoDriverJob**: `aperf-nonroot-test`
 - **Tool**: aperf with collector output mode
 
 ## Results
@@ -22,7 +22,7 @@
 
 The controller successfully created the ephemeral container:
 - Container name: `powertool-aperf-nonroot-test-7af41f70`
-- Image: `localhost:32000/codriverlabs/toe/aperf:v1.0.47`
+- Image: `localhost:32000/codriverlabs/ce/kubecodriver-aperf:v1.0.47`
 - Security context includes capabilities (SYS_PTRACE, PERFMON, SYS_ADMIN)
 
 ### ❌ Container Failed with Permission Error

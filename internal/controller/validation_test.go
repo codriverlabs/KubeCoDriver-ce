@@ -12,7 +12,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	toev1alpha1 "toe/api/v1alpha1"
+	kubecodriverv1alpha1 "github.com/codriverlabs/KubeCoDriver/api/v1alpha1"
 )
 
 func TestValidateNamespaceAccess_Comprehensive(t *testing.T) {
@@ -70,18 +70,18 @@ func TestValidateNamespaceAccess_Comprehensive(t *testing.T) {
 		},
 	}
 
-	reconciler := &PowerToolReconciler{}
+	reconciler := &CoDriverJobReconciler{}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			job := &toev1alpha1.PowerTool{
+			job := &kubecodriverv1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: tt.jobNamespace,
 				},
 			}
 
-			toolConfig := &toev1alpha1.PowerToolConfig{
-				Spec: toev1alpha1.PowerToolConfigSpec{
+			toolConfig := &kubecodriverv1alpha1.CoDriverTool{
+				Spec: kubecodriverv1alpha1.CoDriverToolSpec{
 					AllowedNamespaces: tt.allowedNamespaces,
 				},
 			}
@@ -102,10 +102,10 @@ func TestValidateNamespaceAccess_Comprehensive(t *testing.T) {
 
 func TestGetTokenDuration_EdgeCases(t *testing.T) {
 	scheme := runtime.NewScheme()
-	require.NoError(t, toev1alpha1.AddToScheme(scheme))
+	require.NoError(t, kubecodriverv1alpha1.AddToScheme(scheme))
 
 	fakeClient := fake.NewClientBuilder().WithScheme(scheme).Build()
-	reconciler := &PowerToolReconciler{Client: fakeClient}
+	reconciler := &CoDriverJobReconciler{Client: fakeClient}
 
 	tests := []struct {
 		name               string
@@ -149,36 +149,36 @@ func TestGetTokenDuration_EdgeCases(t *testing.T) {
 
 func TestGetToolConfig_SearchOrder(t *testing.T) {
 	scheme := runtime.NewScheme()
-	require.NoError(t, toev1alpha1.AddToScheme(scheme))
+	require.NoError(t, kubecodriverv1alpha1.AddToScheme(scheme))
 
 	tests := []struct {
 		name           string
 		toolName       string
-		configs        []toev1alpha1.PowerToolConfig
-		expectedConfig *toev1alpha1.PowerToolConfig
+		configs        []kubecodriverv1alpha1.CoDriverTool
+		expectedConfig *kubecodriverv1alpha1.CoDriverTool
 		expectError    bool
 	}{
 		{
-			name:     "config found in toe-system",
+			name:     "config found in kubecodriver-system",
 			toolName: "aperf",
-			configs: []toev1alpha1.PowerToolConfig{
+			configs: []kubecodriverv1alpha1.CoDriverTool{
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "aperf-config",
-						Namespace: "toe-system",
+						Namespace: "kubecodriver-system",
 					},
-					Spec: toev1alpha1.PowerToolConfigSpec{
-						Image: "toe-system/aperf:latest",
+					Spec: kubecodriverv1alpha1.CoDriverToolSpec{
+						Image: "kubecodriver-system/aperf:latest",
 					},
 				},
 			},
-			expectedConfig: &toev1alpha1.PowerToolConfig{
+			expectedConfig: &kubecodriverv1alpha1.CoDriverTool{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "aperf-config",
-					Namespace: "toe-system",
+					Namespace: "kubecodriver-system",
 				},
-				Spec: toev1alpha1.PowerToolConfigSpec{
-					Image: "toe-system/aperf:latest",
+				Spec: kubecodriverv1alpha1.CoDriverToolSpec{
+					Image: "kubecodriver-system/aperf:latest",
 				},
 			},
 			expectError: false,
@@ -186,7 +186,7 @@ func TestGetToolConfig_SearchOrder(t *testing.T) {
 		{
 			name:           "config not found",
 			toolName:       "nonexistent",
-			configs:        []toev1alpha1.PowerToolConfig{},
+			configs:        []kubecodriverv1alpha1.CoDriverTool{},
 			expectedConfig: nil,
 			expectError:    true,
 		},
@@ -204,7 +204,7 @@ func TestGetToolConfig_SearchOrder(t *testing.T) {
 				WithObjects(objs...).
 				Build()
 
-			reconciler := &PowerToolReconciler{Client: fakeClient}
+			reconciler := &CoDriverJobReconciler{Client: fakeClient}
 
 			config, err := reconciler.getToolConfig(context.Background(), tt.toolName)
 
@@ -225,11 +225,11 @@ func TestGetToolConfig_SearchOrder(t *testing.T) {
 
 func TestGetToolConfig_ErrorHandling(t *testing.T) {
 	scheme := runtime.NewScheme()
-	require.NoError(t, toev1alpha1.AddToScheme(scheme))
+	require.NoError(t, kubecodriverv1alpha1.AddToScheme(scheme))
 
 	// Test with empty tool name
 	fakeClient := fake.NewClientBuilder().WithScheme(scheme).Build()
-	reconciler := &PowerToolReconciler{Client: fakeClient}
+	reconciler := &CoDriverJobReconciler{Client: fakeClient}
 
 	config, err := reconciler.getToolConfig(context.Background(), "")
 	assert.Error(t, err)

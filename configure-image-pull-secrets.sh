@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Script to configure image pull secrets for the toe operator deployment
+# Script to configure image pull secrets for the KubeCoDriver operator deployment
 # Usage: ./configure-image-pull-secrets.sh <secret-name>
 
 SECRET_NAME=${1:-"ecr-secret"}

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Build script for toe-k8s-operator
+# Build script for kubecodriver-k8s-operator
 # Usage: ./build.sh [local|ecr]
 
 set -euo pipefail
@@ -73,7 +73,7 @@ esac
 
 cd "$PROJECT_ROOT"
 
-echo "=== Building toe-k8s-operator ==="
+echo "=== Building kubecodriver-k8s-operator ==="
 echo "Image: $IMAGE:$VERSION"
 echo "Registry Type: $REGISTRY_TYPE"
 

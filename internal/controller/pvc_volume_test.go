@@ -7,7 +7,7 @@ import (
 )
 
 func TestFindPVCVolumeName(t *testing.T) {
-	r := &PowerToolReconciler{}
+	r := &CoDriverJobReconciler{}
 
 	tests := []struct {
 		name      string

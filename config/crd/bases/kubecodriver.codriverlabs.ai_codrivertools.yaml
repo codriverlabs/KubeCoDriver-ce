@@ -3,21 +3,21 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.18.0
-  name: powertoolconfigs.codriverlabs.ai.toe.run
+    controller-gen.kubebuilder.io/version: v0.20.1
+  name: codrivertools.kubecodriver.codriverlabs.ai
 spec:
-  group: codriverlabs.ai.toe.run
+  group: kubecodriver.codriverlabs.ai
   names:
-    kind: PowerToolConfig
-    listKind: PowerToolConfigList
-    plural: powertoolconfigs
-    singular: powertoolconfig
+    kind: CoDriverTool
+    listKind: CoDriverToolList
+    plural: codrivertools
+    singular: codrivertool
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: PowerToolConfig is the Schema for the powertoolconfigs API
+        description: CoDriverTool is the Schema for the codrivertools API
         properties:
           apiVersion:
             description: |-
@@ -37,7 +37,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: spec defines the desired state of PowerToolConfig
+            description: spec defines the desired state of CoDriverTool
             properties:
               allowedNamespaces:
                 description: |-
@@ -114,14 +114,13 @@ spec:
             - securityContext
             type: object
           status:
-            description: status defines the observed state of PowerToolConfig
+            description: status defines the observed state of CoDriverTool
             properties:
               conditions:
                 description: Conditions represent the latest available observations
-                  of the PowerToolConfig's state
+                  of the CoDriverTool's state
                 items:
-                  description: PowerToolConfigCondition represents a condition of
-                    a PowerToolConfig
+                  description: CoDriverToolCondition represents a condition of a CoDriverTool
                   properties:
                     lastTransitionTime:
                       format: date-time
@@ -146,7 +145,7 @@ spec:
                 format: date-time
                 type: string
               phase:
-                description: Phase represents the current phase of the PowerToolConfig
+                description: Phase represents the current phase of the CoDriverTool
                 type: string
             type: object
         required:

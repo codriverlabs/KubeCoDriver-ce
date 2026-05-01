@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document summarizes the unit test improvements made to the TOE (Tactical Operations Engine) project to enhance code coverage and test reliability.
+This document summarizes the unit test improvements made to the KubeCoDriver project to enhance code coverage and test reliability.
 
 ## Coverage Results
 
@@ -36,12 +36,12 @@ This document summarizes the unit test improvements made to the TOE (Tactical Op
 ### 2. `internal/controller/reconcile_main_test.go`
 **Purpose**: Test main reconciliation flow
 **Coverage Areas**:
-- PowerTool not found scenarios
+- CoDriverJob not found scenarios
 - Deletion handling with finalizers
 - Basic reconciliation flow
 
 **Key Test Cases**:
-- `TestReconcile_PowerToolNotFoundReturnsEmpty` - Missing resource handling
+- `TestReconcile_CoDriverJobNotFoundReturnsEmpty` - Missing resource handling
 - `TestReconcile_DeletionHandling` - Proper cleanup on deletion
 
 ### 3. `internal/controller/status_management_test.go`
@@ -80,7 +80,7 @@ This document summarizes the unit test improvements made to the TOE (Tactical Op
 
 ### 2. **Multiple Scenario Testing**
 - Different output modes (ephemeral, PVC, collector)
-- Various PowerTool phases (Running, Completed, Failed)
+- Various CoDriverJob phases (Running, Completed, Failed)
 - Multiple namespace configurations
 - Different security contexts
 
@@ -181,4 +181,4 @@ The unit test enhancements provide:
 - **Maintainable test structure**
 - **Fast, reliable test execution**
 
-These improvements ensure the TOE operator is more robust, reliable, and maintainable while providing confidence in code changes and refactoring efforts.
+These improvements ensure the KubeCoDriver operator is more robust, reliable, and maintainable while providing confidence in code changes and refactoring efforts.

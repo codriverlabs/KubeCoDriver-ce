@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: pvc-inspector
-  namespace: toe-system
+  namespace: kubecodriver-system
   labels:
     app: pvc-inspector
 spec:

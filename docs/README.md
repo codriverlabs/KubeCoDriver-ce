@@ -1,6 +1,6 @@
-# TOE Documentation
+# KubeCoDriver Documentation
 
-This directory contains comprehensive documentation for the TOE (Tactical Operations Engine) project.
+This directory contains comprehensive documentation for the KubeCoDriver project.
 
 ## Directory Structure
 
@@ -36,7 +36,7 @@ docs/
 ## Quick Links
 
 ### Getting Started
-- [Security Model](security/README.md) - Overview of TOE security architecture
+- [Security Model](security/README.md) - Overview of KubeCoDriver security architecture
 - [TLS Setup](architecture/tls-setup.md) - Configure TLS for secure communication
 - [Version Management](version-management.md) - Managing Go versions across the project
 
@@ -51,7 +51,7 @@ docs/
 
 ### Security
 - [RBAC Deployment](security/rbac-deployment.md) - Role-based access control setup
-- [PowerTool Security](security/powertoolconfig-security.md) - Tool security configuration
+- [CoDriverJob Security](security/powertoolconfig-security.md) - Tool security configuration
 
 ## Contributing to Documentation
 

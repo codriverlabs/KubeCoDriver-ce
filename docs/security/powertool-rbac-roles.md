@@ -1,18 +1,18 @@
-# PowerTool Built-in RBAC Roles
+# CoDriverJob Built-in RBAC Roles
 
 ## Overview
 
-TOE provides three built-in ClusterRoles for managing access to PowerTool and PowerToolConfig resources. These roles follow Kubernetes RBAC best practices and provide a secure, role-based approach to profiling operations.
+KubeCoDriver provides three built-in ClusterRoles for managing access to CoDriverJob and CoDriverTool resources. These roles follow Kubernetes RBAC best practices and provide a secure, role-based approach to profiling operations.
 
 ## Built-in Roles
 
-### 1. PowerTool Admin Role (`powertool-admin-role`)
+### 1. CoDriverJob Admin Role (`powertool-admin-role`)
 
-**Purpose**: Full administrative access to all PowerTool resources.
+**Purpose**: Full administrative access to all CoDriverJob resources.
 
 **Permissions**:
-- **PowerTool**: Full CRUD access (create, read, update, delete)
-- **PowerToolConfig**: Full CRUD access (create, read, update, delete)
+- **CoDriverJob**: Full CRUD access (create, read, update, delete)
+- **CoDriverTool**: Full CRUD access (create, read, update, delete)
 - **Status resources**: Can read and update status for both resource types
 
 **Intended for**:
@@ -26,22 +26,22 @@ kind: ClusterRole
 metadata:
   name: powertool-admin-role
 rules:
-- apiGroups: ["codriverlabs.ai.toe.run"]
+- apiGroups: ["kubecodriver.codriverlabs.ai"]
   resources: ["powertools", "powertoolconfigs"]
   verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
-- apiGroups: ["codriverlabs.ai.toe.run"]
+- apiGroups: ["kubecodriver.codriverlabs.ai"]
   resources: ["powertools/status", "powertoolconfigs/status"]
   verbs: ["get", "patch", "update"]
 ```
 
-### 2. PowerTool Editor Role (`powertool-editor-role`)
+### 2. CoDriverJob Editor Role (`powertool-editor-role`)
 
 **Purpose**: Can create and manage profiling jobs using approved tools.
 
 **Permissions**:
-- **PowerTool**: Full CRUD access (create, read, update, delete)
-- **PowerToolConfig**: Read-only access (get, list, watch)
-- **Status resources**: Can read and update PowerTool status, read-only access to PowerToolConfig status
+- **CoDriverJob**: Full CRUD access (create, read, update, delete)
+- **CoDriverTool**: Read-only access (get, list, watch)
+- **Status resources**: Can read and update CoDriverJob status, read-only access to CoDriverTool status
 
 **Intended for**:
 - Developers who need to run profiling
@@ -54,27 +54,27 @@ kind: ClusterRole
 metadata:
   name: powertool-editor-role
 rules:
-- apiGroups: ["codriverlabs.ai.toe.run"]
+- apiGroups: ["kubecodriver.codriverlabs.ai"]
   resources: ["powertools"]
   verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
-- apiGroups: ["codriverlabs.ai.toe.run"]
+- apiGroups: ["kubecodriver.codriverlabs.ai"]
   resources: ["powertools/status"]
   verbs: ["get", "patch", "update"]
-- apiGroups: ["codriverlabs.ai.toe.run"]
+- apiGroups: ["kubecodriver.codriverlabs.ai"]
   resources: ["powertoolconfigs"]
   verbs: ["get", "list", "watch"]
-- apiGroups: ["codriverlabs.ai.toe.run"]
+- apiGroups: ["kubecodriver.codriverlabs.ai"]
   resources: ["powertoolconfigs/status"]
   verbs: ["get"]
 ```
 
-### 3. PowerTool Viewer Role (`powertool-viewer-role`)
+### 3. CoDriverJob Viewer Role (`powertool-viewer-role`)
 
-**Purpose**: Read-only access to all PowerTool resources for monitoring and auditing.
+**Purpose**: Read-only access to all CoDriverJob resources for monitoring and auditing.
 
 **Permissions**:
-- **PowerTool**: Read-only access (get, list, watch)
-- **PowerToolConfig**: Read-only access (get, list, watch)
+- **CoDriverJob**: Read-only access (get, list, watch)
+- **CoDriverTool**: Read-only access (get, list, watch)
 - **Status resources**: Read-only access to both resource types
 
 **Intended for**:
@@ -89,10 +89,10 @@ kind: ClusterRole
 metadata:
   name: powertool-viewer-role
 rules:
-- apiGroups: ["codriverlabs.ai.toe.run"]
+- apiGroups: ["kubecodriver.codriverlabs.ai"]
   resources: ["powertools", "powertoolconfigs"]
   verbs: ["get", "list", "watch"]
-- apiGroups: ["codriverlabs.ai.toe.run"]
+- apiGroups: ["kubecodriver.codriverlabs.ai"]
   resources: ["powertools/status", "powertoolconfigs/status"]
   verbs: ["get"]
 ```
@@ -185,13 +185,13 @@ roleRef:
 
 ### Separation of Concerns
 
-1. **PowerToolConfig Management** (Admin-only):
+1. **CoDriverTool Management** (Admin-only):
    - Define available profiling tools
    - Set security contexts and capabilities
    - Configure namespace restrictions
    - Control tool image sources
 
-2. **PowerTool Operations** (Editor access):
+2. **CoDriverJob Operations** (Editor access):
    - Create profiling jobs using approved tools
    - Monitor profiling job status
    - Access profiling results
@@ -207,15 +207,15 @@ roleRef:
 
 | Action | Admin | Editor | Viewer |
 |--------|-------|--------|--------|
-| Create PowerToolConfig | ✅ | ❌ | ❌ |
-| Update PowerToolConfig | ✅ | ❌ | ❌ |
-| Delete PowerToolConfig | ✅ | ❌ | ❌ |
-| View PowerToolConfig | ✅ | ✅ | ✅ |
-| Create PowerTool | ✅ | ✅ | ❌ |
-| Update PowerTool | ✅ | ✅ | ❌ |
-| Delete PowerTool | ✅ | ✅ | ❌ |
-| View PowerTool | ✅ | ✅ | ✅ |
-| Update PowerTool Status | ✅ | ✅ | ❌ |
+| Create CoDriverTool | ✅ | ❌ | ❌ |
+| Update CoDriverTool | ✅ | ❌ | ❌ |
+| Delete CoDriverTool | ✅ | ❌ | ❌ |
+| View CoDriverTool | ✅ | ✅ | ✅ |
+| Create CoDriverJob | ✅ | ✅ | ❌ |
+| Update CoDriverJob | ✅ | ✅ | ❌ |
+| Delete CoDriverJob | ✅ | ✅ | ❌ |
+| View CoDriverJob | ✅ | ✅ | ✅ |
+| Update CoDriverJob Status | ✅ | ✅ | ❌ |
 | View Status Resources | ✅ | ✅ | ✅ |
 
 ## Validation and Testing
@@ -239,7 +239,7 @@ kubectl auth can-i delete powertools --as=user:monitor@company.com  # Should be 
 ### Verify Role Assignments
 
 ```bash
-# List all ClusterRoleBindings for PowerTool roles
+# List all ClusterRoleBindings for CoDriverJob roles
 kubectl get clusterrolebindings -o json | jq -r '.items[] | select(.roleRef.name | contains("powertool")) | "\(.metadata.name): \(.roleRef.name)"'
 
 # Check specific user's effective permissions
@@ -279,8 +279,8 @@ kubectl auth can-i --list --as=user:developer@company.com | grep powertool
 ### 3. Monitoring and Auditing
 
 ```bash
-# Monitor PowerTool resource creation
-kubectl get events --field-selector involvedObject.apiVersion=codriverlabs.ai.toe.run/v1alpha1
+# Monitor CoDriverJob resource creation
+kubectl get events --field-selector involvedObject.apiVersion=kubecodriver.codriverlabs.ai/v1alpha1
 
 # Audit role usage
 kubectl logs -n kube-system deployment/kube-apiserver | grep powertool
@@ -330,7 +330,7 @@ roleRef:
 ### Debugging Commands
 
 ```bash
-# List all PowerTool-related RBAC resources
+# List all CoDriverJob-related RBAC resources
 kubectl get clusterroles,clusterrolebindings,roles,rolebindings -A | grep powertool
 
 # Check effective permissions for a user
@@ -362,4 +362,4 @@ If you're using custom RBAC roles, you can migrate to the built-in roles:
    kubectl delete clusterrole my-custom-powertool-role
    ```
 
-The built-in roles provide a standardized, secure foundation for PowerTool access control while maintaining flexibility for organization-specific requirements.
+The built-in roles provide a standardized, secure foundation for CoDriverJob access control while maintaining flexibility for organization-specific requirements.

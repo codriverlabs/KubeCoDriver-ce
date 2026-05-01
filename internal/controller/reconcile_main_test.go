@@ -15,12 +15,12 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	toev1alpha1 "toe/api/v1alpha1"
+	kubecodriverv1alpha1 "github.com/codriverlabs/KubeCoDriver/api/v1alpha1"
 )
 
-func TestReconcile_PowerToolNotFoundReturnsEmpty(t *testing.T) {
+func TestReconcile_CoDriverJobNotFoundReturnsEmpty(t *testing.T) {
 	scheme := runtime.NewScheme()
-	require.NoError(t, toev1alpha1.AddToScheme(scheme))
+	require.NoError(t, kubecodriverv1alpha1.AddToScheme(scheme))
 	require.NoError(t, corev1.AddToScheme(scheme))
 
 	fakeClient := fake.NewClientBuilder().
@@ -28,7 +28,7 @@ func TestReconcile_PowerToolNotFoundReturnsEmpty(t *testing.T) {
 		Build()
 
 	k8sClient := k8sfake.NewSimpleClientset()
-	reconciler := NewPowerToolReconciler(fakeClient, scheme, k8sClient)
+	reconciler := NewCoDriverJobReconciler(fakeClient, scheme, k8sClient)
 
 	req := ctrl.Request{
 		NamespacedName: types.NamespacedName{
@@ -45,18 +45,18 @@ func TestReconcile_PowerToolNotFoundReturnsEmpty(t *testing.T) {
 
 func TestReconcile_DeletionHandling(t *testing.T) {
 	scheme := runtime.NewScheme()
-	require.NoError(t, toev1alpha1.AddToScheme(scheme))
+	require.NoError(t, kubecodriverv1alpha1.AddToScheme(scheme))
 	require.NoError(t, corev1.AddToScheme(scheme))
 
-	powerTool := &toev1alpha1.PowerTool{
+	coDriverJob := &kubecodriverv1alpha1.CoDriverJob{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:              "test-tool",
 			Namespace:         "default",
 			DeletionTimestamp: &metav1.Time{Time: time.Now()},
-			Finalizers:        []string{"toe.run/powertool-cleanup"},
+			Finalizers:        []string{"kubecodriver.codriverlabs.ai/codriverjob-cleanup"},
 		},
-		Spec: toev1alpha1.PowerToolSpec{
-			Tool: toev1alpha1.ToolSpec{
+		Spec: kubecodriverv1alpha1.CoDriverJobSpec{
+			Tool: kubecodriverv1alpha1.ToolSpec{
 				Name: "aperf",
 			},
 		},
@@ -64,16 +64,16 @@ func TestReconcile_DeletionHandling(t *testing.T) {
 
 	fakeClient := fake.NewClientBuilder().
 		WithScheme(scheme).
-		WithObjects(powerTool).
+		WithObjects(coDriverJob).
 		Build()
 
 	k8sClient := k8sfake.NewSimpleClientset()
-	reconciler := NewPowerToolReconciler(fakeClient, scheme, k8sClient)
+	reconciler := NewCoDriverJobReconciler(fakeClient, scheme, k8sClient)
 
 	req := ctrl.Request{
 		NamespacedName: types.NamespacedName{
-			Name:      powerTool.Name,
-			Namespace: powerTool.Namespace,
+			Name:      coDriverJob.Name,
+			Namespace: coDriverJob.Namespace,
 		},
 	}
 

@@ -8,7 +8,7 @@ import (
 )
 
 func TestGetTargetContainer_SingleContainer(t *testing.T) {
-	r := &PowerToolReconciler{}
+	r := &CoDriverJobReconciler{}
 
 	pod := corev1.Pod{
 		Spec: corev1.PodSpec{
@@ -25,7 +25,7 @@ func TestGetTargetContainer_SingleContainer(t *testing.T) {
 }
 
 func TestGetTargetContainer_MultiContainer_Specified(t *testing.T) {
-	r := &PowerToolReconciler{}
+	r := &CoDriverJobReconciler{}
 
 	pod := corev1.Pod{
 		Spec: corev1.PodSpec{
@@ -43,7 +43,7 @@ func TestGetTargetContainer_MultiContainer_Specified(t *testing.T) {
 }
 
 func TestGetTargetContainer_MultiContainer_NotSpecified(t *testing.T) {
-	r := &PowerToolReconciler{}
+	r := &CoDriverJobReconciler{}
 
 	pod := corev1.Pod{
 		Spec: corev1.PodSpec{
@@ -61,7 +61,7 @@ func TestGetTargetContainer_MultiContainer_NotSpecified(t *testing.T) {
 }
 
 func TestGetTargetContainer_NotFound_FallbackToFirst(t *testing.T) {
-	r := &PowerToolReconciler{}
+	r := &CoDriverJobReconciler{}
 
 	pod := corev1.Pod{
 		Spec: corev1.PodSpec{
@@ -79,7 +79,7 @@ func TestGetTargetContainer_NotFound_FallbackToFirst(t *testing.T) {
 }
 
 func TestGetTargetContainer_EmptyPod(t *testing.T) {
-	r := &PowerToolReconciler{}
+	r := &CoDriverJobReconciler{}
 
 	pod := corev1.Pod{
 		Spec: corev1.PodSpec{
@@ -92,7 +92,7 @@ func TestGetTargetContainer_EmptyPod(t *testing.T) {
 }
 
 func TestGetTargetContainer_EmptyString(t *testing.T) {
-	r := &PowerToolReconciler{}
+	r := &CoDriverJobReconciler{}
 
 	pod := corev1.Pod{
 		Spec: corev1.PodSpec{
@@ -131,7 +131,7 @@ func TestSecurityContextInheritance_TargetContainer(t *testing.T) {
 		},
 	}
 
-	r := &PowerToolReconciler{}
+	r := &CoDriverJobReconciler{}
 	targetName := "main-app"
 	container := r.getTargetContainer(pod, &targetName)
 
@@ -164,7 +164,7 @@ func TestSecurityContextInheritance_FirstContainer(t *testing.T) {
 		},
 	}
 
-	r := &PowerToolReconciler{}
+	r := &CoDriverJobReconciler{}
 	// No target specified - should use first container
 	container := r.getTargetContainer(pod, nil)
 

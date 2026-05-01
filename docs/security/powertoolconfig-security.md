@@ -1,23 +1,23 @@
-# PowerToolConfig Security Configuration
+# CoDriverTool Security Configuration
 
 ## Overview
 
-PowerToolConfig CRDs are the exclusive mechanism for defining security contexts for power tools. This document details how security is configured, enforced, and managed through PowerToolConfig resources.
+CoDriverTool CRDs are the exclusive mechanism for defining security contexts for power tools. This document details how security is configured, enforced, and managed through CoDriverTool resources.
 
 ## Security Model
 
 ### Administrative Control
 
-Only cluster administrators can create and modify PowerToolConfig resources:
+Only cluster administrators can create and modify CoDriverTool resources:
 
 ```yaml
-# RBAC for PowerToolConfig management
+# RBAC for CoDriverTool management
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: powertoolconfig-admin
 rules:
-- apiGroups: ["codriverlabs.ai.toe.run"]
+- apiGroups: ["kubecodriver.codriverlabs.ai"]
   resources: ["powertoolconfigs"]
   verbs: ["create", "update", "patch", "delete", "get", "list", "watch"]
 ```
@@ -27,13 +27,13 @@ rules:
 Regular users cannot modify security settings:
 
 ```yaml
-# RBAC for PowerTool users (no PowerToolConfig access)
+# RBAC for CoDriverJob users (no CoDriverTool access)
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: powertool-user
 rules:
-- apiGroups: ["codriverlabs.ai.toe.run"]
+- apiGroups: ["kubecodriver.codriverlabs.ai"]
   resources: ["powertools"]
   verbs: ["create", "update", "patch", "delete", "get", "list", "watch"]
 # Note: No powertoolconfigs permissions
@@ -44,14 +44,14 @@ rules:
 ### SecuritySpec Structure
 
 ```yaml
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerToolConfig
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverTool
 metadata:
   name: aperf-config
-  namespace: toe-system
+  namespace: kubecodriver-system
 spec:
   name: "aperf"
-  image: "localhost:32000/toe/aperf:v1.0.5"
+  image: "localhost:32000/codriverlabs/ce/kubecodriver-aperf:v1.0.5"
   security:
     # Privilege settings
     allowPrivileged: false      # Never allow privileged containers
@@ -79,8 +79,8 @@ spec:
 For tools that need basic system access:
 
 ```yaml
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerToolConfig
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverTool
 metadata:
   name: basic-tool-config
 spec:
@@ -99,8 +99,8 @@ spec:
 For performance profiling tools:
 
 ```yaml
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerToolConfig
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverTool
 metadata:
   name: profiler-config
 spec:
@@ -119,8 +119,8 @@ spec:
 For tools requiring deeper system access:
 
 ```yaml
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerToolConfig
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverTool
 metadata:
   name: system-analyzer-config
 spec:
@@ -142,14 +142,14 @@ spec:
 For tools requiring extensive system access:
 
 ```yaml
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerToolConfig
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverTool
 metadata:
   name: privileged-tool-config
   annotations:
-    security.toe.run/risk-level: "high"
-    security.toe.run/justification: "Required for kernel debugging"
-    security.toe.run/approved-by: "security-team@company.com"
+    security.kubecodriver.codriverlabs.ai/risk-level: "high"
+    security.kubecodriver.codriverlabs.ai/justification: "Required for kernel debugging"
+    security.kubecodriver.codriverlabs.ai/approved-by: "security-team@company.com"
 spec:
   name: "kernel-debugger"
   image: "registry/kernel-debugger:latest"
@@ -187,20 +187,20 @@ spec:
 
 ### Controller Enforcement
 
-The PowerTool controller enforces security policies:
+The CoDriverJob controller enforces security policies:
 
-1. **Lookup Phase**: Controller finds PowerToolConfig by tool name
+1. **Lookup Phase**: Controller finds CoDriverTool by tool name
 2. **Validation Phase**: Validates security configuration exists
-3. **Application Phase**: Applies ONLY PowerToolConfig security settings
-4. **Rejection Phase**: Ignores any security settings in PowerTool
+3. **Application Phase**: Applies ONLY CoDriverTool security settings
+4. **Rejection Phase**: Ignores any security settings in CoDriverJob
 
 ```go
 // Controller enforcement logic (simplified)
-func (r *PowerToolReconciler) createEphemeralContainer(job *PowerTool) error {
+func (r *CoDriverJobReconciler) createEphemeralContainer(job *CoDriverJob) error {
     // Get admin-defined security
     toolConfig := r.getToolConfig(job.Spec.Tool.Name)
     
-    // Apply ONLY PowerToolConfig security
+    // Apply ONLY CoDriverTool security
     securityContext := toolConfig.Spec.Security
     
     // User security settings are IGNORED
@@ -223,13 +223,13 @@ webhooks:
 - name: validate-powertool-security
   rules:
   - operations: ["CREATE", "UPDATE"]
-    apiGroups: ["codriverlabs.ai.toe.run"]
+    apiGroups: ["kubecodriver.codriverlabs.ai"]
     resources: ["powertools"]
   admissionReviewVersions: ["v1"]
   clientConfig:
     service:
       name: powertool-admission-webhook
-      namespace: toe-system
+      namespace: kubecodriver-system
       path: "/validate-powertool"
 ```
 
@@ -251,7 +251,7 @@ webhooks:
 
 2. **Regular Security Reviews**:
    ```bash
-   # Audit all PowerToolConfigs
+   # Audit all CoDriverTools
    kubectl get powertoolconfigs -A -o yaml | grep -A 10 security:
    
    # Check for privileged tools
@@ -262,9 +262,9 @@ webhooks:
    ```yaml
    metadata:
      annotations:
-       security.toe.run/risk-assessment: "completed-2024-01-15"
-       security.toe.run/approved-by: "security-team@company.com"
-       security.toe.run/review-date: "2024-07-15"
+       security.kubecodriver.codriverlabs.ai/risk-assessment: "completed-2024-01-15"
+       security.kubecodriver.codriverlabs.ai/approved-by: "security-team@company.com"
+       security.kubecodriver.codriverlabs.ai/review-date: "2024-07-15"
    ```
 
 ### For Tool Developers
@@ -278,9 +278,9 @@ webhooks:
    ```yaml
    metadata:
      annotations:
-       tool.toe.run/capabilities-required: "SYS_PTRACE for process tracing"
-       tool.toe.run/security-impact: "Can read process memory of target containers"
-       tool.toe.run/alternatives: "Use non-privileged mode with reduced functionality"
+       tool.kubecodriver.codriverlabs.ai/capabilities-required: "SYS_PTRACE for process tracing"
+       tool.kubecodriver.codriverlabs.ai/security-impact: "Can read process memory of target containers"
+       tool.kubecodriver.codriverlabs.ai/alternatives: "Use non-privileged mode with reduced functionality"
    ```
 
 ### For Users
@@ -288,10 +288,10 @@ webhooks:
 1. **Use Existing Configurations**:
    ```bash
    # List available tools
-   kubectl get powertoolconfigs -n toe-system
+   kubectl get powertoolconfigs -n kubecodriver-system
    
    # Check tool security profile
-   kubectl describe powertoolconfig aperf-config -n toe-system
+   kubectl describe powertoolconfig aperf-config -n kubecodriver-system
    ```
 
 2. **Request New Tools Properly**:
@@ -304,8 +304,8 @@ webhooks:
 ### Security Monitoring
 
 ```bash
-# Monitor PowerToolConfig changes
-kubectl get events --field-selector involvedObject.kind=PowerToolConfig
+# Monitor CoDriverTool changes
+kubectl get events --field-selector involvedObject.kind=CoDriverTool
 
 # Check for privileged tool usage
 kubectl get powertoolconfigs -A -o json | jq '.items[] | select(.spec.security.allowPrivileged == true) | .metadata.name'
@@ -320,10 +320,10 @@ kubectl get powertoolconfigs -A -o json | jq '.items[] | {name: .metadata.name, 
 # Generate security report
 cat << 'EOF' > security-report.sh
 #!/bin/bash
-echo "PowerToolConfig Security Report - $(date)"
+echo "CoDriverTool Security Report - $(date)"
 echo "=================================="
 echo
-echo "Total PowerToolConfigs:"
+echo "Total CoDriverTools:"
 kubectl get powertoolconfigs -A --no-headers | wc -l
 echo
 echo "Privileged Tools:"
@@ -341,17 +341,17 @@ chmod +x security-report.sh
 
 1. **Tool Not Found**:
    ```
-   Error: PowerToolConfig not found for tool: mytool
+   Error: CoDriverTool not found for tool: mytool
    ```
-   - Create PowerToolConfig with matching name
-   - Check namespace (toe-system recommended)
+   - Create CoDriverTool with matching name
+   - Check namespace (kubecodriver-system recommended)
 
 2. **Insufficient Capabilities**:
    ```
    Error: Operation not permitted
    ```
    - Review tool documentation for required capabilities
-   - Add minimal required capabilities to PowerToolConfig
+   - Add minimal required capabilities to CoDriverTool
 
 3. **Privileged Access Denied**:
    ```
@@ -363,7 +363,7 @@ chmod +x security-report.sh
 ### Validation Commands
 
 ```bash
-# Check PowerToolConfig security
+# Check CoDriverTool security
 kubectl get powertoolconfig aperf-config -o jsonpath='{.spec.security}'
 
 # Validate capability syntax

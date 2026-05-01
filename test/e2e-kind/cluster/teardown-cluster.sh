@@ -1,13 +1,13 @@
 #!/bin/bash
 set -euo pipefail
 
-# TOE Kind E2E Cluster Teardown Script
+# KubeCoDriver Kind E2E Cluster Teardown Script
 # This script cleans up the Kind cluster and associated resources
 
-CLUSTER_NAME="${CLUSTER_NAME:-toe-e2e}"
+CLUSTER_NAME="${CLUSTER_NAME:-kubecodriver-e2e}"
 CLEANUP_IMAGES="${CLEANUP_IMAGES:-false}"
 
-echo "🧹 Tearing down Kind cluster for TOE E2E testing..."
+echo "🧹 Tearing down Kind cluster for KubeCoDriver E2E testing..."
 
 # Function to check if command exists
 command_exists() {
@@ -24,13 +24,13 @@ collect_artifacts() {
     # Collect cluster info
     kubectl cluster-info dump > "$artifact_dir/cluster-info.yaml" 2>/dev/null || true
     
-    # Collect TOE resources
-    kubectl get powertools -A -o yaml > "$artifact_dir/powertools.yaml" 2>/dev/null || true
-    kubectl get powertoolconfigs -A -o yaml > "$artifact_dir/powertoolconfigs.yaml" 2>/dev/null || true
+    # Collect KubeCoDriver resources
+    kubectl get codriverjobs -A -o yaml > "$artifact_dir/codriverjobs.yaml" 2>/dev/null || true
+    kubectl get codrivertools -A -o yaml > "$artifact_dir/codrivertools.yaml" 2>/dev/null || true
     
     # Collect pod logs
-    kubectl logs -n toe-system -l app=toe-controller --tail=1000 > "$artifact_dir/controller-logs.txt" 2>/dev/null || true
-    kubectl logs -n toe-system -l app=toe-collector --tail=1000 > "$artifact_dir/collector-logs.txt" 2>/dev/null || true
+    kubectl logs -n kubecodriver-system -l app=kubecodriver-controller --tail=1000 > "$artifact_dir/controller-logs.txt" 2>/dev/null || true
+    kubectl logs -n kubecodriver-system -l app=kubecodriver-collector --tail=1000 > "$artifact_dir/collector-logs.txt" 2>/dev/null || true
     
     # Collect events
     kubectl get events -A --sort-by='.lastTimestamp' > "$artifact_dir/events.txt" 2>/dev/null || true
@@ -41,20 +41,20 @@ collect_artifacts() {
     echo "✅ Artifacts collected in: $artifact_dir"
 }
 
-# Clean up TOE resources
-cleanup_toe_resources() {
-    echo "🗑️ Cleaning up TOE resources..."
+# Clean up KubeCoDriver resources
+cleanup_kubecodriver_resources() {
+    echo "🗑️ Cleaning up KubeCoDriver resources..."
     
-    # Delete PowerTools
-    kubectl delete powertools --all -A --timeout=60s || true
+    # Delete CoDriverJobs
+    kubectl delete codriverjobs --all -A --timeout=60s || true
     
-    # Delete PowerToolConfigs
-    kubectl delete powertoolconfigs --all -A --timeout=60s || true
+    # Delete CoDriverTools
+    kubectl delete codrivertools --all -A --timeout=60s || true
     
-    # Delete TOE namespace
-    kubectl delete namespace toe-system --timeout=60s || true
+    # Delete KubeCoDriver namespace
+    kubectl delete namespace kubecodriver-system --timeout=60s || true
     
-    echo "✅ TOE resources cleaned up"
+    echo "✅ KubeCoDriver resources cleaned up"
 }
 
 # Delete Kind cluster
@@ -81,9 +81,9 @@ cleanup_container_resources() {
     if [ "$CLEANUP_IMAGES" = "true" ]; then
         echo "🗑️ Removing commit-specific images..."
         if command_exists docker; then
-            docker images | grep "toe-controller.*e2e-" | awk '{print $1":"$2}' | xargs -r docker rmi -f || true
+            docker images | grep "kubecodriver-controller.*e2e-" | awk '{print $1":"$2}' | xargs -r docker rmi -f || true
         elif command_exists podman; then
-            podman images | grep "toe-controller.*e2e-" | awk '{print $1":"$2}' | xargs -r podman rmi -f || true
+            podman images | grep "kubecodriver-controller.*e2e-" | awk '{print $1":"$2}' | xargs -r podman rmi -f || true
         fi
     fi
     
@@ -107,14 +107,14 @@ cleanup_temp_files() {
     rm -f /tmp/kubeconfig-* || true
     
     # Remove temporary manifests
-    rm -rf /tmp/toe-e2e-* || true
+    rm -rf /tmp/kubecodriver-e2e-* || true
     
     echo "✅ Temporary files cleaned up"
 }
 
 # Main execution
 main() {
-    echo "🎯 TOE Kind E2E Cluster Teardown"
+    echo "🎯 KubeCoDriver Kind E2E Cluster Teardown"
     echo "Cluster Name: $CLUSTER_NAME"
     echo ""
     
@@ -126,8 +126,8 @@ main() {
         # Collect artifacts before cleanup
         collect_artifacts
         
-        # Clean up TOE resources
-        cleanup_toe_resources
+        # Clean up KubeCoDriver resources
+        cleanup_kubecodriver_resources
     else
         echo "ℹ️ Cluster $CLUSTER_NAME not found, skipping resource cleanup"
     fi
@@ -146,7 +146,7 @@ main() {
     echo ""
     echo "Summary:"
     echo "  ✅ Test artifacts collected"
-    echo "  ✅ TOE resources cleaned up"
+    echo "  ✅ KubeCoDriver resources cleaned up"
     echo "  ✅ Kind cluster deleted"
     echo "  ✅ Container resources pruned"
     echo "  ✅ Temporary files removed"

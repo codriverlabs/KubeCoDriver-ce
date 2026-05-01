@@ -16,7 +16,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"toe/api/v1alpha1"
+	"github.com/codriverlabs/KubeCoDriver/api/v1alpha1"
 )
 
 var (
@@ -58,7 +58,7 @@ var _ = BeforeSuite(func() {
 
 	By("verifying TOE CRDs are installed")
 	Eventually(func() error {
-		ptList := &v1alpha1.PowerToolList{}
+		ptList := &v1alpha1.CoDriverJobList{}
 		return k8sClient.List(ctx, ptList)
 	}, "30s", "2s").Should(Succeed())
 

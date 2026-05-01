@@ -1,11 +1,11 @@
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerToolConfig
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverTool
 metadata:
   name: aperf-config
-  namespace: toe-system
+  namespace: kubecodriver-system
 spec:
   name: "aperf"
-  image: ghcr.io/codriverlabs/ce/toe-aperf:1.1.0
+  image: ghcr.io/codriverlabs/ce/kubecodriver-aperf:v1.1.0
   securityContext:
     allowPrivileged: false
     allowHostPID: false
@@ -17,7 +17,7 @@ spec:
     - "production"
     - "staging"
     - "development"
-    - "toe-test"
+    - "kubecodriver-test"
   description: "Advanced performance profiling tool for CPU and memory analysis"
   version: "v1.0.12"
   defaultArgs: ["--cpu", "--memory"]

@@ -15,8 +15,8 @@ The aperf profiling tool fails with "Permission denied (os error 13)" when runni
 
 ### Test 1: kubectl debug with default profile
 ```bash
-kubectl debug busybox-nonroot -n toe-test \
-  --image=localhost:32000/codriverlabs/toe/aperf:v1.0.47 \
+kubectl debug busybox-nonroot -n kubecodriver-test \
+  --image=localhost:32000/codriverlabs/ce/kubecodriver-aperf:v1.0.47 \
   --target=main-container \
   -- aperf record --period=5 --run-name=test --profile
 ```
@@ -25,9 +25,9 @@ kubectl debug busybox-nonroot -n toe-test \
 
 ### Test 2: kubectl debug with sysadmin profile
 ```bash
-kubectl debug busybox-nonroot -n toe-test \
+kubectl debug busybox-nonroot -n kubecodriver-test \
   --profile=sysadmin \
-  --image=localhost:32000/codriverlabs/toe/aperf:v1.0.47 \
+  --image=localhost:32000/codriverlabs/ce/kubecodriver-aperf:v1.0.47 \
   --target=main-container \
   -- aperf record --period=5 --run-name=test --profile
 ```
@@ -48,17 +48,17 @@ Available profiles:
 
 **Key Finding**: Even `sysadmin` profile with `privileged: true` doesn't override pod-level `runAsUser`. The pod-level security context takes precedence.
 
-## Current PowerToolConfig
+## Current CoDriverTool
 
 ```yaml
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerToolConfig
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverTool
 metadata:
   name: aperf-config
-  namespace: toe-system
+  namespace: kubecodriver-system
 spec:
   name: "aperf"
-  image: "localhost:32000/codriverlabs/toe/aperf:v1.0.47"
+  image: "localhost:32000/codriverlabs/ce/kubecodriver-aperf:v1.0.47"
   securityContext:
     allowPrivileged: false  # ← Prevents privileged mode
     capabilities:
@@ -90,7 +90,7 @@ type SecuritySpec struct {
 ### Implementation Logic
 
 ```go
-func (r *PowerToolReconciler) createEphemeralContainerForPod(...) error {
+func (r *CoDriverJobReconciler) createEphemeralContainerForPod(...) error {
     // Build base security context from toolConfig
     securityContext := r.buildSecurityContext(toolConfig.Spec.SecurityContext)
 
@@ -134,17 +134,17 @@ func (r *PowerToolReconciler) createEphemeralContainerForPod(...) error {
 }
 ```
 
-### Updated PowerToolConfig for aperf
+### Updated CoDriverTool for aperf
 
 ```yaml
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerToolConfig
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverTool
 metadata:
   name: aperf-config
-  namespace: toe-system
+  namespace: kubecodriver-system
 spec:
   name: "aperf"
-  image: "localhost:32000/codriverlabs/toe/aperf:v1.0.47"
+  image: "localhost:32000/codriverlabs/ce/kubecodriver-aperf:v1.0.47"
   securityContext:
     runAsRoot: true  # NEW - aperf requires root access
     allowPrivileged: false
@@ -216,10 +216,10 @@ securityContext:
 - Compromised profiling tool could affect host
 
 ### Mitigations
-1. **Explicit Opt-In**: `runAsRoot` must be explicitly set in PowerToolConfig
-2. **RBAC Controls**: Limit who can create PowerToolConfigs with `runAsRoot: true`
+1. **Explicit Opt-In**: `runAsRoot` must be explicitly set in CoDriverTool
+2. **RBAC Controls**: Limit who can create CoDriverTools with `runAsRoot: true`
 3. **Namespace Restrictions**: Use `allowedNamespaces` to limit where root tools can run
-4. **Audit Logging**: Log all PowerTool executions with root access
+4. **Audit Logging**: Log all CoDriverJob executions with root access
 5. **Capabilities Still Dropped**: Even as root, only specific capabilities are added
 
 ### Recommended RBAC
@@ -229,9 +229,9 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: powertool-root-tools
-  namespace: toe-system
+  namespace: kubecodriver-system
 rules:
-- apiGroups: ["codriverlabs.ai.toe.run"]
+- apiGroups: ["kubecodriver.codriverlabs.ai"]
   resources: ["powertoolconfigs"]
   verbs: ["create", "update"]
   resourceNames: ["aperf-config", "perf-config"]  # Explicit allow-list
@@ -253,7 +253,7 @@ Based on analysis, these tools likely need `runAsRoot: true`:
 - [ ] Update `buildSecurityContext()` to handle `runAsRoot`
 - [ ] Update `createEphemeralContainerForPod()` with conditional logic
 - [ ] Add unit tests for `runAsRoot` behavior
-- [ ] Update aperf PowerToolConfig with `runAsRoot: true`
+- [ ] Update aperf CoDriverTool with `runAsRoot: true`
 - [ ] Add security documentation
 - [ ] Add RBAC examples
 - [ ] Test aperf with updated configuration
@@ -266,6 +266,6 @@ Based on analysis, these tools likely need `runAsRoot: true`:
 
 ## Conclusion
 
-The aperf tool failure is **not a bug** in our security context inheritance implementation. It's a **tool requirement** that needs explicit configuration via a new `runAsRoot` field in PowerToolConfig.
+The aperf tool failure is **not a bug** in our security context inheritance implementation. It's a **tool requirement** that needs explicit configuration via a new `runAsRoot` field in CoDriverTool.
 
 Our implementation correctly inherits security context from target pods/containers. The solution is to extend the API to allow tools that require root access to explicitly request it, while still maintaining group and filesystem context from the target.

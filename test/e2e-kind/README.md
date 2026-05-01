@@ -1,8 +1,8 @@
-# TOE Kind E2E Testing
+# KubeCoDriver Kind E2E Testing
 
 ## Overview
 
-This directory contains comprehensive end-to-end tests for TOE using Kind (Kubernetes in Docker) clusters. These tests validate functionality that cannot be tested with envtest, particularly ephemeral container creation and real pod profiling.
+This directory contains comprehensive end-to-end tests for KubeCoDriver using Kind (Kubernetes in Docker) clusters. These tests validate functionality that cannot be tested with envtest, particularly ephemeral container creation and real pod profiling.
 
 **Kind Architecture:**
 - Runs local Kubernetes clusters using Docker container "nodes"
@@ -11,8 +11,8 @@ This directory contains comprehensive end-to-end tests for TOE using Kind (Kuber
 - Provides Go packages for cluster creation and image management
 
 **Complete Isolation:** Both clusters and images use commit-based naming:
-- Cluster: `toe-e2e-<commit-hash>`
-- Image: `toe-controller:e2e-<commit-hash>`
+- Cluster: `kubecodriver-e2e-<commit-hash>`
+- Image: `kubecodriver-controller:e2e-<commit-hash>`
 
 ## Quick Start
 
@@ -25,7 +25,7 @@ This directory contains comprehensive end-to-end tests for TOE using Kind (Kuber
 This single command:
 - ✅ Creates Kind cluster
 - ✅ Builds controller image
-- ✅ Deploys TOE components
+- ✅ Deploys KubeCoDriver components
 - ✅ Runs all tests
 - ✅ Cleans up automatically
 
@@ -45,8 +45,8 @@ KEEP_CLUSTER=true ./test/e2e-kind/run-tests.sh
 ./test/e2e-kind/cluster/setup-cluster.sh
 
 # 2. Build and deploy manually
-make docker-build IMG=toe-controller:e2e
-kind load docker-image toe-controller:e2e --name <cluster-name>
+make docker-build IMG=kubecodriver-controller:e2e
+kind load docker-image kubecodriver-controller:e2e --name <cluster-name>
 kubectl apply -f test/e2e-kind/manifests/
 
 # 3. Run tests
@@ -109,10 +109,10 @@ go test -v -tags=e2ekind ./test/e2e-kind/...
 ### Cluster Naming
 Clusters are named using commit hashes to enable parallel testing:
 ```
-toe-e2e-<commit-hash>
+kubecodriver-e2e-<commit-hash>
 ```
 
-Example: `toe-e2e-a1b2c3d4`
+Example: `kubecodriver-e2e-a1b2c3d4`
 
 ### Setup
 ```bash
@@ -121,7 +121,7 @@ Example: `toe-e2e-a1b2c3d4`
 
 Creates:
 - Multi-node Kind cluster (1 control-plane + 2 workers)
-- Installs TOE CRDs
+- Installs KubeCoDriver CRDs
 - Configures RBAC
 - Sets up networking and storage
 
@@ -142,7 +142,7 @@ Performs:
 All utility functions are reusable with minor timeout adjustments:
 - Namespace management
 - Pod creation and waiting
-- PowerTool/PowerToolConfig creation
+- CoDriverJob/CoDriverTool creation
 - Status checking and logging
 
 ### From `test/e2e/*_test.go`
@@ -174,7 +174,7 @@ Controller logic tests are fully reusable:
 
 ## Environment Variables
 
-- `CLUSTER_NAME`: Override cluster name (default: `toe-e2e-<commit>`)
+- `CLUSTER_NAME`: Override cluster name (default: `kubecodriver-e2e-<commit>`)
 - `KEEP_CLUSTER`: Keep cluster after tests (default: `false`)
 - `TEST_PHASE`: Run specific phase (default: `all`)
 - `TEST_TIMEOUT`: Test timeout (default: `30m`)
@@ -193,7 +193,7 @@ Controller logic tests are fully reusable:
 ### Artifacts
 Test artifacts are automatically collected in `test-artifacts-<timestamp>/`:
 - Cluster info dump
-- PowerTool/PowerToolConfig resources
+- CoDriverJob/CoDriverTool resources
 - Controller and collector logs
 - Events
 - Node descriptions
@@ -208,10 +208,10 @@ KEEP_CLUSTER=true TEST_PHASE=phase1 ./test/e2e-kind/run-tests.sh
 # Inspect cluster
 kubectl get all -A
 kubectl get powertools -A
-kubectl logs -n toe-system -l app=toe-controller
+kubectl logs -n kubecodriver-system -l app=kubecodriver-controller
 
 # Cleanup when done
-kind delete cluster --name toe-e2e-local
+kind delete cluster --name kubecodriver-e2e-local
 ```
 
 ### 2. Adding New Tests
@@ -226,13 +226,13 @@ kind delete cluster --name toe-e2e-local
 # Check cluster state
 kubectl get all -A
 
-# Check TOE resources
+# Check KubeCoDriver resources
 kubectl get powertools -A -o yaml
 kubectl get powertoolconfigs -A -o yaml
 
 # Check logs
-kubectl logs -n toe-system -l app=toe-controller --tail=100
-kubectl logs -n toe-system -l app=toe-collector --tail=100
+kubectl logs -n kubecodriver-system -l app=kubecodriver-controller --tail=100
+kubectl logs -n kubecodriver-system -l app=kubecodriver-collector --tail=100
 
 # Check events
 kubectl get events -A --sort-by='.lastTimestamp'
@@ -269,4 +269,4 @@ kubectl get events -A --sort-by='.lastTimestamp'
 - [Kind Documentation](https://kind.sigs.k8s.io/)
 - [Ephemeral Containers](https://kubernetes.io/docs/concepts/workloads/pods/ephemeral-containers/)
 - [Ginkgo Testing Framework](https://onsi.github.io/ginkgo/)
-- [TOE E2E Strategy](../docs/e2e-kind-strategy.md)
+- [KubeCoDriver E2E Strategy](../docs/e2e-kind-strategy.md)

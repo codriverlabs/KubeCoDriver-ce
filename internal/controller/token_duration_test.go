@@ -7,7 +7,7 @@ import (
 )
 
 func TestGetTokenDuration(t *testing.T) {
-	r := &PowerToolReconciler{}
+	r := &CoDriverJobReconciler{}
 	ctx := context.Background()
 
 	tests := []struct {

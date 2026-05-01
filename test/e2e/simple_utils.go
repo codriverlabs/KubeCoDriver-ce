@@ -12,7 +12,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"toe/api/v1alpha1"
+	"github.com/codriverlabs/KubeCoDriver/api/v1alpha1"
 )
 
 var (
@@ -51,7 +51,7 @@ func InitializeSimpleClients() error {
 func CreateSimpleTestNamespace() *corev1.Namespace {
 	ns := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: "toe-simple-e2e-",
+			GenerateName: "kubecodriver-simple-e2e-",
 		},
 	}
 	Expect(simpleK8sClient.Create(simpleCtx, ns)).To(Succeed())
@@ -102,30 +102,30 @@ func CreateSimpleMockTargetPod(namespace, name string, labels map[string]string)
 	return pod
 }
 
-// CreateSimpleTestPowerTool creates a PowerTool for testing
-func CreateSimpleTestPowerTool(name, namespace string, spec v1alpha1.PowerToolSpec) *v1alpha1.PowerTool {
-	powerTool := &v1alpha1.PowerTool{
+// CreateSimpleTestCoDriverJob creates a CoDriverJob for testing
+func CreateSimpleTestCoDriverJob(name, namespace string, spec v1alpha1.CoDriverJobSpec) *v1alpha1.CoDriverJob {
+	coDriverJob := &v1alpha1.CoDriverJob{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
 		Spec: spec,
 	}
-	Expect(simpleK8sClient.Create(simpleCtx, powerTool)).To(Succeed())
-	return powerTool
+	Expect(simpleK8sClient.Create(simpleCtx, coDriverJob)).To(Succeed())
+	return coDriverJob
 }
 
-// CreateSimpleTestPowerToolConfig creates a PowerToolConfig for testing
-func CreateSimpleTestPowerToolConfig(name, namespace string) *v1alpha1.PowerToolConfig {
+// CreateSimpleTestCoDriverTool creates a CoDriverTool for testing
+func CreateSimpleTestCoDriverTool(name, namespace string) *v1alpha1.CoDriverTool {
 	allowPrivileged := true
-	powerToolConfig := &v1alpha1.PowerToolConfig{
+	coDriverTool := &v1alpha1.CoDriverTool{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
-		Spec: v1alpha1.PowerToolConfigSpec{
+		Spec: v1alpha1.CoDriverToolSpec{
 			Name:  "aperf",
-			Image: "ghcr.io/codriverlabs/toe-aperf:latest",
+			Image: "ghcr.io/codriverlabs/ce/kubecodriver-aperf:latest",
 			SecurityContext: v1alpha1.SecuritySpec{
 				AllowPrivileged: &allowPrivileged,
 				Capabilities: &v1alpha1.Capabilities{
@@ -134,15 +134,15 @@ func CreateSimpleTestPowerToolConfig(name, namespace string) *v1alpha1.PowerTool
 			},
 		},
 	}
-	Expect(simpleK8sClient.Create(simpleCtx, powerToolConfig)).To(Succeed())
-	return powerToolConfig
+	Expect(simpleK8sClient.Create(simpleCtx, coDriverTool)).To(Succeed())
+	return coDriverTool
 }
 
-// WaitForSimplePowerToolPhase waits for PowerTool to reach expected phase
-func WaitForSimplePowerToolPhase(powerTool *v1alpha1.PowerTool, expectedPhase string) {
+// WaitForSimpleCoDriverJobPhase waits for CoDriverJob to reach expected phase
+func WaitForSimpleCoDriverJobPhase(coDriverJob *v1alpha1.CoDriverJob, expectedPhase string) {
 	Eventually(func() string {
-		updated := &v1alpha1.PowerTool{}
-		err := simpleK8sClient.Get(simpleCtx, client.ObjectKeyFromObject(powerTool), updated)
+		updated := &v1alpha1.CoDriverJob{}
+		err := simpleK8sClient.Get(simpleCtx, client.ObjectKeyFromObject(coDriverJob), updated)
 		if err != nil {
 			return ""
 		}
@@ -153,11 +153,11 @@ func WaitForSimplePowerToolPhase(powerTool *v1alpha1.PowerTool, expectedPhase st
 	}, "30s", "1s").Should(Equal(expectedPhase))
 }
 
-// WaitForSimplePowerToolCondition waits for PowerTool to have expected condition
-func WaitForSimplePowerToolCondition(powerTool *v1alpha1.PowerTool, conditionType string, status string) {
+// WaitForSimpleCoDriverJobCondition waits for CoDriverJob to have expected condition
+func WaitForSimpleCoDriverJobCondition(coDriverJob *v1alpha1.CoDriverJob, conditionType string, status string) {
 	Eventually(func() bool {
-		updated := &v1alpha1.PowerTool{}
-		err := simpleK8sClient.Get(simpleCtx, client.ObjectKeyFromObject(powerTool), updated)
+		updated := &v1alpha1.CoDriverJob{}
+		err := simpleK8sClient.Get(simpleCtx, client.ObjectKeyFromObject(coDriverJob), updated)
 		if err != nil {
 			return false
 		}
@@ -171,10 +171,10 @@ func WaitForSimplePowerToolCondition(powerTool *v1alpha1.PowerTool, conditionTyp
 	}, "30s", "1s").Should(BeTrue())
 }
 
-// GetSimplePowerTool retrieves the latest version of a PowerTool
-func GetSimplePowerTool(powerTool *v1alpha1.PowerTool) *v1alpha1.PowerTool {
-	updated := &v1alpha1.PowerTool{}
-	Expect(simpleK8sClient.Get(simpleCtx, client.ObjectKeyFromObject(powerTool), updated)).To(Succeed())
+// GetSimpleCoDriverJob retrieves the latest version of a CoDriverJob
+func GetSimpleCoDriverJob(coDriverJob *v1alpha1.CoDriverJob) *v1alpha1.CoDriverJob {
+	updated := &v1alpha1.CoDriverJob{}
+	Expect(simpleK8sClient.Get(simpleCtx, client.ObjectKeyFromObject(coDriverJob), updated)).To(Succeed())
 	return updated
 }
 
@@ -185,9 +185,9 @@ func GetSimplePod(pod *corev1.Pod) *corev1.Pod {
 	return updated
 }
 
-// CreateSimpleBasicPowerToolSpec creates a basic PowerTool spec for testing
-func CreateSimpleBasicPowerToolSpec(targetLabels map[string]string) v1alpha1.PowerToolSpec {
-	return v1alpha1.PowerToolSpec{
+// CreateSimpleBasicCoDriverJobSpec creates a basic CoDriverJob spec for testing
+func CreateSimpleBasicCoDriverJobSpec(targetLabels map[string]string) v1alpha1.CoDriverJobSpec {
+	return v1alpha1.CoDriverJobSpec{
 		Targets: v1alpha1.TargetSpec{
 			LabelSelector: &metav1.LabelSelector{
 				MatchLabels: targetLabels,
@@ -203,10 +203,10 @@ func CreateSimpleBasicPowerToolSpec(targetLabels map[string]string) v1alpha1.Pow
 	}
 }
 
-// LogSimplePowerToolStatus logs the current status of a PowerTool for debugging
-func LogSimplePowerToolStatus(powerTool *v1alpha1.PowerTool) {
-	updated := GetSimplePowerTool(powerTool)
-	fmt.Printf("PowerTool %s/%s Status:\n", updated.Namespace, updated.Name)
+// LogSimpleCoDriverJobStatus logs the current status of a CoDriverJob for debugging
+func LogSimpleCoDriverJobStatus(coDriverJob *v1alpha1.CoDriverJob) {
+	updated := GetSimpleCoDriverJob(coDriverJob)
+	fmt.Printf("CoDriverJob %s/%s Status:\n", updated.Namespace, updated.Name)
 	if updated.Status.Phase != nil {
 		fmt.Printf("  Phase: %s\n", *updated.Status.Phase)
 	} else {

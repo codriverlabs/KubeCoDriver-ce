@@ -2,7 +2,7 @@
 
 ## Overview
 
-The TOE project uses different testing approaches for different test types:
+The KubeCoDriver project uses different testing approaches for different test types:
 
 ## Unit Tests (`internal/controller/*_test.go`)
 
@@ -20,7 +20,7 @@ The TOE project uses different testing approaches for different test types:
 ```go
 func TestCheckForConflicts(t *testing.T) {
     scheme := runtime.NewScheme()
-    _ = toev1alpha1.AddToScheme(scheme)
+    _ = kubecodriverv1alpha1.AddToScheme(scheme)
     
     fakeClient := fake.NewClientBuilder().
         WithScheme(scheme).
@@ -97,7 +97,7 @@ make test-e2e
 
 - `KUBEBUILDER_ASSETS`: Path to envtest binaries (set automatically by Makefile)
 - `ENVTEST_K8S_VERSION`: Kubernetes version for envtest (default: 1.34)
-- `KIND_CLUSTER`: Name of Kind cluster for e2e tests (default: toe-test-e2e)
+- `KIND_CLUSTER`: Name of Kind cluster for e2e tests (default: kubecodriver-test-e2e)
 - `GOTOOLCHAIN`: Go toolchain version (use: go1.25.3)
 
 ## Best Practices

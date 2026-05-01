@@ -9,8 +9,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// PowerToolConfigSpec defines the desired state of PowerToolConfig
-type PowerToolConfigSpec struct {
+// CoDriverToolSpec defines the desired state of CoDriverTool
+type CoDriverToolSpec struct {
 	// Name is the unique identifier for this power tool
 	// +required
 	Name string `json:"name"`
@@ -45,9 +45,9 @@ type PowerToolConfigSpec struct {
 	Resources *ResourceSpec `json:"resources,omitempty"`
 }
 
-// PowerToolConfigStatus defines the observed state of PowerToolConfig
-type PowerToolConfigStatus struct {
-	// Phase represents the current phase of the PowerToolConfig
+// CoDriverToolStatus defines the observed state of CoDriverTool
+type CoDriverToolStatus struct {
+	// Phase represents the current phase of the CoDriverTool
 	// +optional
 	Phase *string `json:"phase,omitempty"`
 
@@ -55,13 +55,13 @@ type PowerToolConfigStatus struct {
 	// +optional
 	LastValidated *metav1.Time `json:"lastValidated,omitempty"`
 
-	// Conditions represent the latest available observations of the PowerToolConfig's state
+	// Conditions represent the latest available observations of the CoDriverTool's state
 	// +optional
-	Conditions []PowerToolConfigCondition `json:"conditions,omitempty"`
+	Conditions []CoDriverToolCondition `json:"conditions,omitempty"`
 }
 
-// PowerToolConfigCondition represents a condition of a PowerToolConfig
-type PowerToolConfigCondition struct {
+// CoDriverToolCondition represents a condition of a CoDriverTool
+type CoDriverToolCondition struct {
 	Type               string      `json:"type"`
 	Status             string      `json:"status"`
 	LastTransitionTime metav1.Time `json:"lastTransitionTime"`
@@ -72,32 +72,32 @@ type PowerToolConfigCondition struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 
-// PowerToolConfig is the Schema for the powertoolconfigs API
-type PowerToolConfig struct {
+// CoDriverTool is the Schema for the codrivertools API
+type CoDriverTool struct {
 	metav1.TypeMeta `json:",inline"`
 
 	// metadata is a standard object metadata
 	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty,omitzero"`
 
-	// spec defines the desired state of PowerToolConfig
+	// spec defines the desired state of CoDriverTool
 	// +required
-	Spec PowerToolConfigSpec `json:"spec"`
+	Spec CoDriverToolSpec `json:"spec"`
 
-	// status defines the observed state of PowerToolConfig
+	// status defines the observed state of CoDriverTool
 	// +optional
-	Status PowerToolConfigStatus `json:"status,omitempty,omitzero"`
+	Status CoDriverToolStatus `json:"status,omitempty,omitzero"`
 }
 
 // +kubebuilder:object:root=true
 
-// PowerToolConfigList contains a list of PowerToolConfig
-type PowerToolConfigList struct {
+// CoDriverToolList contains a list of CoDriverTool
+type CoDriverToolList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []PowerToolConfig `json:"items"`
+	Items           []CoDriverTool `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&PowerToolConfig{}, &PowerToolConfigList{})
+	SchemeBuilder.Register(&CoDriverTool{}, &CoDriverToolList{})
 }

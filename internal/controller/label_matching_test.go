@@ -7,7 +7,7 @@ import (
 )
 
 func TestExtractMatchingLabels(t *testing.T) {
-	r := &PowerToolReconciler{}
+	r := &CoDriverJobReconciler{}
 
 	tests := []struct {
 		name      string
@@ -163,7 +163,7 @@ func TestExtractMatchingLabels(t *testing.T) {
 }
 
 func TestExtractMatchingLabels_POSIXCompliance(t *testing.T) {
-	r := &PowerToolReconciler{}
+	r := &CoDriverJobReconciler{}
 
 	tests := []struct {
 		name      string

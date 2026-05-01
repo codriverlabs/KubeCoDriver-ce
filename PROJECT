@@ -3,19 +3,19 @@
 # and allow the plugins properly work.
 # More info: https://book.kubebuilder.io/reference/project-config.html
 cliVersion: 4.8.0
-domain: codriverlabs.ai.toe.run
+domain: kubecodriver.codriverlabs.ai
 layout:
 - go.kubebuilder.io/v4
-projectName: toe
-repo: toe
+projectName: kubecodriver
+repo: github.com/codriverlabs/KubeCoDriver
 resources:
 - api:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: codriverlabs.ai.toe.run
-  group: codriverlabs.ai.toe.run
+  domain: kubecodriver.codriverlabs.ai
+  group: kubecodriver.codriverlabs.ai
   kind: ProfileJob
-  path: toe/api/v1alpha1
+  path: github.com/codriverlabs/KubeCoDriver/api/v1alpha1
   version: v1alpha1
 version: "3"

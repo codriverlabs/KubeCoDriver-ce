@@ -34,7 +34,7 @@ The controller's `buildSecurityContext()` function only sets:
 - ✅ No CRD changes required
 - ✅ No API modifications
 - ✅ Fully backward compatible
-- ✅ Works automatically for all existing PowerToolConfigs
+- ✅ Works automatically for all existing CoDriverTools
 - ✅ Simple implementation
 
 ### Phase 1: Implement Auto-Inheritance (45 min)
@@ -44,7 +44,7 @@ The controller's `buildSecurityContext()` function only sets:
 Modify `createEphemeralContainerForPod()` to automatically inherit security context:
 
 ```go
-func (r *PowerToolReconciler) createEphemeralContainerForPod(ctx context.Context, powerTool *toev1alpha1.PowerTool, toolConfig *toev1alpha1.PowerToolConfig, pod corev1.Pod, containerName string) error {
+func (r *CoDriverJobReconciler) createEphemeralContainerForPod(ctx context.Context, powerTool *kubecodriverv1alpha1.CoDriverJob, toolConfig *kubecodriverv1alpha1.CoDriverTool, pod corev1.Pod, containerName string) error {
     logger := log.FromContext(ctx)
 
     // ... existing code for env vars ...
@@ -287,7 +287,7 @@ Ephemeral container will automatically run as user 1001:1001.
 
 Check controller logs for inheritance messages:
 ```bash
-kubectl logs -n toe-system -l control-plane=controller-manager | grep "Inherited"
+kubectl logs -n kubecodriver-system -l control-plane=controller-manager | grep "Inherited"
 ```
 ```
 
@@ -340,7 +340,7 @@ If issues arise:
 - `docs/security/README.md` - Documentation
 - `roadmap/test-results-nonroot.md` - Test results
 - `examples/test-nonroot-pod.yaml` - Test pod
-- `examples/test-nonroot-powertool.yaml` - Test PowerTool
+- `examples/test-nonroot-powertool.yaml` - Test CoDriverJob
 
 ## Timeline
 
@@ -355,6 +355,6 @@ If issues arise:
 
 - This is a backward-compatible change
 - No API/CRD modifications required
-- Existing PowerToolConfigs will automatically benefit
+- Existing CoDriverTools will automatically benefit
 - Auto-discovery provides sensible defaults
 - Logging helps with debugging and verification

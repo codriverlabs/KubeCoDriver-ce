@@ -1,12 +1,12 @@
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerToolConfig
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverTool
 metadata:
   name: chaos-config
-  namespace: toe-system
+  namespace: kubecodriver-system
 spec:
   name: "chaos"
   description: "Comprehensive chaos engineering experiments: process, cpu, storage, network, memory"
-  image: ghcr.io/codriverlabs/ce/toe-chaos:1.1.0
+  image: ghcr.io/codriverlabs/ce/kubecodriver-chaos:v1.1.0
   securityContext:
     allowPrivileged: true
     capabilities:

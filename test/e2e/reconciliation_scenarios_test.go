@@ -9,7 +9,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"toe/api/v1alpha1"
+	"github.com/codriverlabs/KubeCoDriver/api/v1alpha1"
 )
 
 var _ = Describe("Advanced Reconciliation Scenarios", func() {
@@ -17,7 +17,7 @@ var _ = Describe("Advanced Reconciliation Scenarios", func() {
 
 	BeforeEach(func() {
 		namespace = CreateSimpleTestNamespace()
-		CreateSimpleTestPowerToolConfig("aperf-config", namespace.Name)
+		CreateSimpleTestCoDriverTool("aperf-config", namespace.Name)
 	})
 
 	AfterEach(func() {
@@ -29,14 +29,14 @@ var _ = Describe("Advanced Reconciliation Scenarios", func() {
 
 		BeforeEach(func() {
 			secondNamespace = CreateSimpleTestNamespace()
-			CreateSimpleTestPowerToolConfig("aperf-config", secondNamespace.Name)
+			CreateSimpleTestCoDriverTool("aperf-config", secondNamespace.Name)
 		})
 
 		AfterEach(func() {
 			DeleteSimpleTestNamespace(secondNamespace)
 		})
 
-		It("should isolate PowerTools between namespaces", func() {
+		It("should isolate CoDriverJobs between namespaces", func() {
 			By("creating pods in both namespaces")
 			CreateSimpleMockTargetPod(namespace.Name, "ns1-pod", map[string]string{
 				"app": "cross-ns-app",
@@ -45,21 +45,21 @@ var _ = Describe("Advanced Reconciliation Scenarios", func() {
 				"app": "cross-ns-app",
 			})
 
-			By("creating PowerTool in first namespace")
-			spec := CreateSimpleBasicPowerToolSpec(map[string]string{"app": "cross-ns-app"})
-			powerTool1 := CreateSimpleTestPowerTool("ns1-tool", namespace.Name, spec)
+			By("creating CoDriverJob in first namespace")
+			spec := CreateSimpleBasicCoDriverJobSpec(map[string]string{"app": "cross-ns-app"})
+			coDriverJob1 := CreateSimpleTestCoDriverJob("ns1-tool", namespace.Name, spec)
 
-			By("creating PowerTool in second namespace")
-			powerTool2 := CreateSimpleTestPowerTool("ns2-tool", secondNamespace.Name, spec)
+			By("creating CoDriverJob in second namespace")
+			coDriverJob2 := CreateSimpleTestCoDriverJob("ns2-tool", secondNamespace.Name, spec)
 
-			By("verifying each PowerTool only targets pods in its namespace")
+			By("verifying each CoDriverJob only targets pods in its namespace")
 			Eventually(func() int {
-				updated := GetSimplePowerTool(powerTool1)
+				updated := GetSimpleCoDriverJob(coDriverJob1)
 				return len(updated.Status.ActivePods)
 			}, "30s", "1s").Should(Equal(1))
 
 			Eventually(func() int {
-				updated := GetSimplePowerTool(powerTool2)
+				updated := GetSimpleCoDriverJob(coDriverJob2)
 				return len(updated.Status.ActivePods)
 			}, "30s", "1s").Should(Equal(1))
 		})
@@ -72,25 +72,25 @@ var _ = Describe("Advanced Reconciliation Scenarios", func() {
 				"app": "orphan-app",
 			})
 
-			By("creating PowerTool")
-			spec := CreateSimpleBasicPowerToolSpec(map[string]string{"app": "orphan-app"})
-			powerTool := CreateSimpleTestPowerTool("orphan-test", namespace.Name, spec)
+			By("creating CoDriverJob")
+			spec := CreateSimpleBasicCoDriverJobSpec(map[string]string{"app": "orphan-app"})
+			coDriverJob := CreateSimpleTestCoDriverJob("orphan-test", namespace.Name, spec)
 
 			By("waiting for reconciliation")
-			WaitForSimplePowerToolPhase(powerTool, "Pending")
+			WaitForSimpleCoDriverJobPhase(coDriverJob, "Pending")
 
-			By("simulating pod deletion without PowerTool cleanup")
+			By("simulating pod deletion without CoDriverJob cleanup")
 			Expect(simpleK8sClient.Delete(simpleCtx, targetPod)).To(Succeed())
 
-			By("verifying PowerTool handles orphaned state")
+			By("verifying CoDriverJob handles orphaned state")
 			Eventually(func() int {
-				updated := GetSimplePowerTool(powerTool)
+				updated := GetSimpleCoDriverJob(coDriverJob)
 				return len(updated.Status.ActivePods)
 			}, "30s", "1s").Should(Equal(0))
 
-			By("verifying PowerTool phase transitions appropriately")
+			By("verifying CoDriverJob phase transitions appropriately")
 			Eventually(func() string {
-				updated := GetSimplePowerTool(powerTool)
+				updated := GetSimpleCoDriverJob(coDriverJob)
 				if updated.Status.Phase == nil {
 					return ""
 				}
@@ -98,18 +98,18 @@ var _ = Describe("Advanced Reconciliation Scenarios", func() {
 			}, "30s", "1s").Should(Equal("Failed"))
 		})
 
-		It("should clean up resources on PowerTool deletion", func() {
+		It("should clean up resources on CoDriverJob deletion", func() {
 			By("creating target pod")
 			CreateSimpleMockTargetPod(namespace.Name, "cleanup-pod", map[string]string{
 				"app": "cleanup-app",
 			})
 
-			By("creating PowerTool")
-			spec := CreateSimpleBasicPowerToolSpec(map[string]string{"app": "cleanup-app"})
-			powerTool := CreateSimpleTestPowerTool("cleanup-test", namespace.Name, spec)
+			By("creating CoDriverJob")
+			spec := CreateSimpleBasicCoDriverJobSpec(map[string]string{"app": "cleanup-app"})
+			coDriverJob := CreateSimpleTestCoDriverJob("cleanup-test", namespace.Name, spec)
 
 			By("waiting for reconciliation")
-			WaitForSimplePowerToolPhase(powerTool, "Pending")
+			WaitForSimpleCoDriverJobPhase(coDriverJob, "Pending")
 
 			By("storing initial resource state")
 			initialPod := GetSimplePod(&corev1.Pod{
@@ -119,17 +119,17 @@ var _ = Describe("Advanced Reconciliation Scenarios", func() {
 				},
 			})
 
-			By("deleting PowerTool")
-			Expect(simpleK8sClient.Delete(simpleCtx, powerTool)).To(Succeed())
+			By("deleting CoDriverJob")
+			Expect(simpleK8sClient.Delete(simpleCtx, coDriverJob)).To(Succeed())
 
-			By("verifying PowerTool is deleted")
+			By("verifying CoDriverJob is deleted")
 			Eventually(func() bool {
-				updated := &v1alpha1.PowerTool{}
-				err := simpleK8sClient.Get(simpleCtx, client.ObjectKeyFromObject(powerTool), updated)
+				updated := &v1alpha1.CoDriverJob{}
+				err := simpleK8sClient.Get(simpleCtx, client.ObjectKeyFromObject(coDriverJob), updated)
 				return err != nil
 			}, "30s", "1s").Should(BeTrue())
 
-			By("verifying target pod is not affected by PowerTool deletion")
+			By("verifying target pod is not affected by CoDriverJob deletion")
 			finalPod := GetSimplePod(initialPod)
 			Expect(finalPod.Name).To(Equal(initialPod.Name))
 		})
@@ -145,13 +145,13 @@ var _ = Describe("Advanced Reconciliation Scenarios", func() {
 				"service": "any-service",
 			})
 
-			By("creating PowerTool with empty label selector")
-			powerTool := &v1alpha1.PowerTool{
+			By("creating CoDriverJob with empty label selector")
+			coDriverJob := &v1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "empty-selector",
 					Namespace: namespace.Name,
 				},
-				Spec: v1alpha1.PowerToolSpec{
+				Spec: v1alpha1.CoDriverJobSpec{
 					Targets: v1alpha1.TargetSpec{
 						LabelSelector: &metav1.LabelSelector{}, // Empty selector
 					},
@@ -164,72 +164,72 @@ var _ = Describe("Advanced Reconciliation Scenarios", func() {
 					},
 				},
 			}
-			Expect(simpleK8sClient.Create(simpleCtx, powerTool)).To(Succeed())
+			Expect(simpleK8sClient.Create(simpleCtx, coDriverJob)).To(Succeed())
 
 			By("verifying all pods in namespace are selected")
 			Eventually(func() int {
-				updated := GetSimplePowerTool(powerTool)
+				updated := GetSimpleCoDriverJob(coDriverJob)
 				return len(updated.Status.ActivePods)
 			}, "30s", "1s").Should(Equal(2))
 		})
 
-		It("should handle rapid PowerTool creation and deletion", func() {
+		It("should handle rapid CoDriverJob creation and deletion", func() {
 			By("creating target pod")
 			CreateSimpleMockTargetPod(namespace.Name, "rapid-pod", map[string]string{
 				"app": "rapid-app",
 			})
 
-			By("rapidly creating and deleting PowerTools")
+			By("rapidly creating and deleting CoDriverJobs")
 			for i := 0; i < 3; i++ {
-				spec := CreateSimpleBasicPowerToolSpec(map[string]string{"app": "rapid-app"})
-				powerTool := CreateSimpleTestPowerTool(fmt.Sprintf("rapid-tool-%d", i), namespace.Name, spec)
+				spec := CreateSimpleBasicCoDriverJobSpec(map[string]string{"app": "rapid-app"})
+				coDriverJob := CreateSimpleTestCoDriverJob(fmt.Sprintf("rapid-tool-%d", i), namespace.Name, spec)
 
 				// Brief wait to allow some reconciliation
 				Eventually(func() bool {
-					updated := GetSimplePowerTool(powerTool)
+					updated := GetSimpleCoDriverJob(coDriverJob)
 					return updated.Status.Phase != nil
 				}, "10s", "1s").Should(BeTrue())
 
 				// Delete immediately
-				Expect(simpleK8sClient.Delete(simpleCtx, powerTool)).To(Succeed())
+				Expect(simpleK8sClient.Delete(simpleCtx, coDriverJob)).To(Succeed())
 
 				// Verify deletion
 				Eventually(func() bool {
-					updated := &v1alpha1.PowerTool{}
-					err := simpleK8sClient.Get(simpleCtx, client.ObjectKeyFromObject(powerTool), updated)
+					updated := &v1alpha1.CoDriverJob{}
+					err := simpleK8sClient.Get(simpleCtx, client.ObjectKeyFromObject(coDriverJob), updated)
 					return err != nil
 				}, "15s", "1s").Should(BeTrue())
 			}
 		})
 
-		It("should handle PowerTool updates during reconciliation", func() {
+		It("should handle CoDriverJob updates during reconciliation", func() {
 			By("creating target pod")
 			CreateSimpleMockTargetPod(namespace.Name, "update-pod", map[string]string{
 				"app": "update-app",
 			})
 
-			By("creating PowerTool")
-			spec := CreateSimpleBasicPowerToolSpec(map[string]string{"app": "update-app"})
-			powerTool := CreateSimpleTestPowerTool("update-test", namespace.Name, spec)
+			By("creating CoDriverJob")
+			spec := CreateSimpleBasicCoDriverJobSpec(map[string]string{"app": "update-app"})
+			coDriverJob := CreateSimpleTestCoDriverJob("update-test", namespace.Name, spec)
 
 			By("waiting for initial reconciliation")
-			WaitForSimplePowerToolPhase(powerTool, "Pending")
+			WaitForSimpleCoDriverJobPhase(coDriverJob, "Pending")
 
-			By("updating PowerTool spec")
-			updated := GetSimplePowerTool(powerTool)
+			By("updating CoDriverJob spec")
+			updated := GetSimpleCoDriverJob(coDriverJob)
 			updated.Spec.Tool.Duration = "60s"
 			Expect(simpleK8sClient.Update(simpleCtx, updated)).To(Succeed())
 
 			By("verifying reconciliation handles the update")
 			Eventually(func() string {
-				current := GetSimplePowerTool(powerTool)
+				current := GetSimpleCoDriverJob(coDriverJob)
 				return current.Spec.Tool.Duration
 			}, "30s", "1s").Should(Equal("60s"))
 		})
 	})
 
 	Context("Stress Testing Scenarios", func() {
-		It("should handle multiple concurrent PowerTools", func() {
+		It("should handle multiple concurrent CoDriverJobs", func() {
 			By("creating multiple target pods")
 			for i := 0; i < 10; i++ {
 				CreateSimpleMockTargetPod(namespace.Name, fmt.Sprintf("stress-pod-%d", i), map[string]string{
@@ -238,10 +238,10 @@ var _ = Describe("Advanced Reconciliation Scenarios", func() {
 				})
 			}
 
-			By("creating multiple PowerTools with different selectors")
-			var powerTools []*v1alpha1.PowerTool
+			By("creating multiple CoDriverJobs with different selectors")
+			var coDriverJobs []*v1alpha1.CoDriverJob
 			for i := 0; i < 5; i++ {
-				spec := v1alpha1.PowerToolSpec{
+				spec := v1alpha1.CoDriverJobSpec{
 					Targets: v1alpha1.TargetSpec{
 						LabelSelector: &metav1.LabelSelector{
 							MatchLabels: map[string]string{
@@ -258,20 +258,20 @@ var _ = Describe("Advanced Reconciliation Scenarios", func() {
 						Mode: "ephemeral",
 					},
 				}
-				powerTool := CreateSimpleTestPowerTool(fmt.Sprintf("stress-tool-%d", i), namespace.Name, spec)
-				powerTools = append(powerTools, powerTool)
+				coDriverJob := CreateSimpleTestCoDriverJob(fmt.Sprintf("stress-tool-%d", i), namespace.Name, spec)
+				coDriverJobs = append(coDriverJobs, coDriverJob)
 			}
 
-			By("verifying all PowerTools reconcile successfully")
-			for i, powerTool := range powerTools {
+			By("verifying all CoDriverJobs reconcile successfully")
+			for i, coDriverJob := range coDriverJobs {
 				Eventually(func() string {
-					updated := GetSimplePowerTool(powerTool)
+					updated := GetSimpleCoDriverJob(coDriverJob)
 					if updated.Status.Phase == nil {
 						return ""
 					}
 					return *updated.Status.Phase
 				}, "45s", "1s").Should(Or(Equal("Pending"), Equal("Running")),
-					fmt.Sprintf("PowerTool %d should reach Pending or Running phase", i))
+					fmt.Sprintf("CoDriverJob %d should reach Pending or Running phase", i))
 			}
 		})
 
@@ -284,19 +284,19 @@ var _ = Describe("Advanced Reconciliation Scenarios", func() {
 				})
 			}
 
-			By("creating PowerTool targeting all pods")
-			spec := CreateSimpleBasicPowerToolSpec(map[string]string{"app": "pressure-app"})
-			powerTool := CreateSimpleTestPowerTool("pressure-test", namespace.Name, spec)
+			By("creating CoDriverJob targeting all pods")
+			spec := CreateSimpleBasicCoDriverJobSpec(map[string]string{"app": "pressure-app"})
+			coDriverJob := CreateSimpleTestCoDriverJob("pressure-test", namespace.Name, spec)
 
 			By("verifying consistent reconciliation despite scale")
 			Eventually(func() int {
-				updated := GetSimplePowerTool(powerTool)
+				updated := GetSimpleCoDriverJob(coDriverJob)
 				return len(updated.Status.ActivePods)
 			}, "60s", "2s").Should(Equal(20))
 
 			By("verifying status remains consistent")
 			Consistently(func() int {
-				updated := GetSimplePowerTool(powerTool)
+				updated := GetSimpleCoDriverJob(coDriverJob)
 				return len(updated.Status.ActivePods)
 			}, "10s", "1s").Should(Equal(20))
 		})
@@ -309,16 +309,16 @@ var _ = Describe("Advanced Reconciliation Scenarios", func() {
 				"app": "idempotent-app",
 			})
 
-			By("creating PowerTool")
-			spec := CreateSimpleBasicPowerToolSpec(map[string]string{"app": "idempotent-app"})
-			powerTool := CreateSimpleTestPowerTool("idempotent-test", namespace.Name, spec)
+			By("creating CoDriverJob")
+			spec := CreateSimpleBasicCoDriverJobSpec(map[string]string{"app": "idempotent-app"})
+			coDriverJob := CreateSimpleTestCoDriverJob("idempotent-test", namespace.Name, spec)
 
 			By("capturing initial state after reconciliation")
-			WaitForSimplePowerToolPhase(powerTool, "Pending")
-			initialState := GetSimplePowerTool(powerTool)
+			WaitForSimpleCoDriverJobPhase(coDriverJob, "Pending")
+			initialState := GetSimpleCoDriverJob(coDriverJob)
 
 			By("triggering re-reconciliation by updating annotation")
-			updated := GetSimplePowerTool(powerTool)
+			updated := GetSimpleCoDriverJob(coDriverJob)
 			if updated.Annotations == nil {
 				updated.Annotations = make(map[string]string)
 			}
@@ -327,7 +327,7 @@ var _ = Describe("Advanced Reconciliation Scenarios", func() {
 
 			By("verifying state remains consistent after re-reconciliation")
 			Eventually(func() bool {
-				current := GetSimplePowerTool(powerTool)
+				current := GetSimpleCoDriverJob(coDriverJob)
 				return len(current.Status.ActivePods) == len(initialState.Status.ActivePods) &&
 					*current.Status.Phase == *initialState.Status.Phase
 			}, "30s", "1s").Should(BeTrue())

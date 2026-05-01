@@ -1,13 +1,13 @@
-# TOE CICD Scripts
+# KubeCoDriver CICD Scripts
 
-This directory contains scripts for building and deploying the TOE (Tactical Observability Engine) components.
+This directory contains scripts for building and deploying the KubeCoDriver (Tactical Observability Engine) components.
 
 ## Architecture Overview
 
-TOE consists of three main components:
-- **Controller** - Manages PowerTool and PowerToolConfig resources
+KubeCoDriver consists of three main components:
+- **Controller** - Manages CoDriverJob and CoDriverTool resources
 - **Collector** - Receives and stores profiling data  
-- **PowerTools** - Profiling tool containers (aperf, etc.)
+- **CoDriverJobs** - Profiling tool containers (aperf, etc.)
 
 ## Prerequisites
 
@@ -26,7 +26,7 @@ REGISTRY=123456789012.dkr.ecr.us-west-2.amazonaws.com
 TAG=latest
 
 # Cluster configuration  
-NAMESPACE=toe-system
+NAMESPACE=kubecodriver-system
 KUBECONFIG_PATH=~/.kube/config
 ```
 
@@ -81,15 +81,15 @@ The controller must be deployed first as it creates the collector's ServiceAccou
 # Build controller image
 ./build-controller.sh
 
-# Deploy controller (creates toe-system namespace, RBAC, CRDs)
+# Deploy controller (creates kubecodriver-system namespace, RBAC, CRDs)
 ./deploy-controller.sh
 ```
 
 **What this creates:**
-- `toe-system` namespace
+- `kubecodriver-system` namespace
 - Controller deployment and ServiceAccount
-- PowerTool and PowerToolConfig CRDs
-- `toe-collector` ServiceAccount with token creation permissions
+- CoDriverJob and CoDriverTool CRDs
+- `kubecodriver-collector` ServiceAccount with token creation permissions
 - ClusterRole and ClusterRoleBinding for controller
 
 #### 2. Collector Deployment (Optional)
@@ -105,17 +105,17 @@ Deploy collector only if you need centralized profile collection.
 ```
 
 **What this creates:**
-- Collector deployment using `toe-collector` ServiceAccount
+- Collector deployment using `kubecodriver-collector` ServiceAccount
 - Collector service (ClusterIP)
 - TLS certificates for secure communication
 - PVC for profile storage
 
-#### 3. PowerTool Images (As Needed)
+#### 3. CoDriverJob Images (As Needed)
 
-Build PowerTool images for the profiling tools you want to use.
+Build CoDriverJob images for the profiling tools you want to use.
 
 ```bash
-# Build aperf PowerTool
+# Build aperf CoDriverJob
 ./build-powertool-tool.sh aperf
 
 # Build other tools
@@ -133,8 +133,8 @@ cp config.env.example config.env
 ./deploy-all.sh local   # or 'ecr'
 
 # 3. Verify deployment
-kubectl get pods -n toe-system
-kubectl get crds | grep toe
+kubectl get pods -n kubecodriver-system
+kubectl get crds | grep kubecodriver
 ```
 
 ## Script Reference
@@ -160,11 +160,11 @@ kubectl get crds | grep toe
 | `build-collector.sh` | Build collector Docker image | Docker, config.env |
 | `deploy-collector.sh` | Deploy collector to cluster | kubectl, controller deployed |
 
-### PowerTool Scripts
+### CoDriverJob Scripts
 
 | Script | Purpose | Dependencies |
 |--------|---------|--------------|
-| `build-powertool-tool.sh` | Build PowerTool images | Docker, config.env |
+| `build-powertool-tool.sh` | Build CoDriverJob images | Docker, config.env |
 
 ## Usage Patterns
 
@@ -202,11 +202,11 @@ If you only want ephemeral profiling without centralized collection:
 ./build-controller.sh
 ./deploy-controller.sh
 
-# Build PowerTool images
+# Build CoDriverJob images
 ./build-powertool-tool.sh aperf
 
 # Skip collector deployment
-# PowerTools will use ephemeral or PVC output modes
+# CoDriverJobs will use ephemeral or PVC output modes
 ```
 
 ## Troubleshooting
@@ -223,7 +223,7 @@ If you only want ephemeral profiling without centralized collection:
 2. **Collector deployment fails**:
    ```bash
    # Ensure controller is deployed first
-   kubectl get serviceaccount toe-collector -n toe-system
+   kubectl get serviceaccount kubecodriver-collector -n kubecodriver-system
    kubectl get clusterrole manager-role
    ```
 
@@ -231,26 +231,26 @@ If you only want ephemeral profiling without centralized collection:
    ```bash
    # Check registry authentication
    docker login $REGISTRY
-   kubectl get secret -n toe-system | grep regcred
+   kubectl get secret -n kubecodriver-system | grep regcred
    ```
 
 ### Verification Commands
 
 ```bash
 # Check controller status
-kubectl get pods -n toe-system -l app.kubernetes.io/name=toe
-kubectl logs -n toe-system deployment/toe-controller-manager
+kubectl get pods -n kubecodriver-system -l app.kubernetes.io/name=kubecodriver
+kubectl logs -n kubecodriver-system deployment/kubecodriver-controller-manager
 
 # Check collector status  
-kubectl get pods -n toe-system -l app=toe-sdk-collector
-kubectl logs -n toe-system deployment/toe-sdk-collector
+kubectl get pods -n kubecodriver-system -l app=kubecodriver-sdk-collector
+kubectl logs -n kubecodriver-system deployment/kubecodriver-sdk-collector
 
 # Check CRDs
-kubectl get crds | grep codriverlabs.ai.toe.run
+kubectl get crds | grep kubecodriver.codriverlabs.ai
 
 # Check RBAC
 kubectl get clusterrole manager-role
-kubectl get serviceaccount toe-collector -n toe-system
+kubectl get serviceaccount kubecodriver-collector -n kubecodriver-system
 ```
 
 ## Security Considerations
@@ -258,14 +258,14 @@ kubectl get serviceaccount toe-collector -n toe-system
 ### RBAC Model
 
 - **Controller**: ClusterRole with cross-namespace pod access for ephemeral containers
-- **Collector**: Namespace-scoped Role in toe-system for token validation
+- **Collector**: Namespace-scoped Role in kubecodriver-system for token validation
 - **ServiceAccounts**: Separate SAs for controller and collector with minimal permissions
 
 ### Token Flow
 
-1. Controller generates TokenRequest for `toe-collector` ServiceAccount
-2. Token has audience `toe-sdk-collector` and is bound to PowerTool object
-3. PowerTool client sends token via `Authorization: Bearer` header
+1. Controller generates TokenRequest for `kubecodriver-collector` ServiceAccount
+2. Token has audience `kubecodriver-sdk-collector` and is bound to CoDriverJob object
+3. CoDriverJob client sends token via `Authorization: Bearer` header
 4. Collector validates token using Kubernetes TokenReview API
 
 ### Network Security
@@ -280,7 +280,7 @@ kubectl get serviceaccount toe-collector -n toe-system
 
 - `REGISTRY` - Container registry URL
 - `TAG` - Image tag to use
-- `NAMESPACE` - Kubernetes namespace (default: toe-system)
+- `NAMESPACE` - Kubernetes namespace (default: kubecodriver-system)
 
 ### Optional
 
@@ -300,16 +300,16 @@ cicd-scripts/
 ├── clean-controller.sh          # Clean controller resources
 ├── build-collector.sh           # Build collector image  
 ├── deploy-collector.sh          # Deploy collector
-└── build-powertool-tool.sh      # Build PowerTool images
+└── build-powertool-tool.sh      # Build CoDriverJob images
 ```
 
 ## Next Steps
 
 After successful deployment:
 
-1. **Create PowerToolConfig** - Define your profiling tools
+1. **Create CoDriverTool** - Define your profiling tools
 2. **Deploy target applications** - Applications you want to profile
-3. **Create PowerTool resources** - Start profiling jobs
+3. **Create CoDriverJob resources** - Start profiling jobs
 4. **Monitor results** - Check collector logs and storage
 
-See the main project README.md for usage examples and PowerTool configuration.
+See the main project README.md for usage examples and CoDriverJob configuration.

@@ -25,8 +25,8 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
-	toerunv1alpha1 "toe/api/v1alpha1"
-	"toe/internal/controller"
+	kubecodriverv1alpha1 "github.com/codriverlabs/KubeCoDriver/api/v1alpha1"
+	"github.com/codriverlabs/KubeCoDriver/internal/controller"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -38,7 +38,7 @@ var (
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
-	utilruntime.Must(toerunv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(kubecodriverv1alpha1.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
 }
 
@@ -150,7 +150,7 @@ func main() {
 		WebhookServer:          webhookServer,
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
-		LeaderElectionID:       "9410be53.toe.run",
+		LeaderElectionID:       "9410be53.kubecodriver.codriverlabs.ai",
 		// LeaderElectionReleaseOnCancel defines if the leader should step down voluntarily
 		// when the Manager ends. This requires the binary to immediately end when the
 		// Manager is stopped, otherwise, this setting is unsafe. Setting this significantly
@@ -175,20 +175,20 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := controller.NewPowerToolReconciler(
+	if err := controller.NewCoDriverJobReconciler(
 		mgr.GetClient(),
 		mgr.GetScheme(),
 		k8sClient,
 	).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "PowerTool")
+		setupLog.Error(err, "unable to create controller", "controller", "CoDriverJob")
 		os.Exit(1)
 	}
 
-	if err := (&controller.PowerToolConfigReconciler{
+	if err := (&controller.CoDriverToolReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "PowerToolConfig")
+		setupLog.Error(err, "unable to create controller", "controller", "CoDriverTool")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder

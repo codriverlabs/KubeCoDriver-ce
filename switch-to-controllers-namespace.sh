@@ -1,2 +1,2 @@
 #!/bin/bash
-kubectl config set-context --current --namespace=toe-system
+kubectl config set-context --current --namespace=kubecodriver-system

@@ -1,33 +1,33 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: toe-collector
-  namespace: toe-system
+  name: kubecodriver-collector
+  namespace: kubecodriver-system
 spec:
   ports:
   - port: 8443
     targetPort: 8443
   selector:
-    app: toe-collector
+    app: kubecodriver-collector
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: toe-collector
-  namespace: toe-system
+  name: kubecodriver-collector
+  namespace: kubecodriver-system
 spec:
   selector:
     matchLabels:
-      app: toe-collector
+      app: kubecodriver-collector
   template:
     metadata:
       labels:
-        app: toe-collector
+        app: kubecodriver-collector
     spec:
-      serviceAccountName: toe-collector
+      serviceAccountName: kubecodriver-collector
       containers:
       - name: collector
-        image: localhost:32000/codriverlabs/toe-collector:v1.0.8
+        image: localhost:32000/codriverlabs/kubecodriver-collector:v1.0.8
         ports:
         - containerPort: 8443
         volumeMounts:
@@ -47,11 +47,11 @@ spec:
         - name: TLS_KEY_PATH
           value: /certs/tls.key
         - name: KUBERNETES_AUDIENCE
-          value: "toe-sdk-collector"
+          value: "kubecodriver-sdk-collector"
       volumes:
       - name: profiles-data
         persistentVolumeClaim:
           claimName: profiles-pvc
       - name: service-certs
         secret:
-          secretName: toe-collector-certs
+          secretName: kubecodriver-collector-certs

@@ -7,7 +7,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"toe/api/v1alpha1"
+	"github.com/codriverlabs/KubeCoDriver/api/v1alpha1"
 )
 
 var _ = Describe("Tool Configuration and Validation", func() {
@@ -24,22 +24,22 @@ var _ = Describe("Tool Configuration and Validation", func() {
 		DeleteSimpleTestNamespace(namespace)
 	})
 
-	Context("PowerToolConfig Management", func() {
+	Context("CoDriverTool Management", func() {
 		It("should validate tool configurations exist", func() {
-			By("creating PowerToolConfig")
-			_ = CreateSimpleTestPowerToolConfig("valid-config", namespace.Name)
+			By("creating CoDriverTool")
+			_ = CreateSimpleTestCoDriverTool("valid-config", namespace.Name)
 
-			By("creating PowerTool referencing the config")
-			spec := CreateSimpleBasicPowerToolSpec(map[string]string{"app": "tool-app"})
-			powerTool := CreateSimpleTestPowerTool("config-test", namespace.Name, spec)
+			By("creating CoDriverJob referencing the config")
+			spec := CreateSimpleBasicCoDriverJobSpec(map[string]string{"app": "tool-app"})
+			coDriverJob := CreateSimpleTestCoDriverJob("config-test", namespace.Name, spec)
 
-			By("verifying PowerTool finds the configuration")
-			WaitForSimplePowerToolCondition(powerTool, "ToolConfigured", "True")
+			By("verifying CoDriverJob finds the configuration")
+			WaitForSimpleCoDriverJobCondition(coDriverJob, "ToolConfigured", "True")
 		})
 
 		It("should handle missing tool configurations", func() {
-			By("creating PowerTool without corresponding config")
-			spec := v1alpha1.PowerToolSpec{
+			By("creating CoDriverJob without corresponding config")
+			spec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "tool-app"},
@@ -54,7 +54,7 @@ var _ = Describe("Tool Configuration and Validation", func() {
 				},
 			}
 
-			powerTool := &v1alpha1.PowerTool{
+			coDriverJob := &v1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "missing-config",
 					Namespace: namespace.Name,
@@ -63,23 +63,23 @@ var _ = Describe("Tool Configuration and Validation", func() {
 			}
 
 			By("expecting creation to fail due to missing config")
-			err := simpleK8sClient.Create(simpleCtx, powerTool)
+			err := simpleK8sClient.Create(simpleCtx, coDriverJob)
 			Expect(err).To(HaveOccurred())
 		})
 
-		It("should handle multiple PowerToolConfigs", func() {
+		It("should handle multiple CoDriverTools", func() {
 			By("creating multiple tool configurations")
-			_ = CreateSimpleTestPowerToolConfig("aperf-config", namespace.Name)
+			_ = CreateSimpleTestCoDriverTool("aperf-config", namespace.Name)
 
 			allowPrivileged := true
-			config2 := &v1alpha1.PowerToolConfig{
+			config2 := &v1alpha1.CoDriverTool{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "strace-config",
 					Namespace: namespace.Name,
 				},
-				Spec: v1alpha1.PowerToolConfigSpec{
+				Spec: v1alpha1.CoDriverToolSpec{
 					Name:  "strace",
-					Image: "ghcr.io/codriverlabs/toe-strace:latest",
+					Image: "ghcr.io/codriverlabs/ce/kubecodriver-strace:latest",
 					SecurityContext: v1alpha1.SecuritySpec{
 						AllowPrivileged: &allowPrivileged,
 						Capabilities: &v1alpha1.Capabilities{
@@ -90,24 +90,24 @@ var _ = Describe("Tool Configuration and Validation", func() {
 			}
 			Expect(simpleK8sClient.Create(simpleCtx, config2)).To(Succeed())
 
-			By("creating PowerTools for different tools")
-			spec1 := CreateSimpleBasicPowerToolSpec(map[string]string{"app": "tool-app"})
+			By("creating CoDriverJobs for different tools")
+			spec1 := CreateSimpleBasicCoDriverJobSpec(map[string]string{"app": "tool-app"})
 			spec1.Tool.Name = "aperf"
-			powerTool1 := CreateSimpleTestPowerTool("aperf-tool", namespace.Name, spec1)
+			coDriverJob1 := CreateSimpleTestCoDriverJob("aperf-tool", namespace.Name, spec1)
 
-			spec2 := CreateSimpleBasicPowerToolSpec(map[string]string{"app": "tool-app"})
+			spec2 := CreateSimpleBasicCoDriverJobSpec(map[string]string{"app": "tool-app"})
 			spec2.Tool.Name = "strace"
-			powerTool2 := CreateSimpleTestPowerTool("strace-tool", namespace.Name, spec2)
+			coDriverJob2 := CreateSimpleTestCoDriverJob("strace-tool", namespace.Name, spec2)
 
 			By("verifying both tools are configured correctly")
-			WaitForSimplePowerToolCondition(powerTool1, "ToolConfigured", "True")
-			WaitForSimplePowerToolCondition(powerTool2, "ToolConfigured", "True")
+			WaitForSimpleCoDriverJobCondition(coDriverJob1, "ToolConfigured", "True")
+			WaitForSimpleCoDriverJobCondition(coDriverJob2, "ToolConfigured", "True")
 		})
 	})
 
 	Context("Tool Duration Validation", func() {
 		BeforeEach(func() {
-			CreateSimpleTestPowerToolConfig("duration-config", namespace.Name)
+			CreateSimpleTestCoDriverTool("duration-config", namespace.Name)
 		})
 
 		It("should accept valid duration formats", func() {
@@ -121,16 +121,16 @@ var _ = Describe("Tool Configuration and Validation", func() {
 			}
 
 			for _, duration := range validDurations {
-				spec := CreateSimpleBasicPowerToolSpec(map[string]string{"app": "tool-app"})
+				spec := CreateSimpleBasicCoDriverJobSpec(map[string]string{"app": "tool-app"})
 				spec.Tool.Duration = duration
-				powerTool := CreateSimpleTestPowerTool("duration-"+duration, namespace.Name, spec)
+				coDriverJob := CreateSimpleTestCoDriverJob("duration-"+duration, namespace.Name, spec)
 
 				By("verifying duration is accepted: " + duration)
-				updated := GetSimplePowerTool(powerTool)
+				updated := GetSimpleCoDriverJob(coDriverJob)
 				Expect(updated.Spec.Tool.Duration).To(Equal(duration))
 
 				// Cleanup
-				Expect(simpleK8sClient.Delete(simpleCtx, powerTool)).To(Succeed())
+				Expect(simpleK8sClient.Delete(simpleCtx, coDriverJob)).To(Succeed())
 			}
 		})
 
@@ -145,10 +145,10 @@ var _ = Describe("Tool Configuration and Validation", func() {
 			}
 
 			for _, duration := range invalidDurations {
-				spec := CreateSimpleBasicPowerToolSpec(map[string]string{"app": "tool-app"})
+				spec := CreateSimpleBasicCoDriverJobSpec(map[string]string{"app": "tool-app"})
 				spec.Tool.Duration = duration
 
-				powerTool := &v1alpha1.PowerTool{
+				coDriverJob := &v1alpha1.CoDriverJob{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "invalid-duration-" + duration,
 						Namespace: namespace.Name,
@@ -157,7 +157,7 @@ var _ = Describe("Tool Configuration and Validation", func() {
 				}
 
 				By("expecting validation to fail for duration: " + duration)
-				err := simpleK8sClient.Create(simpleCtx, powerTool)
+				err := simpleK8sClient.Create(simpleCtx, coDriverJob)
 				Expect(err).To(HaveOccurred())
 			}
 		})
@@ -165,12 +165,12 @@ var _ = Describe("Tool Configuration and Validation", func() {
 
 	Context("Tool Arguments and Environment", func() {
 		BeforeEach(func() {
-			CreateSimpleTestPowerToolConfig("args-config", namespace.Name)
+			CreateSimpleTestCoDriverTool("args-config", namespace.Name)
 		})
 
 		It("should handle tool arguments correctly", func() {
-			By("creating PowerTool with custom arguments")
-			spec := v1alpha1.PowerToolSpec{
+			By("creating CoDriverJob with custom arguments")
+			spec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "tool-app"},
@@ -185,16 +185,16 @@ var _ = Describe("Tool Configuration and Validation", func() {
 					Mode: "ephemeral",
 				},
 			}
-			powerTool := CreateSimpleTestPowerTool("custom-args", namespace.Name, spec)
+			coDriverJob := CreateSimpleTestCoDriverJob("custom-args", namespace.Name, spec)
 
 			By("verifying arguments are preserved")
-			updated := GetSimplePowerTool(powerTool)
+			updated := GetSimpleCoDriverJob(coDriverJob)
 			Expect(updated.Spec.Tool.Args).To(Equal([]string{"--verbose", "--output=/tmp/custom.out"}))
 		})
 
 		It("should handle environment variables", func() {
-			By("creating PowerTool with environment variables")
-			spec := v1alpha1.PowerToolSpec{
+			By("creating CoDriverJob with environment variables")
+			spec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "tool-app"},
@@ -208,26 +208,26 @@ var _ = Describe("Tool Configuration and Validation", func() {
 					Mode: "ephemeral",
 				},
 			}
-			powerTool := CreateSimpleTestPowerTool("custom-env", namespace.Name, spec)
+			coDriverJob := CreateSimpleTestCoDriverJob("custom-env", namespace.Name, spec)
 
 			By("verifying environment variables are set")
-			_ = GetSimplePowerTool(powerTool)
+			_ = GetSimpleCoDriverJob(coDriverJob)
 		})
 	})
 
 	Context("Security Context Validation", func() {
 		It("should validate security context requirements", func() {
-			By("creating PowerToolConfig with specific security requirements")
+			By("creating CoDriverTool with specific security requirements")
 			allowPrivileged := true
 			allowHostPID := true
-			config := &v1alpha1.PowerToolConfig{
+			config := &v1alpha1.CoDriverTool{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "secure-config",
 					Namespace: namespace.Name,
 				},
-				Spec: v1alpha1.PowerToolConfigSpec{
+				Spec: v1alpha1.CoDriverToolSpec{
 					Name:  "secure-tool",
-					Image: "ghcr.io/codriverlabs/toe-secure:latest",
+					Image: "ghcr.io/codriverlabs/ce/kubecodriver-secure:latest",
 					SecurityContext: v1alpha1.SecuritySpec{
 						AllowPrivileged: &allowPrivileged,
 						AllowHostPID:    &allowHostPID,
@@ -240,8 +240,8 @@ var _ = Describe("Tool Configuration and Validation", func() {
 			}
 			Expect(simpleK8sClient.Create(simpleCtx, config)).To(Succeed())
 
-			By("creating PowerTool using secure configuration")
-			spec := v1alpha1.PowerToolSpec{
+			By("creating CoDriverJob using secure configuration")
+			spec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "tool-app"},
@@ -255,23 +255,23 @@ var _ = Describe("Tool Configuration and Validation", func() {
 					Mode: "ephemeral",
 				},
 			}
-			powerTool := CreateSimpleTestPowerTool("secure-tool-test", namespace.Name, spec)
+			coDriverJob := CreateSimpleTestCoDriverJob("secure-tool-test", namespace.Name, spec)
 
 			By("verifying security context is applied")
-			WaitForSimplePowerToolCondition(powerTool, "ToolConfigured", "True")
+			WaitForSimpleCoDriverJobCondition(coDriverJob, "ToolConfigured", "True")
 		})
 
 		It("should handle capability requirements", func() {
-			By("creating PowerToolConfig with specific capabilities")
+			By("creating CoDriverTool with specific capabilities")
 			allowPrivileged := false
-			config := &v1alpha1.PowerToolConfig{
+			config := &v1alpha1.CoDriverTool{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "cap-config",
 					Namespace: namespace.Name,
 				},
-				Spec: v1alpha1.PowerToolConfigSpec{
+				Spec: v1alpha1.CoDriverToolSpec{
 					Name:  "cap-tool",
-					Image: "ghcr.io/codriverlabs/toe-cap:latest",
+					Image: "ghcr.io/codriverlabs/ce/kubecodriver-cap:latest",
 					SecurityContext: v1alpha1.SecuritySpec{
 						AllowPrivileged: &allowPrivileged,
 						Capabilities: &v1alpha1.Capabilities{
@@ -282,8 +282,8 @@ var _ = Describe("Tool Configuration and Validation", func() {
 			}
 			Expect(simpleK8sClient.Create(simpleCtx, config)).To(Succeed())
 
-			By("creating PowerTool with capability requirements")
-			spec := v1alpha1.PowerToolSpec{
+			By("creating CoDriverJob with capability requirements")
+			spec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "tool-app"},
@@ -297,23 +297,23 @@ var _ = Describe("Tool Configuration and Validation", func() {
 					Mode: "ephemeral",
 				},
 			}
-			powerTool := CreateSimpleTestPowerTool("capability-test", namespace.Name, spec)
+			coDriverJob := CreateSimpleTestCoDriverJob("capability-test", namespace.Name, spec)
 
 			By("verifying capability configuration")
-			WaitForSimplePowerToolCondition(powerTool, "ToolConfigured", "True")
+			WaitForSimpleCoDriverJobCondition(coDriverJob, "ToolConfigured", "True")
 		})
 	})
 
 	Context("Tool Image Management", func() {
 		It("should handle different image registries", func() {
-			By("creating PowerToolConfig with custom registry")
+			By("creating CoDriverTool with custom registry")
 			allowPrivileged := true
-			config := &v1alpha1.PowerToolConfig{
+			config := &v1alpha1.CoDriverTool{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "custom-registry",
 					Namespace: namespace.Name,
 				},
-				Spec: v1alpha1.PowerToolConfigSpec{
+				Spec: v1alpha1.CoDriverToolSpec{
 					Name:  "custom-tool",
 					Image: "custom-registry.example.com/tools/profiler:v1.0.0",
 					SecurityContext: v1alpha1.SecuritySpec{
@@ -323,8 +323,8 @@ var _ = Describe("Tool Configuration and Validation", func() {
 			}
 			Expect(simpleK8sClient.Create(simpleCtx, config)).To(Succeed())
 
-			By("creating PowerTool using custom registry image")
-			spec := v1alpha1.PowerToolSpec{
+			By("creating CoDriverJob using custom registry image")
+			spec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "tool-app"},
@@ -338,23 +338,23 @@ var _ = Describe("Tool Configuration and Validation", func() {
 					Mode: "ephemeral",
 				},
 			}
-			powerTool := CreateSimpleTestPowerTool("custom-registry-test", namespace.Name, spec)
+			coDriverJob := CreateSimpleTestCoDriverJob("custom-registry-test", namespace.Name, spec)
 
 			By("verifying custom image is configured")
-			WaitForSimplePowerToolCondition(powerTool, "ToolConfigured", "True")
+			WaitForSimpleCoDriverJobCondition(coDriverJob, "ToolConfigured", "True")
 		})
 
 		It("should handle image pull policies", func() {
-			By("creating PowerToolConfig with pull policy")
+			By("creating CoDriverTool with pull policy")
 			allowPrivileged := true
-			config := &v1alpha1.PowerToolConfig{
+			config := &v1alpha1.CoDriverTool{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "pull-policy-config",
 					Namespace: namespace.Name,
 				},
-				Spec: v1alpha1.PowerToolConfigSpec{
+				Spec: v1alpha1.CoDriverToolSpec{
 					Name:  "pull-policy-tool",
-					Image: "ghcr.io/codriverlabs/toe-test:latest",
+					Image: "ghcr.io/codriverlabs/ce/kubecodriver-test:latest",
 					SecurityContext: v1alpha1.SecuritySpec{
 						AllowPrivileged: &allowPrivileged,
 					},
@@ -363,9 +363,9 @@ var _ = Describe("Tool Configuration and Validation", func() {
 			Expect(simpleK8sClient.Create(simpleCtx, config)).To(Succeed())
 
 			By("verifying image configuration is accepted")
-			updated := &v1alpha1.PowerToolConfig{}
+			updated := &v1alpha1.CoDriverTool{}
 			Expect(simpleK8sClient.Get(simpleCtx, client.ObjectKeyFromObject(config), updated)).To(Succeed())
-			Expect(updated.Spec.Image).To(Equal("ghcr.io/codriverlabs/toe-test:latest"))
+			Expect(updated.Spec.Image).To(Equal("ghcr.io/codriverlabs/ce/kubecodriver-test:latest"))
 		})
 	})
 })

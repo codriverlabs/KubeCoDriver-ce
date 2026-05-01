@@ -1,15 +1,15 @@
 # Production-only profiler with high privileges
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerToolConfig
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverTool
 metadata:
   name: prod-profiler-config
-  namespace: toe-system
+  namespace: kubecodriver-system
   annotations:
-    powertool.toe.run/access-level: "production-only"
-    powertool.toe.run/owner: "platform-team"
+    codriverjob.kubecodriver.codriverlabs.ai/access-level: "production-only"
+    codriverjob.kubecodriver.codriverlabs.ai/owner: "platform-team"
 spec:
   name: "prod-profiler"
-  image: "localhost:32000/codriverlabs/toe/aperf:v1.0.12"
+  image: "localhost:32000/codriverlabs/ce/kubecodriver-aperf:v1.0.12"
   securityContext:
     allowPrivileged: false
     allowHostPID: false
@@ -25,17 +25,17 @@ spec:
 
 ---
 # Development-safe profiler with minimal privileges
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerToolConfig
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverTool
 metadata:
   name: dev-profiler-config
-  namespace: toe-system
+  namespace: kubecodriver-system
   annotations:
-    powertool.toe.run/access-level: "development"
-    powertool.toe.run/owner: "dev-team"
+    codriverjob.kubecodriver.codriverlabs.ai/access-level: "development"
+    codriverjob.kubecodriver.codriverlabs.ai/owner: "dev-team"
 spec:
   name: "dev-profiler"
-  image: "localhost:32000/codriverlabs/toe/aperf:v1.1.0"
+  image: "localhost:32000/codriverlabs/ce/kubecodriver-aperf:v1.1.0"
   securityContext:
     allowPrivileged: false
     allowHostPID: false
@@ -51,18 +51,18 @@ spec:
 
 ---
 # Admin-only debugger with full access (no namespace restrictions)
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerToolConfig
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverTool
 metadata:
   name: admin-debugger-config
-  namespace: toe-system
+  namespace: kubecodriver-system
   annotations:
-    powertool.toe.run/access-level: "admin-only"
-    powertool.toe.run/owner: "platform-team"
-    powertool.toe.run/security-review: "approved-2034-01-01"
+    codriverjob.kubecodriver.codriverlabs.ai/access-level: "admin-only"
+    codriverjob.kubecodriver.codriverlabs.ai/owner: "platform-team"
+    codriverjob.kubecodriver.codriverlabs.ai/security-review: "approved-2034-01-01"
 spec:
   name: "admin-debugger"
-  image: "localhost:32000/codriverlabs/toe/debugger:v1.0.0"
+  image: "localhost:32000/codriverlabs/ce/kubecodriver-debugger:v1.0.0"
   securityContext:
     allowPrivileged: true
     allowHostPID: false
@@ -74,17 +74,17 @@ spec:
 
 ---
 # Team-specific tool
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerToolConfig
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverTool
 metadata:
   name: team-alpha-profiler-config
-  namespace: toe-system
+  namespace: kubecodriver-system
   annotations:
-    powertool.toe.run/team: "team-alpha"
-    powertool.toe.run/owner: "team-alpha-lead"
+    codriverjob.kubecodriver.codriverlabs.ai/team: "team-alpha"
+    codriverjob.kubecodriver.codriverlabs.ai/owner: "team-alpha-lead"
 spec:
   name: "team-profiler"
-  image: "localhost:32000/codriverlabs/toe/team-profiler:v1.1.0"
+  image: "localhost:32000/codriverlabs/ce/kubecodriver-team-profiler:v1.1.0"
   securityContext:
     allowPrivileged: false
     allowHostPID: false

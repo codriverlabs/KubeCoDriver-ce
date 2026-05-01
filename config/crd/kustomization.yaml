@@ -2,8 +2,8 @@
 # since it depends on service name and namespace that are out of this kustomize package.
 # It should be run by config/default
 resources:
-- bases/codriverlabs.ai.toe.run_powertools.yaml
-- bases/codriverlabs.ai.toe.run_powertoolconfigs.yaml
+- bases/kubecodriver.codriverlabs.ai_codriverjobs.yaml
+- bases/kubecodriver.codriverlabs.ai_codrivertools.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patches:

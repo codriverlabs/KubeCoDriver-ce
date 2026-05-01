@@ -25,13 +25,13 @@ This creates a busybox pod running as user 1001:1001 with:
 ### 2. Verify Pod is Running
 
 ```bash
-kubectl get pod busybox-nonroot -n toe-test
-kubectl exec busybox-nonroot -n toe-test -- id
+kubectl get pod busybox-nonroot -n kubecodriver-test
+kubectl exec busybox-nonroot -n kubecodriver-test -- id
 ```
 
 Expected output: `uid=1001 gid=1001`
 
-### 3. Apply PowerTool
+### 3. Apply CoDriverJob
 
 ```bash
 kubectl apply -f examples/test-nonroot-powertool.yaml
@@ -40,11 +40,11 @@ kubectl apply -f examples/test-nonroot-powertool.yaml
 ### 4. Monitor Controller Logs
 
 ```bash
-kubectl logs -n toe-system -l control-plane=controller-manager -f
+kubectl logs -n kubecodriver-system -l control-plane=controller-manager -f
 ```
 
 Look for:
-- "Reconciling PowerTool" messages
+- "Reconciling CoDriverJob" messages
 - "Successfully added ephemeral container" messages
 - Any error messages
 
@@ -52,19 +52,19 @@ Look for:
 
 ```bash
 # Check if ephemeral container was created
-kubectl get pod busybox-nonroot -n toe-test -o jsonpath='{.spec.ephemeralContainers}' | jq .
+kubectl get pod busybox-nonroot -n kubecodriver-test -o jsonpath='{.spec.ephemeralContainers}' | jq .
 
 # Check ephemeral container security context
-kubectl get pod busybox-nonroot -n toe-test -o jsonpath='{.spec.ephemeralContainers[0].securityContext}' | jq .
+kubectl get pod busybox-nonroot -n kubecodriver-test -o jsonpath='{.spec.ephemeralContainers[0].securityContext}' | jq .
 
 # Check ephemeral container status
-kubectl get pod busybox-nonroot -n toe-test -o jsonpath='{.status.ephemeralContainerStatuses}' | jq .
+kubectl get pod busybox-nonroot -n kubecodriver-test -o jsonpath='{.status.ephemeralContainerStatuses}' | jq .
 ```
 
-### 6. Check PowerTool Status
+### 6. Check CoDriverJob Status
 
 ```bash
-kubectl get powertool aperf-nonroot-test -n toe-test -o yaml
+kubectl get codriverjob aperf-nonroot-test -n kubecodriver-test -o yaml
 ```
 
 ## What to Look For
@@ -93,13 +93,13 @@ kubectl get powertool aperf-nonroot-test -n toe-test -o yaml
 
 3. **Security context inherited** (if pod-level):
    - Ephemeral container should run as user 1001
-   - Check with: `kubectl exec busybox-nonroot -n toe-test -c <ephemeral-container-name> -- id`
+   - Check with: `kubectl exec busybox-nonroot -n kubecodriver-test -c <ephemeral-container-name> -- id`
 
 ### ❌ Failure Indicators
 
 1. **No ephemeral container created**:
    - Check controller logs for errors
-   - Check PowerTool status for error messages
+   - Check CoDriverJob status for error messages
 
 2. **Ephemeral container in waiting state**:
    ```json
@@ -146,23 +146,23 @@ kubectl delete -f examples/test-nonroot-pod.yaml
 
 ```bash
 # Check controller logs
-kubectl logs -n toe-system -l control-plane=controller-manager --tail=100
+kubectl logs -n kubecodriver-system -l control-plane=controller-manager --tail=100
 
-# Check PowerTool events
-kubectl describe powertool aperf-nonroot-test -n toe-test
+# Check CoDriverJob events
+kubectl describe powertool aperf-nonroot-test -n kubecodriver-test
 
 # Check if aperf-config exists
-kubectl get powertoolconfig -n toe-system
+kubectl get powertoolconfig -n kubecodriver-system
 ```
 
 ### Ephemeral Container Stuck in Waiting
 
 ```bash
 # Check container status
-kubectl get pod busybox-nonroot -n toe-test -o jsonpath='{.status.ephemeralContainerStatuses[0].state}' | jq .
+kubectl get pod busybox-nonroot -n kubecodriver-test -o jsonpath='{.status.ephemeralContainerStatuses[0].state}' | jq .
 
 # Check pod events
-kubectl describe pod busybox-nonroot -n toe-test
+kubectl describe pod busybox-nonroot -n kubecodriver-test
 ```
 
 ### Permission Denied Errors
@@ -172,8 +172,8 @@ This indicates the ephemeral container is running as a different user than expec
 Check:
 ```bash
 # Pod security context
-kubectl get pod busybox-nonroot -n toe-test -o jsonpath='{.spec.securityContext}' | jq .
+kubectl get pod busybox-nonroot -n kubecodriver-test -o jsonpath='{.spec.securityContext}' | jq .
 
 # Ephemeral container security context
-kubectl get pod busybox-nonroot -n toe-test -o jsonpath='{.spec.ephemeralContainers[0].securityContext}' | jq .
+kubectl get pod busybox-nonroot -n kubecodriver-test -o jsonpath='{.spec.ephemeralContainers[0].securityContext}' | jq .
 ```

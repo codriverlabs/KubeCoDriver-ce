@@ -7,7 +7,7 @@ import (
 )
 
 func TestExtractMatchingLabels_EdgeCases(t *testing.T) {
-	r := &PowerToolReconciler{}
+	r := &CoDriverJobReconciler{}
 
 	tests := []struct {
 		name      string

@@ -2,25 +2,25 @@
 
 ## Profiler Image Security
 
-The TOE operator implements a secure image resolution mechanism to prevent users from specifying arbitrary Docker images in PowerTool resources.
+The KubeCoDriver operator implements a secure image resolution mechanism to prevent users from specifying arbitrary Docker images in CoDriverJob resources.
 
 ### How It Works
 
-1. **No Direct Image Specification**: Users cannot specify Docker images directly in PowerTool CRDs
+1. **No Direct Image Specification**: Users cannot specify Docker images directly in CoDriverJob CRDs
 2. **Tool-Based Resolution**: Users specify a `tool` name (e.g., "aperf", "aprof") 
 3. **ConfigMap Mapping**: The operator resolves tool names to Docker images using a ConfigMap
 4. **Operator-Only Access**: Only the operator has access to the `profiler-images` ConfigMap
 
 ### ConfigMap Structure
 
-The `profiler-images` ConfigMap in the `toe-system` namespace contains tool-to-image mappings:
+The `profiler-images` ConfigMap in the `kubecodriver-system` namespace contains tool-to-image mappings:
 
 ```yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: profiler-images
-  namespace: toe-system
+  namespace: kubecodriver-system
 data:
   # Production images
   aperf: "your-registry/aperf:v1.0.0"
@@ -54,8 +54,8 @@ Use the provided script to update profiler image mappings:
 ### Example Usage
 
 ```yaml
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerTool
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverJob
 metadata:
   name: secure-profiling
 spec:

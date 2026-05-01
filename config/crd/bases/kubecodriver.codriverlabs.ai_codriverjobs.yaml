@@ -3,21 +3,21 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.18.0
-  name: powertools.codriverlabs.ai.toe.run
+    controller-gen.kubebuilder.io/version: v0.20.1
+  name: codriverjobs.kubecodriver.codriverlabs.ai
 spec:
-  group: codriverlabs.ai.toe.run
+  group: kubecodriver.codriverlabs.ai
   names:
-    kind: PowerTool
-    listKind: PowerToolList
-    plural: powertools
-    singular: powertool
+    kind: CoDriverJob
+    listKind: CoDriverJobList
+    plural: codriverjobs
+    singular: codriverjob
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: PowerTool is the Schema for the powertools API
+        description: CoDriverJob is the Schema for the codriverjobs API
         properties:
           apiVersion:
             description: |-
@@ -37,7 +37,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: spec defines the desired state of PowerTool
+            description: spec defines the desired state of CoDriverJob
             properties:
               budgets:
                 description: BudgetSpec defines the budget configuration
@@ -174,7 +174,7 @@ spec:
                 properties:
                   args:
                     description: |-
-                      Args provides additional arguments that will be appended to defaultArgs from PowerToolConfig
+                      Args provides additional arguments that will be appended to defaultArgs from CoDriverTool
                       Users cannot override administrator-defined defaultArgs for security
                     items:
                       type: string
@@ -203,7 +203,7 @@ spec:
             - tool
             type: object
           status:
-            description: status defines the observed state of PowerTool
+            description: status defines the observed state of CoDriverJob
             properties:
               activePods:
                 additionalProperties:
@@ -220,7 +220,7 @@ spec:
                 type: integer
               conditions:
                 items:
-                  description: PowerToolCondition represents a condition of a PowerTool
+                  description: CoDriverJobCondition represents a condition of a CoDriverJob
                   properties:
                     lastTransitionTime:
                       format: date-time

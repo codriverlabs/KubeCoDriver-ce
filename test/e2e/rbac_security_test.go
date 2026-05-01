@@ -10,7 +10,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"toe/api/v1alpha1"
+	"github.com/codriverlabs/KubeCoDriver/api/v1alpha1"
 )
 
 var _ = Describe("RBAC and Security", func() {
@@ -23,11 +23,11 @@ var _ = Describe("RBAC and Security", func() {
 
 		// Add restricted label to second namespace
 		restrictedNamespace.Labels = map[string]string{
-			"toe.run/restricted": "true",
+			"kubecodriver.codriverlabs.ai/restricted": "true",
 		}
 		Expect(simpleK8sClient.Update(simpleCtx, restrictedNamespace)).To(Succeed())
 
-		CreateSimpleTestPowerToolConfig("rbac-config", namespace.Name)
+		CreateSimpleTestCoDriverTool("rbac-config", namespace.Name)
 		CreateSimpleMockTargetPod(namespace.Name, "rbac-pod", map[string]string{
 			"app": "rbac-app",
 		})
@@ -40,16 +40,16 @@ var _ = Describe("RBAC and Security", func() {
 
 	Context("Namespace Access Control", func() {
 		It("should enforce namespace restrictions", func() {
-			By("creating PowerToolConfig with namespace restrictions")
+			By("creating CoDriverTool with namespace restrictions")
 			allowPrivileged := true
-			restrictedConfig := &v1alpha1.PowerToolConfig{
+			restrictedConfig := &v1alpha1.CoDriverTool{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "restricted-config",
 					Namespace: namespace.Name,
 				},
-				Spec: v1alpha1.PowerToolConfigSpec{
+				Spec: v1alpha1.CoDriverToolSpec{
 					Name:  "restricted-tool",
-					Image: "ghcr.io/codriverlabs/toe-restricted:latest",
+					Image: "ghcr.io/codriverlabs/ce/kubecodriver-restricted:latest",
 					SecurityContext: v1alpha1.SecuritySpec{
 						AllowPrivileged: &allowPrivileged,
 					},
@@ -63,8 +63,8 @@ var _ = Describe("RBAC and Security", func() {
 				"app": "restricted-app",
 			})
 
-			By("attempting to create PowerTool in restricted namespace")
-			spec := v1alpha1.PowerToolSpec{
+			By("attempting to create CoDriverJob in restricted namespace")
+			spec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "restricted-app"},
@@ -79,7 +79,7 @@ var _ = Describe("RBAC and Security", func() {
 				},
 			}
 
-			powerTool := &v1alpha1.PowerTool{
+			coDriverJob := &v1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "restricted-test",
 					Namespace: restrictedNamespace.Name,
@@ -88,21 +88,21 @@ var _ = Describe("RBAC and Security", func() {
 			}
 
 			By("expecting creation to fail due to namespace restrictions")
-			err := simpleK8sClient.Create(simpleCtx, powerTool)
+			err := simpleK8sClient.Create(simpleCtx, coDriverJob)
 			Expect(err).To(HaveOccurred())
 		})
 
 		It("should allow access to permitted namespaces", func() {
-			By("creating PowerToolConfig allowing multiple namespaces")
+			By("creating CoDriverTool allowing multiple namespaces")
 			allowPrivileged := true
-			multiNsConfig := &v1alpha1.PowerToolConfig{
+			multiNsConfig := &v1alpha1.CoDriverTool{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "multi-ns-config",
 					Namespace: namespace.Name,
 				},
-				Spec: v1alpha1.PowerToolConfigSpec{
+				Spec: v1alpha1.CoDriverToolSpec{
 					Name:  "multi-ns-tool",
-					Image: "ghcr.io/codriverlabs/toe-multi:latest",
+					Image: "ghcr.io/codriverlabs/ce/kubecodriver-multi:latest",
 					SecurityContext: v1alpha1.SecuritySpec{
 						AllowPrivileged: &allowPrivileged,
 					},
@@ -111,8 +111,8 @@ var _ = Describe("RBAC and Security", func() {
 			}
 			Expect(simpleK8sClient.Create(simpleCtx, multiNsConfig)).To(Succeed())
 
-			By("creating PowerTool in allowed namespace")
-			spec := v1alpha1.PowerToolSpec{
+			By("creating CoDriverJob in allowed namespace")
+			spec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "rbac-app"},
@@ -126,23 +126,23 @@ var _ = Describe("RBAC and Security", func() {
 					Mode: "ephemeral",
 				},
 			}
-			powerTool := CreateSimpleTestPowerTool("multi-ns-test", namespace.Name, spec)
+			coDriverJob := CreateSimpleTestCoDriverJob("multi-ns-test", namespace.Name, spec)
 
-			By("verifying PowerTool is accepted")
-			WaitForSimplePowerToolPhase(powerTool, "Pending")
+			By("verifying CoDriverJob is accepted")
+			WaitForSimpleCoDriverJobPhase(coDriverJob, "Pending")
 		})
 
 		It("should handle empty allowed namespaces (allow all)", func() {
-			By("creating PowerToolConfig with no namespace restrictions")
+			By("creating CoDriverTool with no namespace restrictions")
 			allowPrivileged := true
-			openConfig := &v1alpha1.PowerToolConfig{
+			openConfig := &v1alpha1.CoDriverTool{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "open-config",
 					Namespace: namespace.Name,
 				},
-				Spec: v1alpha1.PowerToolConfigSpec{
+				Spec: v1alpha1.CoDriverToolSpec{
 					Name:  "open-tool",
-					Image: "ghcr.io/codriverlabs/toe-open:latest",
+					Image: "ghcr.io/codriverlabs/ce/kubecodriver-open:latest",
 					SecurityContext: v1alpha1.SecuritySpec{
 						AllowPrivileged: &allowPrivileged,
 					},
@@ -151,8 +151,8 @@ var _ = Describe("RBAC and Security", func() {
 			}
 			Expect(simpleK8sClient.Create(simpleCtx, openConfig)).To(Succeed())
 
-			By("creating PowerTool in any namespace")
-			spec := v1alpha1.PowerToolSpec{
+			By("creating CoDriverJob in any namespace")
+			spec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "rbac-app"},
@@ -166,25 +166,25 @@ var _ = Describe("RBAC and Security", func() {
 					Mode: "ephemeral",
 				},
 			}
-			powerTool := CreateSimpleTestPowerTool("open-test", namespace.Name, spec)
+			coDriverJob := CreateSimpleTestCoDriverJob("open-test", namespace.Name, spec)
 
-			By("verifying PowerTool is accepted")
-			WaitForSimplePowerToolPhase(powerTool, "Pending")
+			By("verifying CoDriverJob is accepted")
+			WaitForSimpleCoDriverJobPhase(coDriverJob, "Pending")
 		})
 	})
 
 	Context("Security Context Validation", func() {
 		It("should validate privileged mode requirements", func() {
-			By("creating PowerToolConfig requiring privileged mode")
+			By("creating CoDriverTool requiring privileged mode")
 			allowPrivileged := true
-			privilegedConfig := &v1alpha1.PowerToolConfig{
+			privilegedConfig := &v1alpha1.CoDriverTool{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "privileged-config",
 					Namespace: namespace.Name,
 				},
-				Spec: v1alpha1.PowerToolConfigSpec{
+				Spec: v1alpha1.CoDriverToolSpec{
 					Name:  "privileged-tool",
-					Image: "ghcr.io/codriverlabs/toe-privileged:latest",
+					Image: "ghcr.io/codriverlabs/ce/kubecodriver-privileged:latest",
 					SecurityContext: v1alpha1.SecuritySpec{
 						AllowPrivileged: &allowPrivileged,
 						Capabilities: &v1alpha1.Capabilities{
@@ -195,8 +195,8 @@ var _ = Describe("RBAC and Security", func() {
 			}
 			Expect(simpleK8sClient.Create(simpleCtx, privilegedConfig)).To(Succeed())
 
-			By("creating PowerTool using privileged configuration")
-			spec := v1alpha1.PowerToolSpec{
+			By("creating CoDriverJob using privileged configuration")
+			spec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "rbac-app"},
@@ -210,23 +210,23 @@ var _ = Describe("RBAC and Security", func() {
 					Mode: "ephemeral",
 				},
 			}
-			powerTool := CreateSimpleTestPowerTool("privileged-test", namespace.Name, spec)
+			coDriverJob := CreateSimpleTestCoDriverJob("privileged-test", namespace.Name, spec)
 
-			By("verifying privileged PowerTool is configured")
-			WaitForSimplePowerToolCondition(powerTool, "ToolConfigured", "True")
+			By("verifying privileged CoDriverJob is configured")
+			WaitForSimpleCoDriverJobCondition(coDriverJob, "ToolConfigured", "True")
 		})
 
 		It("should handle capability restrictions", func() {
-			By("creating PowerToolConfig with specific capabilities")
+			By("creating CoDriverTool with specific capabilities")
 			allowPrivileged := false
-			capConfig := &v1alpha1.PowerToolConfig{
+			capConfig := &v1alpha1.CoDriverTool{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "capability-config",
 					Namespace: namespace.Name,
 				},
-				Spec: v1alpha1.PowerToolConfigSpec{
+				Spec: v1alpha1.CoDriverToolSpec{
 					Name:  "capability-tool",
-					Image: "ghcr.io/codriverlabs/toe-cap:latest",
+					Image: "ghcr.io/codriverlabs/ce/kubecodriver-cap:latest",
 					SecurityContext: v1alpha1.SecuritySpec{
 						AllowPrivileged: &allowPrivileged,
 						Capabilities: &v1alpha1.Capabilities{
@@ -238,8 +238,8 @@ var _ = Describe("RBAC and Security", func() {
 			}
 			Expect(simpleK8sClient.Create(simpleCtx, capConfig)).To(Succeed())
 
-			By("creating PowerTool with capability requirements")
-			spec := v1alpha1.PowerToolSpec{
+			By("creating CoDriverJob with capability requirements")
+			spec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "rbac-app"},
@@ -253,24 +253,24 @@ var _ = Describe("RBAC and Security", func() {
 					Mode: "ephemeral",
 				},
 			}
-			powerTool := CreateSimpleTestPowerTool("capability-test", namespace.Name, spec)
+			coDriverJob := CreateSimpleTestCoDriverJob("capability-test", namespace.Name, spec)
 
 			By("verifying capability configuration is applied")
-			WaitForSimplePowerToolCondition(powerTool, "ToolConfigured", "True")
+			WaitForSimpleCoDriverJobCondition(coDriverJob, "ToolConfigured", "True")
 		})
 
 		It("should enforce hostPID restrictions", func() {
-			By("creating PowerToolConfig with hostPID requirements")
+			By("creating CoDriverTool with hostPID requirements")
 			allowPrivileged := false
 			allowHostPID := true
-			hostPIDConfig := &v1alpha1.PowerToolConfig{
+			hostPIDConfig := &v1alpha1.CoDriverTool{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "hostpid-config",
 					Namespace: namespace.Name,
 				},
-				Spec: v1alpha1.PowerToolConfigSpec{
+				Spec: v1alpha1.CoDriverToolSpec{
 					Name:  "hostpid-tool",
-					Image: "ghcr.io/codriverlabs/toe-hostpid:latest",
+					Image: "ghcr.io/codriverlabs/ce/kubecodriver-hostpid:latest",
 					SecurityContext: v1alpha1.SecuritySpec{
 						AllowPrivileged: &allowPrivileged,
 						AllowHostPID:    &allowHostPID,
@@ -282,8 +282,8 @@ var _ = Describe("RBAC and Security", func() {
 			}
 			Expect(simpleK8sClient.Create(simpleCtx, hostPIDConfig)).To(Succeed())
 
-			By("creating PowerTool requiring hostPID access")
-			spec := v1alpha1.PowerToolSpec{
+			By("creating CoDriverJob requiring hostPID access")
+			spec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "rbac-app"},
@@ -297,10 +297,10 @@ var _ = Describe("RBAC and Security", func() {
 					Mode: "ephemeral",
 				},
 			}
-			powerTool := CreateSimpleTestPowerTool("hostpid-test", namespace.Name, spec)
+			coDriverJob := CreateSimpleTestCoDriverJob("hostpid-test", namespace.Name, spec)
 
 			By("verifying hostPID configuration is accepted")
-			WaitForSimplePowerToolCondition(powerTool, "ToolConfigured", "True")
+			WaitForSimpleCoDriverJobCondition(coDriverJob, "ToolConfigured", "True")
 		})
 	})
 
@@ -309,7 +309,7 @@ var _ = Describe("RBAC and Security", func() {
 			By("creating custom service account")
 			serviceAccount := &corev1.ServiceAccount{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "toe-custom-sa",
+					Name:      "kubecodriver-custom-sa",
 					Namespace: namespace.Name,
 				},
 			}
@@ -318,7 +318,7 @@ var _ = Describe("RBAC and Security", func() {
 			By("creating role for service account")
 			role := &rbacv1.Role{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "toe-custom-role",
+					Name:      "kubecodriver-custom-role",
 					Namespace: namespace.Name,
 				},
 				Rules: []rbacv1.PolicyRule{
@@ -339,20 +339,20 @@ var _ = Describe("RBAC and Security", func() {
 			By("creating role binding")
 			roleBinding := &rbacv1.RoleBinding{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "toe-custom-binding",
+					Name:      "kubecodriver-custom-binding",
 					Namespace: namespace.Name,
 				},
 				Subjects: []rbacv1.Subject{
 					{
 						Kind:      "ServiceAccount",
-						Name:      "toe-custom-sa",
+						Name:      "kubecodriver-custom-sa",
 						Namespace: namespace.Name,
 					},
 				},
 				RoleRef: rbacv1.RoleRef{
 					APIGroup: "rbac.authorization.k8s.io",
 					Kind:     "Role",
-					Name:     "toe-custom-role",
+					Name:     "kubecodriver-custom-role",
 				},
 			}
 			Expect(simpleK8sClient.Create(simpleCtx, roleBinding)).To(Succeed())
@@ -364,15 +364,15 @@ var _ = Describe("RBAC and Security", func() {
 		})
 
 		It("should validate required permissions", func() {
-			By("creating PowerTool that requires specific permissions")
-			spec := CreateSimpleBasicPowerToolSpec(map[string]string{"app": "rbac-app"})
-			powerTool := CreateSimpleTestPowerTool("permission-test", namespace.Name, spec)
+			By("creating CoDriverJob that requires specific permissions")
+			spec := CreateSimpleBasicCoDriverJobSpec(map[string]string{"app": "rbac-app"})
+			coDriverJob := CreateSimpleTestCoDriverJob("permission-test", namespace.Name, spec)
 
-			By("verifying PowerTool can access required resources")
-			WaitForSimplePowerToolPhase(powerTool, "Pending")
+			By("verifying CoDriverJob can access required resources")
+			WaitForSimpleCoDriverJobPhase(coDriverJob, "Pending")
 
 			By("verifying no permission errors in status")
-			updated := GetSimplePowerTool(powerTool)
+			updated := GetSimpleCoDriverJob(coDriverJob)
 			if updated.Status.LastError != nil {
 				Expect(*updated.Status.LastError).NotTo(ContainSubstring("forbidden"))
 				Expect(*updated.Status.LastError).NotTo(ContainSubstring("unauthorized"))
@@ -385,7 +385,7 @@ var _ = Describe("RBAC and Security", func() {
 			By("creating resource quota")
 			quota := &corev1.ResourceQuota{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "toe-quota",
+					Name:      "kubecodriver-quota",
 					Namespace: namespace.Name,
 				},
 				Spec: corev1.ResourceQuotaSpec{
@@ -399,19 +399,19 @@ var _ = Describe("RBAC and Security", func() {
 			}
 			Expect(simpleK8sClient.Create(simpleCtx, quota)).To(Succeed())
 
-			By("creating PowerTool within quota limits")
-			spec := CreateSimpleBasicPowerToolSpec(map[string]string{"app": "rbac-app"})
-			powerTool := CreateSimpleTestPowerTool("quota-test", namespace.Name, spec)
+			By("creating CoDriverJob within quota limits")
+			spec := CreateSimpleBasicCoDriverJobSpec(map[string]string{"app": "rbac-app"})
+			coDriverJob := CreateSimpleTestCoDriverJob("quota-test", namespace.Name, spec)
 
-			By("verifying PowerTool respects quotas")
-			WaitForSimplePowerToolPhase(powerTool, "Pending")
+			By("verifying CoDriverJob respects quotas")
+			WaitForSimpleCoDriverJobPhase(coDriverJob, "Pending")
 		})
 
 		It("should handle limit ranges", func() {
 			By("creating limit range")
 			limitRange := &corev1.LimitRange{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "toe-limits",
+					Name:      "kubecodriver-limits",
 					Namespace: namespace.Name,
 				},
 				Spec: corev1.LimitRangeSpec{
@@ -432,12 +432,12 @@ var _ = Describe("RBAC and Security", func() {
 			}
 			Expect(simpleK8sClient.Create(simpleCtx, limitRange)).To(Succeed())
 
-			By("creating PowerTool with limit range constraints")
-			spec := CreateSimpleBasicPowerToolSpec(map[string]string{"app": "rbac-app"})
-			powerTool := CreateSimpleTestPowerTool("limit-range-test", namespace.Name, spec)
+			By("creating CoDriverJob with limit range constraints")
+			spec := CreateSimpleBasicCoDriverJobSpec(map[string]string{"app": "rbac-app"})
+			coDriverJob := CreateSimpleTestCoDriverJob("limit-range-test", namespace.Name, spec)
 
-			By("verifying PowerTool works within limit ranges")
-			WaitForSimplePowerToolPhase(powerTool, "Pending")
+			By("verifying CoDriverJob works within limit ranges")
+			WaitForSimpleCoDriverJobPhase(coDriverJob, "Pending")
 		})
 	})
 
@@ -446,7 +446,7 @@ var _ = Describe("RBAC and Security", func() {
 			By("creating network policy")
 			networkPolicy := &networkingv1.NetworkPolicy{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "toe-netpol",
+					Name:      "kubecodriver-netpol",
 					Namespace: namespace.Name,
 				},
 				Spec: networkingv1.NetworkPolicySpec{
@@ -472,12 +472,12 @@ var _ = Describe("RBAC and Security", func() {
 			}
 			Expect(simpleK8sClient.Create(simpleCtx, networkPolicy)).To(Succeed())
 
-			By("creating PowerTool with network policy constraints")
-			spec := CreateSimpleBasicPowerToolSpec(map[string]string{"app": "rbac-app"})
-			powerTool := CreateSimpleTestPowerTool("netpol-test", namespace.Name, spec)
+			By("creating CoDriverJob with network policy constraints")
+			spec := CreateSimpleBasicCoDriverJobSpec(map[string]string{"app": "rbac-app"})
+			coDriverJob := CreateSimpleTestCoDriverJob("netpol-test", namespace.Name, spec)
 
-			By("verifying PowerTool handles network policies")
-			WaitForSimplePowerToolPhase(powerTool, "Pending")
+			By("verifying CoDriverJob handles network policies")
+			WaitForSimpleCoDriverJobPhase(coDriverJob, "Pending")
 		})
 	})
 })

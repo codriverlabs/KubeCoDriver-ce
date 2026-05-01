@@ -2,34 +2,34 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: toe-collector
-  namespace: {{ include "toe-operator.namespace" . }}
+  name: kubecodriver-collector
+  namespace: {{ include "kubecodriver-operator.namespace" . }}
   labels:
-    {{- include "toe-operator.labels" . | nindent 4 }}
+    {{- include "kubecodriver-operator.labels" . | nindent 4 }}
     app.kubernetes.io/component: collector
 spec:
   replicas: {{ .Values.collector.replicas }}
   selector:
     matchLabels:
-      app: toe-collector
+      app: kubecodriver-collector
   template:
     metadata:
       labels:
-        app: toe-collector
-        {{- include "toe-operator.selectorLabels" . | nindent 8 }}
+        app: kubecodriver-collector
+        {{- include "kubecodriver-operator.selectorLabels" . | nindent 8 }}
     spec:
-      serviceAccountName: toe-collector
+      serviceAccountName: kubecodriver-collector
       {{- if .Values.collector.storage.fsGroup }}
       securityContext:
         fsGroup: {{ .Values.collector.storage.fsGroup }}
       {{- end }}
-      {{- with include "toe-operator.imagePullSecrets" . }}
+      {{- with include "kubecodriver-operator.imagePullSecrets" . }}
       imagePullSecrets:
 {{ . | indent 8 }}
       {{- end }}
       containers:
       - name: collector
-        image: {{ include "toe-operator.collector.image" . }}
+        image: {{ include "kubecodriver-operator.collector.image" . }}
         imagePullPolicy: {{ .Values.collector.image.pullPolicy }}
         ports:
         - containerPort: 8443
@@ -51,25 +51,25 @@ spec:
       - name: data
         {{- if .Values.collector.storage.enabled }}
         persistentVolumeClaim:
-          claimName: toe-collector-data
+          claimName: kubecodriver-collector-data
         {{- else }}
         emptyDir: {}
         {{- end }}
       - name: certs
         secret:
-          secretName: toe-collector-certs
+          secretName: kubecodriver-collector-certs
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: toe-collector
-  namespace: {{ include "toe-operator.namespace" . }}
+  name: kubecodriver-collector
+  namespace: {{ include "kubecodriver-operator.namespace" . }}
   labels:
-    {{- include "toe-operator.labels" . | nindent 4 }}
+    {{- include "kubecodriver-operator.labels" . | nindent 4 }}
     app.kubernetes.io/component: collector
 spec:
   selector:
-    app: toe-collector
+    app: kubecodriver-collector
   ports:
   - port: {{ .Values.collector.service.port }}
     targetPort: 8443
@@ -80,10 +80,10 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: toe-collector-data
-  namespace: {{ include "toe-operator.namespace" . }}
+  name: kubecodriver-collector-data
+  namespace: {{ include "kubecodriver-operator.namespace" . }}
   labels:
-    {{- include "toe-operator.labels" . | nindent 4 }}
+    {{- include "kubecodriver-operator.labels" . | nindent 4 }}
     app.kubernetes.io/component: collector
 spec:
   accessModes:

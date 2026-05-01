@@ -1,11 +1,11 @@
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerTool
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverJob
 metadata:
   name: chaos-comprehensive-test
   annotations:
     description: "Comprehensive chaos engineering workflow for resilience testing"
-    chaos.toe.run/experiment-type: "multi-phase"
-    chaos.toe.run/risk-level: "medium"
+    chaos.kubecodriver.codriverlabs.ai/experiment-type: "multi-phase"
+    chaos.kubecodriver.codriverlabs.ai/risk-level: "medium"
 spec:
   targets:
     labelSelector:
@@ -22,5 +22,5 @@ spec:
       - "oscillating"
   output:
     mode: "collector"
-  # This would be part of a larger workflow where multiple PowerTools
+  # This would be part of a larger workflow where multiple CoDriverJobs
   # are executed in sequence to test different failure scenarios

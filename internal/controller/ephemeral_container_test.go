@@ -6,14 +6,14 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	toev1alpha1 "toe/api/v1alpha1"
+	kubecodriverv1alpha1 "github.com/codriverlabs/KubeCoDriver/api/v1alpha1"
 )
 
-func TestBuildPowerToolEnvVars_OutputModes(t *testing.T) {
+func TestBuildCoDriverJobEnvVars_OutputModes(t *testing.T) {
 	tests := []struct {
 		name        string
 		outputMode  string
-		pvcSpec     *toev1alpha1.PVCSpec
+		pvcSpec     *kubecodriverv1alpha1.PVCSpec
 		checkEnvVar func(*testing.T, []corev1.EnvVar)
 	}{
 		{
@@ -30,7 +30,7 @@ func TestBuildPowerToolEnvVars_OutputModes(t *testing.T) {
 		{
 			name:       "PVC mode",
 			outputMode: "pvc",
-			pvcSpec: &toev1alpha1.PVCSpec{
+			pvcSpec: &kubecodriverv1alpha1.PVCSpec{
 				ClaimName: "test-pvc",
 			},
 			checkEnvVar: func(t *testing.T, envVars []corev1.EnvVar) {
@@ -45,7 +45,7 @@ func TestBuildPowerToolEnvVars_OutputModes(t *testing.T) {
 			name:       "collector mode - basic env vars only",
 			outputMode: "collector",
 			checkEnvVar: func(t *testing.T, envVars []corev1.EnvVar) {
-				// buildPowerToolEnvVars only sets OUTPUT_MODE
+				// buildCoDriverJobEnvVars only sets OUTPUT_MODE
 				// COLLECTOR_ENDPOINT and COLLECTOR_TOKEN are added in createEphemeralContainerForPod
 				for _, env := range envVars {
 					if env.Name == "OUTPUT_MODE" && env.Value != "collector" {
@@ -58,24 +58,24 @@ func TestBuildPowerToolEnvVars_OutputModes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := &PowerToolReconciler{}
+			r := &CoDriverJobReconciler{}
 
-			powerTool := &toev1alpha1.PowerTool{
+			coDriverJob := &kubecodriverv1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-tool",
 					Namespace: "default",
 				},
-				Spec: toev1alpha1.PowerToolSpec{
-					Targets: toev1alpha1.TargetSpec{
+				Spec: kubecodriverv1alpha1.CoDriverJobSpec{
+					Targets: kubecodriverv1alpha1.TargetSpec{
 						LabelSelector: &metav1.LabelSelector{
 							MatchLabels: map[string]string{"app": "test"},
 						},
 					},
-					Tool: toev1alpha1.ToolSpec{
+					Tool: kubecodriverv1alpha1.ToolSpec{
 						Name:     "perf",
 						Duration: "30s",
 					},
-					Output: toev1alpha1.OutputSpec{
+					Output: kubecodriverv1alpha1.OutputSpec{
 						Mode: tt.outputMode,
 						PVC:  tt.pvcSpec,
 					},
@@ -93,7 +93,7 @@ func TestBuildPowerToolEnvVars_OutputModes(t *testing.T) {
 				},
 			}
 
-			envVars := r.buildPowerToolEnvVars(powerTool, pod)
+			envVars := r.buildCoDriverJobEnvVars(coDriverJob, pod)
 
 			if tt.checkEnvVar != nil {
 				tt.checkEnvVar(t, envVars)
@@ -103,17 +103,17 @@ func TestBuildPowerToolEnvVars_OutputModes(t *testing.T) {
 }
 
 func TestBuildSecurityContext_AllCases(t *testing.T) {
-	r := &PowerToolReconciler{}
+	r := &CoDriverJobReconciler{}
 	trueVal := true
 
 	tests := []struct {
 		name     string
-		security toev1alpha1.SecuritySpec
+		security kubecodriverv1alpha1.SecuritySpec
 		check    func(*testing.T, *corev1.SecurityContext)
 	}{
 		{
 			name:     "empty security spec - returns empty context",
-			security: toev1alpha1.SecuritySpec{},
+			security: kubecodriverv1alpha1.SecuritySpec{},
 			check: func(t *testing.T, sc *corev1.SecurityContext) {
 				// Function always returns non-nil SecurityContext
 				if sc == nil {
@@ -130,7 +130,7 @@ func TestBuildSecurityContext_AllCases(t *testing.T) {
 		},
 		{
 			name: "privileged mode",
-			security: toev1alpha1.SecuritySpec{
+			security: kubecodriverv1alpha1.SecuritySpec{
 				AllowPrivileged: &trueVal,
 			},
 			check: func(t *testing.T, sc *corev1.SecurityContext) {
@@ -141,8 +141,8 @@ func TestBuildSecurityContext_AllCases(t *testing.T) {
 		},
 		{
 			name: "capabilities add and drop",
-			security: toev1alpha1.SecuritySpec{
-				Capabilities: &toev1alpha1.Capabilities{
+			security: kubecodriverv1alpha1.SecuritySpec{
+				Capabilities: &kubecodriverv1alpha1.Capabilities{
 					Add:  []string{"SYS_ADMIN", "SYS_PTRACE"},
 					Drop: []string{"ALL"},
 				},
@@ -161,9 +161,9 @@ func TestBuildSecurityContext_AllCases(t *testing.T) {
 		},
 		{
 			name: "privileged and capabilities combined",
-			security: toev1alpha1.SecuritySpec{
+			security: kubecodriverv1alpha1.SecuritySpec{
 				AllowPrivileged: &trueVal,
-				Capabilities: &toev1alpha1.Capabilities{
+				Capabilities: &kubecodriverv1alpha1.Capabilities{
 					Add: []string{"NET_ADMIN"},
 				},
 			},

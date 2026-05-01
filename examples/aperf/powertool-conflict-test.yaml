@@ -1,16 +1,16 @@
-# PowerTool Conflict Resolution Test
-# This example tests conflict detection when multiple PowerTools target the same pods
+# CoDriverJob Conflict Resolution Test
+# This example tests conflict detection when multiple CoDriverJobs target the same pods
 
 ---
-# PowerToolConfig for testing
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerToolConfig
+# CoDriverTool for testing
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverTool
 metadata:
   name: aperf-test-config
-  namespace: toe-system
+  namespace: kubecodriver-system
 spec:
   name: "aperf"
-  image: "localhost:32000/toe/aperf:v1.0.5"
+  image: "localhost:32000/codriverlabs/ce/kubecodriver-aperf:v1.0.5"
   security:
     allowPrivileged: false
     allowHostPID: false
@@ -21,15 +21,15 @@ spec:
   version: "v1.0.5"
 
 ---
-# First PowerTool - should succeed
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerTool
+# First CoDriverJob - should succeed
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverJob
 metadata:
-  name: powertool-engineer1
-  namespace: toe-test
+  name: codriverjob-engineer1
+  namespace: kubecodriver-test
   annotations:
-    test.toe.run/scenario: "conflict-resolution"
-    test.toe.run/expected: "success"
+    test.kubecodriver.codriverlabs.ai/scenario: "conflict-resolution"
+    test.kubecodriver.codriverlabs.ai/expected: "success"
 spec:
   targets:
     labelSelector:
@@ -47,15 +47,15 @@ spec:
     maxConcurrentPods: 1
 
 ---
-# Second PowerTool - should detect conflict and be rejected/queued
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerTool
+# Second CoDriverJob - should detect conflict and be rejected/queued
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverJob
 metadata:
-  name: powertool-engineer2
-  namespace: toe-test
+  name: codriverjob-engineer2
+  namespace: kubecodriver-test
   annotations:
-    test.toe.run/scenario: "conflict-resolution"
-    test.toe.run/expected: "conflict-detected"
+    test.kubecodriver.codriverlabs.ai/scenario: "conflict-resolution"
+    test.kubecodriver.codriverlabs.ai/expected: "conflict-detected"
 spec:
   targets:
     labelSelector:

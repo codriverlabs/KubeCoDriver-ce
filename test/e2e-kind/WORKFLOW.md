@@ -16,7 +16,7 @@
                             ▼
 ┌──────────────────────────────────────────────────────────────┐
 │ Step 1: Cluster Setup                                        │
-│ ├─ Create cluster: toe-e2e-<commit-hash>                     │
+│ ├─ Create cluster: kubecodriver-e2e-<commit-hash>                     │
 │ ├─ Install networking (CNI)                                  │
 │ ├─ Setup storage classes                                     │
 │ └─ Configure RBAC                                            │
@@ -27,10 +27,10 @@
                             ▼
 ┌──────────────────────────────────────────────────────────────┐
 │ Step 2: Build & Load Images                                 │
-│ ├─ Image: toe-controller:e2e-<commit-hash>                  │
+│ ├─ Image: kubecodriver-controller:e2e-<commit-hash>                  │
 │ ├─ Check if image exists                                     │
-│ ├─ Build: make docker-build IMG=toe-controller:e2e-<hash>   │
-│ ├─ Load: kind load docker-image toe-controller:e2e-<hash>   │
+│ ├─ Build: make docker-build IMG=kubecodriver-controller:e2e-<hash>   │
+│ ├─ Load: kind load docker-image kubecodriver-controller:e2e-<hash>   │
 │ └─ Verify image in cluster                                   │
 │                                                              │
 │ Duration: ~3 minutes (first run), ~10s (cached)             │
@@ -38,8 +38,8 @@
                             │
                             ▼
 ┌──────────────────────────────────────────────────────────────┐
-│ Step 3: Deploy TOE Components                               │
-│ ├─ Install CRDs (PowerTool, PowerToolConfig)                │
+│ Step 3: Deploy KubeCoDriver Components                               │
+│ ├─ Install CRDs (CoDriverJob, CoDriverTool)                │
 │ ├─ Deploy controller (namespace, RBAC, deployment)          │
 │ ├─ Wait for ready (300s timeout)                            │
 │ └─ Verify deployment status                                  │
@@ -62,7 +62,7 @@
 ┌──────────────────────────────────────────────────────────────┐
 │ Step 5: Cleanup (unless KEEP_CLUSTER=true)                  │
 │ ├─ Collect artifacts (logs, resources, events)              │
-│ ├─ Delete PowerTools                                         │
+│ ├─ Delete CoDriverJobs                                         │
 │ ├─ Delete cluster                                            │
 │ └─ Prune container images                                    │
 │                                                              │
@@ -113,10 +113,10 @@ The entire workflow is **fully automated**:
 ./test/e2e-kind/run-tests.sh
 
 # Output:
-# 🚀 Starting Kind E2E tests with cluster: toe-e2e-a1b2c3d4
+# 🚀 Starting Kind E2E tests with cluster: kubecodriver-e2e-a1b2c3d4
 # 📦 Step 1: Setting up Kind cluster...
 # 🔨 Step 2: Building controller image...
-# 🚀 Step 3: Deploying TOE components...
+# 🚀 Step 3: Deploying KubeCoDriver components...
 # 🧪 Step 4: Running E2E tests...
 # ✅ All tests passed!
 ```
@@ -167,13 +167,13 @@ TEST_TIMEOUT=45m ./test/e2e-kind/run-tests.sh
 # Multiple PRs on same runner - complete isolation
 # PR #123 (commit: abc123)
 ./test/e2e-kind/run-tests.sh
-# Cluster: toe-e2e-abc123
-# Image: toe-controller:e2e-abc123
+# Cluster: kubecodriver-e2e-abc123
+# Image: kubecodriver-controller:e2e-abc123
 
 # PR #456 (commit: def456)
 ./test/e2e-kind/run-tests.sh
-# Cluster: toe-e2e-def456
-# Image: toe-controller:e2e-def456
+# Cluster: kubecodriver-e2e-def456
+# Image: kubecodriver-controller:e2e-def456
 
 # No conflicts - fully isolated!
 ```

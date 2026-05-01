@@ -42,7 +42,7 @@ make manifests
 **File**: `internal/controller/powertool_controller.go`
 
 ```go
-func (r *PowerToolReconciler) buildSecurityContext(securitySpec toev1alpha1.SecuritySpec) *corev1.SecurityContext {
+func (r *CoDriverJobReconciler) buildSecurityContext(securitySpec kubecodriverv1alpha1.SecuritySpec) *corev1.SecurityContext {
     securityContext := &corev1.SecurityContext{}
 
     if securitySpec.AllowPrivileged != nil {
@@ -132,19 +132,19 @@ if requiresRoot {
 }
 ```
 
-### Phase 4: Update PowerToolConfig (5 min)
+### Phase 4: Update CoDriverTool (5 min)
 
 **File**: `examples/aperf/powertoolconfig-aperf.yaml`
 
 ```yaml
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerToolConfig
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverTool
 metadata:
   name: aperf-config
-  namespace: toe-system
+  namespace: kubecodriver-system
 spec:
   name: "aperf"
-  image: "localhost:32000/codriverlabs/toe/aperf:v1.0.47"
+  image: "localhost:32000/codriverlabs/ce/kubecodriver-aperf:v1.0.47"
   securityContext:
     runAsRoot: true  # NEW - aperf requires root
     allowPrivileged: false
@@ -163,10 +163,10 @@ spec:
 
 ```go
 func TestBuildSecurityContext_RunAsRoot(t *testing.T) {
-    r := &PowerToolReconciler{}
+    r := &CoDriverJobReconciler{}
     
     runAsRoot := true
-    spec := toev1alpha1.SecuritySpec{
+    spec := kubecodriverv1alpha1.SecuritySpec{
         RunAsRoot: &runAsRoot,
     }
     
@@ -202,7 +202,7 @@ func TestSecurityContextInheritance_WithRunAsRoot(t *testing.T) {
 1. **Explicit Opt-In**: Tools must explicitly declare `runAsRoot: true`
 2. **Group Preservation**: Maintains group context for file access
 3. **Capabilities Control**: Still uses capability-based restrictions
-4. **RBAC Enforcement**: PowerToolConfig creation can be restricted
+4. **RBAC Enforcement**: CoDriverTool creation can be restricted
 5. **Namespace Restrictions**: `allowedNamespaces` still applies
 6. **Audit Trail**: All root executions logged
 
@@ -220,7 +220,7 @@ func TestSecurityContextInheritance_WithRunAsRoot(t *testing.T) {
 - [ ] Update `buildSecurityContext()` function
 - [ ] Update `createEphemeralContainerForPod()` with conditional logic
 - [ ] Add unit tests for `runAsRoot` behavior
-- [ ] Update aperf PowerToolConfig
+- [ ] Update aperf CoDriverTool
 - [ ] Test aperf with non-root pod
 - [ ] Add security documentation
 - [ ] Update examples

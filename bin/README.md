@@ -1,6 +1,6 @@
 # Build Tools Directory
 
-This directory contains build and development tools used by the Kubebuilder-based TOE project.
+This directory contains build and development tools used by the Kubebuilder-based KubeCoDriver project.
 
 ## Tool Overview
 
@@ -12,7 +12,7 @@ This directory contains build and development tools used by the Kubebuilder-base
 - Generate DeepCopy methods for API types
 - Generate webhook configurations
 
-**Usage in TOE:**
+**Usage in KubeCoDriver:**
 ```bash
 # Generate CRDs and RBAC
 controller-gen rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
@@ -29,13 +29,13 @@ controller-gen object:headerFile="hack/boilerplate.go.txt" paths="./..."
 - Generate final deployment YAML from base + overlays
 - Manage image tags and resource names
 
-**Usage in TOE:**
+**Usage in KubeCoDriver:**
 ```bash
 # Build final manifests
 kustomize build config/default > dist/install.yaml
 
 # Update image references
-cd config/manager && kustomize edit set image controller=myregistry/toe:v1.0.0
+cd config/manager && kustomize edit set image controller=myregistry/kubecodriver:v1.0.0
 ```
 
 ### `golangci-lint` - Go Code Linter
@@ -47,7 +47,7 @@ cd config/manager && kustomize edit set image controller=myregistry/toe:v1.0.0
 - Performance issue identification
 - Code complexity analysis
 
-**Usage in TOE:**
+**Usage in KubeCoDriver:**
 ```bash
 # Run all configured linters
 golangci-lint run
@@ -64,7 +64,7 @@ golangci-lint run --config .golangci.yml
 - Manage multiple Kubernetes versions for compatibility testing
 - Provide KUBEBUILDER_ASSETS environment variable
 
-**Usage in TOE:**
+**Usage in KubeCoDriver:**
 ```bash
 # Install test environment
 setup-envtest use 1.33.x
@@ -122,5 +122,5 @@ controller-gen: ## Download controller-gen locally if necessary.
 
 ## Output Binaries Location
 Project output binaries are located in `build/bin/`:
-- `build/bin/manager` - TOE controller binary
-- `build/bin/collector` - TOE collector binary
+- `build/bin/manager` - KubeCoDriver controller binary
+- `build/bin/collector` - KubeCoDriver collector binary

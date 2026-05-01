@@ -4,12 +4,12 @@
 
 ### Functions with 0% Coverage (Critical Gaps)
 
-#### 1. `NewPowerToolReconciler` (0%)
-**What it does:** Constructor for PowerToolReconciler
+#### 1. `NewCoDriverJobReconciler` (0%)
+**What it does:** Constructor for CoDriverJobReconciler
 
 **Missing tests:**
 ```go
-TestNewPowerToolReconciler
+TestNewCoDriverJobReconciler
 - Valid client and scheme
 - Verify fields are set correctly
 ```
@@ -54,7 +54,7 @@ TestFindPVCVolumeName
 ---
 
 #### 4. `handleDeletion` (0%)
-**What it does:** Cleanup logic when PowerTool is deleted
+**What it does:** Cleanup logic when CoDriverJob is deleted
 
 **Missing tests:**
 ```go
@@ -146,7 +146,7 @@ TestValidateNamespaceAccess
 **Missing tests:**
 ```go
 TestReconcile_ErrorCases
-- PowerTool not found → returns nil (deleted)
+- CoDriverJob not found → returns nil (deleted)
 - ToolConfig not found → returns error
 - Invalid tool configuration → returns error
 - No matching pods → updates status
@@ -175,8 +175,8 @@ TestReconcile_RequeueIntervals
 **Missing tests:**
 ```go
 TestCheckForConflicts_EdgeCases
-- Multiple PowerTools targeting same pod
-- PowerTool with different containers
+- Multiple CoDriverJobs targeting same pod
+- CoDriverJob with different containers
 - Conflict resolution logic
 ```
 
@@ -216,14 +216,14 @@ TestCreateEphemeralContainer_Errors
 
 ---
 
-### PowerToolConfig Controller (0% Coverage)
+### CoDriverTool Controller (0% Coverage)
 
-#### 12. PowerToolConfig Reconcile (0%)
-**What it does:** Manages PowerToolConfig resources
+#### 12. CoDriverTool Reconcile (0%)
+**What it does:** Manages CoDriverTool resources
 
 **Missing tests:**
 ```go
-TestPowerToolConfigReconcile
+TestCoDriverToolReconcile
 - Valid config → updates status
 - Invalid config → returns error
 - Config not found → returns nil
@@ -254,14 +254,14 @@ TestPowerToolConfigReconcile
 7. **findPVCVolumeName** - PVC mode, 10 min
 8. **handleDeletion** - Lifecycle, 15 min
 9. **checkForConflicts edge cases** - 10 min
-10. **PowerToolConfig controller** - 20 min
+10. **CoDriverTool controller** - 20 min
 
 **Total effort:** ~1 hour  
 **Expected coverage gain:** 70% → 80%+
 
 ### LOW Priority (Optional)
 
-11. **NewPowerToolReconciler** - Constructor, 5 min
+11. **NewCoDriverJobReconciler** - Constructor, 5 min
 12. **SetupWithManager** - Framework, 10 min
 
 **Total effort:** 15 minutes  
@@ -292,7 +292,7 @@ Day 3:
 - findPVCVolumeName tests
 - handleDeletion tests
 - checkForConflicts edge cases
-- PowerToolConfig controller tests
+- CoDriverTool controller tests
 ```
 
 **Target:** 70% → 80%+
@@ -312,7 +312,7 @@ Day 3:
 ### Example 1: getTokenDuration
 ```go
 func TestGetTokenDuration(t *testing.T) {
-	r := &PowerToolReconciler{}
+	r := &CoDriverJobReconciler{}
 	ctx := context.Background()
 
 	tests := []struct {
@@ -351,7 +351,7 @@ func TestGetTokenDuration(t *testing.T) {
 ### Example 2: isContainerRunning
 ```go
 func TestIsContainerRunning(t *testing.T) {
-	r := &PowerToolReconciler{}
+	r := &CoDriverJobReconciler{}
 
 	tests := []struct {
 		name          string

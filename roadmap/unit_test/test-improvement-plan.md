@@ -45,10 +45,10 @@ TestHandleProfile
 ├── successful profile upload
 ├── missing Authorization header
 ├── invalid token
-├── missing X-PowerTool-Job-ID header
-├── missing X-PowerTool-Namespace header
-├── missing X-PowerTool-Filename (uses default)
-├── empty X-PowerTool-Matching-Labels (defaults to unknown)
+├── missing X-CoDriverJob-Job-ID header
+├── missing X-CoDriverJob-Namespace header
+├── missing X-CoDriverJob-Filename (uses default)
+├── empty X-CoDriverJob-Matching-Labels (defaults to unknown)
 ├── large file upload
 ├── concurrent uploads
 └── storage failure handling
@@ -100,10 +100,10 @@ func TestHandleProfile_Success(t *testing.T) {
     body := bytes.NewBufferString("test data")
     req := httptest.NewRequest("POST", "/api/v1/profile", body)
     req.Header.Set("Authorization", "Bearer valid-token")
-    req.Header.Set("X-PowerTool-Job-ID", "test-job")
-    req.Header.Set("X-PowerTool-Namespace", "default")
-    req.Header.Set("X-PowerTool-Matching-Labels", "app-nginx")
-    req.Header.Set("X-PowerTool-Filename", "output.txt")
+    req.Header.Set("X-CoDriverJob-Job-ID", "test-job")
+    req.Header.Set("X-CoDriverJob-Namespace", "default")
+    req.Header.Set("X-CoDriverJob-Matching-Labels", "app-nginx")
+    req.Header.Set("X-CoDriverJob-Filename", "output.txt")
     
     // Execute
     rr := httptest.NewRecorder()
@@ -188,18 +188,18 @@ func TestValidateToken_Success(t *testing.T) {
     mockClient := &mockK8sClient{
         tokenReview: func(ctx context.Context, tr *authv1.TokenReview) (*authv1.TokenReview, error) {
             tr.Status.Authenticated = true
-            tr.Status.User.Username = "system:serviceaccount:toe-system:toe-sdk-collector"
+            tr.Status.User.Username = "system:serviceaccount:kubecodriver-system:kubecodriver-sdk-collector"
             return tr, nil
         },
     }
     
-    validator := NewK8sTokenValidator(mockClient, "toe-sdk-collector")
+    validator := NewK8sTokenValidator(mockClient, "kubecodriver-sdk-collector")
     userInfo, err := validator.ValidateToken(context.Background(), "valid-token")
     
     if err != nil {
         t.Errorf("unexpected error: %v", err)
     }
-    if userInfo.Username != "system:serviceaccount:toe-system:toe-sdk-collector" {
+    if userInfo.Username != "system:serviceaccount:kubecodriver-system:kubecodriver-sdk-collector" {
         t.Errorf("unexpected username: %v", userInfo.Username)
     }
 }
@@ -237,7 +237,7 @@ TestCompleteProfileUpload
 #### 2. Multi-Component Interaction
 ```go
 TestMultiComponentInteraction
-├── Multiple PowerTools targeting same pod
+├── Multiple CoDriverJobs targeting same pod
 ├── Concurrent profile uploads
 ├── Different label selectors
 └── Various date formats
@@ -282,8 +282,8 @@ func TestCompleteProfileUpload(t *testing.T) {
     collector := startCollector(t)
     defer collector.Stop()
     
-    // Create PowerTool
-    powerTool := createPowerTool(t, "test-profile")
+    // Create CoDriverJob
+    powerTool := createCoDriverJob(t, "test-profile")
     
     // Simulate power-tool upload
     token := generateToken(t)
@@ -308,7 +308,7 @@ func TestCompleteProfileUpload(t *testing.T) {
 
 #### Improve Existing Coverage
 ```go
-TestBuildPowerToolEnvVars_ToolArgs
+TestBuildCoDriverJobEnvVars_ToolArgs
 ├── JSON args parsing
 ├── invalid JSON handling
 ├── nested args
@@ -323,9 +323,9 @@ TestBuildPowerToolEnvVars_ToolArgs
 ```go
 TestE2E_RealCluster
 ├── Deploy collector
-├── Deploy PowerToolConfig
+├── Deploy CoDriverTool
 ├── Create target pod
-├── Create PowerTool
+├── Create CoDriverJob
 ├── Wait for completion
 └── Verify results
 ```
@@ -365,7 +365,7 @@ type TokenValidator interface {
 ### 3. Test Helpers
 ```go
 // test/helpers/helpers.go
-func CreateTestPowerTool(name string) *toev1alpha1.PowerTool
+func CreateTestCoDriverJob(name string) *kubecodriverv1alpha1.CoDriverJob
 func CreateTestPod(name string, labels map[string]string) *corev1.Pod
 func GenerateTestToken() string
 ```

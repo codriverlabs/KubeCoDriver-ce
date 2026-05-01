@@ -88,15 +88,15 @@ func TestSaveProfile(t *testing.T) {
 			name:       "hierarchical date structure",
 			dateFormat: "2006/01/02",
 			metadata: ProfileMetadata{
-				Namespace:     "default",
-				AppLabel:      "app-nginx",
-				PowerToolName: "profile-job",
-				Filename:      "output.txt",
+				Namespace:       "default",
+				AppLabel:        "app-nginx",
+				CoDriverJobName: "profile-job",
+				Filename:        "output.txt",
 			},
 			content: "test profile data",
 			checkPath: func(basePath string, metadata ProfileMetadata) (string, error) {
-				// Find file in hierarchical structure: basePath/namespace/label/powertool/year/month/day/filename
-				pattern := filepath.Join(basePath, metadata.Namespace, metadata.AppLabel, metadata.PowerToolName, "*", "*", "*", metadata.Filename)
+				// Find file in hierarchical structure: basePath/namespace/label/codriverjob/year/month/day/filename
+				pattern := filepath.Join(basePath, metadata.Namespace, metadata.AppLabel, metadata.CoDriverJobName, "*", "*", "*", metadata.Filename)
 				matches, err := filepath.Glob(pattern)
 				if err != nil {
 					return "", err
@@ -111,15 +111,15 @@ func TestSaveProfile(t *testing.T) {
 			name:       "flat date structure",
 			dateFormat: "2006-01-02",
 			metadata: ProfileMetadata{
-				Namespace:     "production",
-				AppLabel:      "env-prod",
-				PowerToolName: "profile-prod",
-				Filename:      "perf.data",
+				Namespace:       "production",
+				AppLabel:        "env-prod",
+				CoDriverJobName: "profile-prod",
+				Filename:        "perf.data",
 			},
 			content: "performance data",
 			checkPath: func(basePath string, metadata ProfileMetadata) (string, error) {
-				// Find file in flat structure: basePath/namespace/label/powertool/date/filename
-				pattern := filepath.Join(basePath, metadata.Namespace, metadata.AppLabel, metadata.PowerToolName, "*", metadata.Filename)
+				// Find file in flat structure: basePath/namespace/label/codriverjob/date/filename
+				pattern := filepath.Join(basePath, metadata.Namespace, metadata.AppLabel, metadata.CoDriverJobName, "*", metadata.Filename)
 				matches, err := filepath.Glob(pattern)
 				if err != nil {
 					return "", err
@@ -134,14 +134,14 @@ func TestSaveProfile(t *testing.T) {
 			name:       "unknown app label",
 			dateFormat: "2006/01/02",
 			metadata: ProfileMetadata{
-				Namespace:     "default",
-				AppLabel:      "unknown",
-				PowerToolName: "test-profile",
-				Filename:      "test.txt",
+				Namespace:       "default",
+				AppLabel:        "unknown",
+				CoDriverJobName: "test-profile",
+				Filename:        "test.txt",
 			},
 			content: "test content",
 			checkPath: func(basePath string, metadata ProfileMetadata) (string, error) {
-				pattern := filepath.Join(basePath, metadata.Namespace, metadata.AppLabel, metadata.PowerToolName, "*", "*", "*", metadata.Filename)
+				pattern := filepath.Join(basePath, metadata.Namespace, metadata.AppLabel, metadata.CoDriverJobName, "*", "*", "*", metadata.Filename)
 				matches, err := filepath.Glob(pattern)
 				if err != nil {
 					return "", err
@@ -201,10 +201,10 @@ func TestSaveProfile_DirectoryCreation(t *testing.T) {
 	}
 
 	metadata := ProfileMetadata{
-		Namespace:     "test-ns",
-		AppLabel:      "tier-backend",
-		PowerToolName: "deep-profile",
-		Filename:      "data.bin",
+		Namespace:       "test-ns",
+		AppLabel:        "tier-backend",
+		CoDriverJobName: "deep-profile",
+		Filename:        "data.bin",
 	}
 
 	reader := bytes.NewBufferString("test data")
@@ -237,10 +237,10 @@ func TestSaveProfile_ReadError(t *testing.T) {
 	// Create a reader that returns an error
 	errorReader := &errorReader{err: errors.New("read failed")}
 	metadata := ProfileMetadata{
-		Namespace:     "default",
-		AppLabel:      "app-test",
-		PowerToolName: "test-job",
-		Filename:      "test.txt",
+		Namespace:       "default",
+		AppLabel:        "app-test",
+		CoDriverJobName: "test-job",
+		Filename:        "test.txt",
 	}
 
 	err = mgr.SaveProfile(errorReader, metadata)
@@ -257,10 +257,10 @@ func TestSaveProfile_EmptyFile(t *testing.T) {
 	}
 
 	metadata := ProfileMetadata{
-		Namespace:     "default",
-		AppLabel:      "app-test",
-		PowerToolName: "test-job",
-		Filename:      "empty.txt",
+		Namespace:       "default",
+		AppLabel:        "app-test",
+		CoDriverJobName: "test-job",
+		Filename:        "empty.txt",
 	}
 
 	reader := bytes.NewReader([]byte{})
@@ -291,28 +291,28 @@ func TestSaveProfile_SpecialCharacters(t *testing.T) {
 		{
 			name: "hyphen in label",
 			metadata: ProfileMetadata{
-				Namespace:     "default",
-				AppLabel:      "app-nginx-v2",
-				PowerToolName: "test-job",
-				Filename:      "output.txt",
+				Namespace:       "default",
+				AppLabel:        "app-nginx-v2",
+				CoDriverJobName: "test-job",
+				Filename:        "output.txt",
 			},
 		},
 		{
 			name: "underscore in filename",
 			metadata: ProfileMetadata{
-				Namespace:     "default",
-				AppLabel:      "app-test",
-				PowerToolName: "test-job",
-				Filename:      "profile_data.txt",
+				Namespace:       "default",
+				AppLabel:        "app-test",
+				CoDriverJobName: "test-job",
+				Filename:        "profile_data.txt",
 			},
 		},
 		{
 			name: "dots in filename",
 			metadata: ProfileMetadata{
-				Namespace:     "default",
-				AppLabel:      "app-test",
-				PowerToolName: "test-job",
-				Filename:      "data.2025.10.30.txt",
+				Namespace:       "default",
+				AppLabel:        "app-test",
+				CoDriverJobName: "test-job",
+				Filename:        "data.2025.10.30.txt",
 			},
 		},
 	}
@@ -351,10 +351,10 @@ func TestSaveProfile_FileCreationError(t *testing.T) {
 	}
 
 	metadata := ProfileMetadata{
-		Namespace:     "default",
-		AppLabel:      "app-test",
-		PowerToolName: "test-job",
-		Filename:      "test.txt",
+		Namespace:       "default",
+		AppLabel:        "app-test",
+		CoDriverJobName: "test-job",
+		Filename:        "test.txt",
 	}
 
 	reader := bytes.NewBufferString("test data")
@@ -372,10 +372,10 @@ func TestSaveProfile_WriteLargeFile(t *testing.T) {
 	}
 
 	metadata := ProfileMetadata{
-		Namespace:     "default",
-		AppLabel:      "app-test",
-		PowerToolName: "large-job",
-		Filename:      "large.bin",
+		Namespace:       "default",
+		AppLabel:        "app-test",
+		CoDriverJobName: "large-job",
+		Filename:        "large.bin",
 	}
 
 	// Create a large buffer (10MB)

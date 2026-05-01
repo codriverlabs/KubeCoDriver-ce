@@ -7,11 +7,11 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  CONTROLLER_IMAGE: ghcr.io/codriverlabs/toe-controller
-  COLLECTOR_IMAGE: ghcr.io/codriverlabs/toe-collector
-  APERF_IMAGE: ghcr.io/codriverlabs/toe-aperf
-  TCPDUMP_IMAGE: ghcr.io/codriverlabs/toe-tcpdump
-  CHAOS_IMAGE: ghcr.io/codriverlabs/toe-chaos
+  CONTROLLER_IMAGE: ghcr.io/codriverlabs/kubecodriver-controller
+  COLLECTOR_IMAGE: ghcr.io/codriverlabs/kubecodriver-collector
+  APERF_IMAGE: ghcr.io/codriverlabs/kubecodriver-aperf
+  TCPDUMP_IMAGE: ghcr.io/codriverlabs/kubecodriver-tcpdump
+  CHAOS_IMAGE: ghcr.io/codriverlabs/kubecodriver-chaos
 
 jobs:
   prepare:
@@ -21,7 +21,7 @@ jobs:
       release-version: ${{ steps.release-version.outputs.version }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       
       - name: Extract Go version
         id: go-version
@@ -46,7 +46,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set up Go
         uses: actions/setup-go@v6
@@ -54,10 +54,10 @@ jobs:
           go-version: ${{ needs.prepare.outputs.go-version }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Log in to Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -70,12 +70,12 @@ jobs:
       - name: Set image names based on repository
         id: images
         run: |
-          if [[ "${{ github.repository }}" == "codriverlabs/toe-run-ce" ]]; then
-            echo "CONTROLLER_IMAGE=ghcr.io/codriverlabs/ce/toe-controller" >> $GITHUB_OUTPUT
-            echo "COLLECTOR_IMAGE=ghcr.io/codriverlabs/ce/toe-collector" >> $GITHUB_OUTPUT
-            echo "APERF_IMAGE=ghcr.io/codriverlabs/ce/toe-aperf" >> $GITHUB_OUTPUT
-            echo "TCPDUMP_IMAGE=ghcr.io/codriverlabs/ce/toe-tcpdump" >> $GITHUB_OUTPUT
-            echo "CHAOS_IMAGE=ghcr.io/codriverlabs/ce/toe-chaos" >> $GITHUB_OUTPUT
+          if [[ "${{ github.repository }}" == "codriverlabs/kubecodriver-ce" ]]; then
+            echo "CONTROLLER_IMAGE=ghcr.io/codriverlabs/ce/kubecodriver-controller" >> $GITHUB_OUTPUT
+            echo "COLLECTOR_IMAGE=ghcr.io/codriverlabs/ce/kubecodriver-collector" >> $GITHUB_OUTPUT
+            echo "APERF_IMAGE=ghcr.io/codriverlabs/ce/kubecodriver-aperf" >> $GITHUB_OUTPUT
+            echo "TCPDUMP_IMAGE=ghcr.io/codriverlabs/ce/kubecodriver-tcpdump" >> $GITHUB_OUTPUT
+            echo "CHAOS_IMAGE=ghcr.io/codriverlabs/ce/kubecodriver-chaos" >> $GITHUB_OUTPUT
           else
             echo "CONTROLLER_IMAGE=${{ env.CONTROLLER_IMAGE }}" >> $GITHUB_OUTPUT
             echo "COLLECTOR_IMAGE=${{ env.COLLECTOR_IMAGE }}" >> $GITHUB_OUTPUT
@@ -85,7 +85,7 @@ jobs:
           fi
 
       - name: Build and push controller image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: true
@@ -99,7 +99,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Build and push collector image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: build/collector/Dockerfile
@@ -114,7 +114,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Build and push aperf image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: power-tools
           file: power-tools/aperf/Dockerfile
@@ -127,7 +127,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Build and push tcpdump image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: power-tools
           file: power-tools/tcpdump/Dockerfile
@@ -140,7 +140,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Build and push chaos image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: power-tools
           file: power-tools/chaos/Dockerfile
@@ -155,14 +155,14 @@ jobs:
   build-arm64:
     needs: prepare
     runs-on: ubuntu-24.04-arm
-    if: github.repository == 'codriverlabs/toe-run-ce'
+    if: github.repository == 'codriverlabs/kubecodriver-ce'
     permissions:
       contents: write
       packages: write
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set up Go
         uses: actions/setup-go@v6
@@ -170,10 +170,10 @@ jobs:
           go-version: ${{ needs.prepare.outputs.go-version }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Log in to Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -186,14 +186,14 @@ jobs:
       - name: Set image names for public repository
         id: images
         run: |
-          echo "CONTROLLER_IMAGE=ghcr.io/codriverlabs/ce/toe-controller" >> $GITHUB_OUTPUT
-          echo "COLLECTOR_IMAGE=ghcr.io/codriverlabs/ce/toe-collector" >> $GITHUB_OUTPUT
-          echo "APERF_IMAGE=ghcr.io/codriverlabs/ce/toe-aperf" >> $GITHUB_OUTPUT
-            echo "TCPDUMP_IMAGE=ghcr.io/codriverlabs/ce/toe-tcpdump" >> $GITHUB_OUTPUT
-            echo "CHAOS_IMAGE=ghcr.io/codriverlabs/ce/toe-chaos" >> $GITHUB_OUTPUT
+          echo "CONTROLLER_IMAGE=ghcr.io/codriverlabs/ce/kubecodriver-controller" >> $GITHUB_OUTPUT
+          echo "COLLECTOR_IMAGE=ghcr.io/codriverlabs/ce/kubecodriver-collector" >> $GITHUB_OUTPUT
+          echo "APERF_IMAGE=ghcr.io/codriverlabs/ce/kubecodriver-aperf" >> $GITHUB_OUTPUT
+            echo "TCPDUMP_IMAGE=ghcr.io/codriverlabs/ce/kubecodriver-tcpdump" >> $GITHUB_OUTPUT
+            echo "CHAOS_IMAGE=ghcr.io/codriverlabs/ce/kubecodriver-chaos" >> $GITHUB_OUTPUT
 
       - name: Build and push controller image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: true
@@ -207,7 +207,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Build and push collector image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: build/collector/Dockerfile
@@ -222,7 +222,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Build and push aperf image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: power-tools
           file: power-tools/aperf/Dockerfile
@@ -235,7 +235,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Build and push tcpdump image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: power-tools
           file: power-tools/tcpdump/Dockerfile
@@ -248,7 +248,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Build and push chaos image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: power-tools
           file: power-tools/chaos/Dockerfile
@@ -270,13 +270,13 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Log in to Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -289,12 +289,12 @@ jobs:
       - name: Set image names based on repository
         id: images
         run: |
-          if [[ "${{ github.repository }}" == "codriverlabs/toe-run-ce" ]]; then
-            echo "CONTROLLER_IMAGE=ghcr.io/codriverlabs/ce/toe-controller" >> $GITHUB_OUTPUT
-            echo "COLLECTOR_IMAGE=ghcr.io/codriverlabs/ce/toe-collector" >> $GITHUB_OUTPUT
-            echo "APERF_IMAGE=ghcr.io/codriverlabs/ce/toe-aperf" >> $GITHUB_OUTPUT
-            echo "TCPDUMP_IMAGE=ghcr.io/codriverlabs/ce/toe-tcpdump" >> $GITHUB_OUTPUT
-            echo "CHAOS_IMAGE=ghcr.io/codriverlabs/ce/toe-chaos" >> $GITHUB_OUTPUT
+          if [[ "${{ github.repository }}" == "codriverlabs/kubecodriver-ce" ]]; then
+            echo "CONTROLLER_IMAGE=ghcr.io/codriverlabs/ce/kubecodriver-controller" >> $GITHUB_OUTPUT
+            echo "COLLECTOR_IMAGE=ghcr.io/codriverlabs/ce/kubecodriver-collector" >> $GITHUB_OUTPUT
+            echo "APERF_IMAGE=ghcr.io/codriverlabs/ce/kubecodriver-aperf" >> $GITHUB_OUTPUT
+            echo "TCPDUMP_IMAGE=ghcr.io/codriverlabs/ce/kubecodriver-tcpdump" >> $GITHUB_OUTPUT
+            echo "CHAOS_IMAGE=ghcr.io/codriverlabs/ce/kubecodriver-chaos" >> $GITHUB_OUTPUT
           else
             echo "CONTROLLER_IMAGE=${{ env.CONTROLLER_IMAGE }}" >> $GITHUB_OUTPUT
             echo "COLLECTOR_IMAGE=${{ env.COLLECTOR_IMAGE }}" >> $GITHUB_OUTPUT
@@ -306,7 +306,7 @@ jobs:
       - name: Determine manifest type
         id: manifest-type
         run: |
-          if [[ "${{ github.repository }}" == "codriverlabs/toe-run-ce" ]]; then
+          if [[ "${{ github.repository }}" == "codriverlabs/kubecodriver-ce" ]]; then
             echo "multi-arch=true" >> $GITHUB_OUTPUT
           else
             echo "multi-arch=false" >> $GITHUB_OUTPUT
@@ -358,7 +358,7 @@ jobs:
             VERSION=${{ steps.version.outputs.VERSION }}
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: |
             dist/release/*
@@ -378,10 +378,10 @@ jobs:
 
             ```bash
             # Direct YAML install
-            kubectl apply -f https://github.com/codriverlabs/toe/releases/download/${{ github.ref_name }}/toe-operator-${{ steps.version.outputs.VERSION }}.yaml
+            kubectl apply -f https://github.com/codriverlabs/kubecodriver/releases/download/${{ github.ref_name }}/kubecodriver-operator-${{ steps.version.outputs.VERSION }}.yaml
 
             # Helm install
-            helm install toe-operator https://github.com/codriverlabs/toe/releases/download/${{ github.ref_name }}/toe-operator-${{ steps.version.outputs.VERSION }}.tgz
+            helm install kubecodriver-operator https://github.com/codriverlabs/kubecodriver/releases/download/${{ github.ref_name }}/kubecodriver-operator-${{ steps.version.outputs.VERSION }}.tgz
             ```
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

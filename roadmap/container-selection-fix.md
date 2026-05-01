@@ -32,7 +32,7 @@ Add function to get target container:
 // getTargetContainer returns the target container from the pod
 // If targetContainerName is specified, it finds that container
 // Otherwise, it returns the first container
-func (r *PowerToolReconciler) getTargetContainer(pod corev1.Pod, targetContainerName *string) *corev1.Container {
+func (r *CoDriverJobReconciler) getTargetContainer(pod corev1.Pod, targetContainerName *string) *corev1.Container {
     // If no container specified, use first container
     if targetContainerName == nil || *targetContainerName == "" {
         if len(pod.Spec.Containers) > 0 {
@@ -63,7 +63,7 @@ func (r *PowerToolReconciler) getTargetContainer(pod corev1.Pod, targetContainer
 Modify `createEphemeralContainerForPod()`:
 
 ```go
-func (r *PowerToolReconciler) createEphemeralContainerForPod(ctx context.Context, powerTool *toev1alpha1.PowerTool, toolConfig *toev1alpha1.PowerToolConfig, pod corev1.Pod, containerName string) error {
+func (r *CoDriverJobReconciler) createEphemeralContainerForPod(ctx context.Context, powerTool *kubecodriverv1alpha1.CoDriverJob, toolConfig *kubecodriverv1alpha1.CoDriverTool, pod corev1.Pod, containerName string) error {
     logger := log.FromContext(ctx)
 
     // Get target container
@@ -73,7 +73,7 @@ func (r *PowerToolReconciler) createEphemeralContainerForPod(ctx context.Context
     }
 
     // Build environment variables
-    envVars := r.buildPowerToolEnvVars(powerTool, pod)
+    envVars := r.buildCoDriverJobEnvVars(powerTool, pod)
 
     // ... existing collector code ...
 
@@ -141,10 +141,10 @@ func (r *PowerToolReconciler) createEphemeralContainerForPod(ctx context.Context
 
 **File**: `internal/controller/powertool_controller.go`
 
-Update `buildPowerToolEnvVars()`:
+Update `buildCoDriverJobEnvVars()`:
 
 ```go
-func (r *PowerToolReconciler) buildPowerToolEnvVars(job *toev1alpha1.PowerTool, targetPod corev1.Pod) []corev1.EnvVar {
+func (r *CoDriverJobReconciler) buildCoDriverJobEnvVars(job *kubecodriverv1alpha1.CoDriverJob, targetPod corev1.Pod) []corev1.EnvVar {
     // Extract matching labels
     matchingLabels := r.extractMatchingLabels(job.Spec.Targets.LabelSelector, targetPod.Labels)
 
@@ -185,7 +185,7 @@ import (
 )
 
 func TestGetTargetContainer_SingleContainer(t *testing.T) {
-    r := &PowerToolReconciler{}
+    r := &CoDriverJobReconciler{}
     
     pod := corev1.Pod{
         Spec: corev1.PodSpec{
@@ -202,7 +202,7 @@ func TestGetTargetContainer_SingleContainer(t *testing.T) {
 }
 
 func TestGetTargetContainer_MultiContainer_Specified(t *testing.T) {
-    r := &PowerToolReconciler{}
+    r := &CoDriverJobReconciler{}
     
     pod := corev1.Pod{
         Spec: corev1.PodSpec{
@@ -220,7 +220,7 @@ func TestGetTargetContainer_MultiContainer_Specified(t *testing.T) {
 }
 
 func TestGetTargetContainer_MultiContainer_NotSpecified(t *testing.T) {
-    r := &PowerToolReconciler{}
+    r := &CoDriverJobReconciler{}
     
     pod := corev1.Pod{
         Spec: corev1.PodSpec{
@@ -238,7 +238,7 @@ func TestGetTargetContainer_MultiContainer_NotSpecified(t *testing.T) {
 }
 
 func TestGetTargetContainer_NotFound_FallbackToFirst(t *testing.T) {
-    r := &PowerToolReconciler{}
+    r := &CoDriverJobReconciler{}
     
     pod := corev1.Pod{
         Spec: corev1.PodSpec{
@@ -256,7 +256,7 @@ func TestGetTargetContainer_NotFound_FallbackToFirst(t *testing.T) {
 }
 
 func TestGetTargetContainer_EmptyPod(t *testing.T) {
-    r := &PowerToolReconciler{}
+    r := &CoDriverJobReconciler{}
     
     pod := corev1.Pod{
         Spec: corev1.PodSpec{
@@ -291,7 +291,7 @@ func TestSecurityContextInheritance_TargetContainer(t *testing.T) {
         },
     }
     
-    r := &PowerToolReconciler{}
+    r := &CoDriverJobReconciler{}
     targetName := "main-app"
     container := r.getTargetContainer(pod, &targetName)
     
@@ -311,7 +311,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: multi-container-test
-  namespace: toe-test
+  namespace: kubecodriver-test
   labels:
     app: "multi-test"
 spec:
@@ -333,11 +333,11 @@ spec:
 **File**: `examples/test-multicontainer-powertool.yaml` (new)
 
 ```yaml
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerTool
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverJob
 metadata:
   name: aperf-multicontainer-test
-  namespace: toe-test
+  namespace: kubecodriver-test
 spec:
   targets:
     labelSelector:
@@ -379,7 +379,7 @@ spec:
 
 ### Step 5: E2E Test
 - [ ] Create multi-container test pod
-- [ ] Create PowerTool targeting specific container
+- [ ] Create CoDriverJob targeting specific container
 - [ ] Verify ephemeral container uses correct security context
 - [ ] Verify TARGET_CONTAINER_NAME env var is set
 

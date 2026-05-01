@@ -1,17 +1,20 @@
 # Image URLs
 IMG ?= controller:latest
-CONTROLLER_IMG ?= ghcr.io/codriverlabs/ce/toe-controller:$(VERSION)
-COLLECTOR_IMG ?= ghcr.io/codriverlabs/ce/toe-collector:$(VERSION)
-APERF_IMG ?= ghcr.io/codriverlabs/ce/toe-aperf:$(VERSION)
-TCPDUMP_IMG ?= ghcr.io/codriverlabs/ce/toe-tcpdump:$(VERSION)
-CHAOS_IMG ?= ghcr.io/codriverlabs/ce/toe-chaos:$(VERSION)
+CONTROLLER_IMG ?= ghcr.io/codriverlabs/ce/kubecodriver-controller:$(VERSION)
+COLLECTOR_IMG ?= ghcr.io/codriverlabs/ce/kubecodriver-collector:$(VERSION)
+APERF_IMG ?= ghcr.io/codriverlabs/ce/kubecodriver-aperf:$(VERSION)
+TCPDUMP_IMG ?= ghcr.io/codriverlabs/ce/kubecodriver-tcpdump:$(VERSION)
+CHAOS_IMG ?= ghcr.io/codriverlabs/ce/kubecodriver-chaos:$(VERSION)
 VERSION ?= v1.0.47
 
+# Public ECR Go image used for Docker-based builds and dep updates
+GO_IMAGE ?= public.ecr.aws/docker/library/golang:1.26.1@sha256:595c7847cff97c9a9e76f015083c481d26078f961c9c8dca3923132f51fe12f1
+
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
-ifeq (,$(shell go env GOBIN))
-GOBIN=$(shell go env GOPATH)/bin
+ifeq (,$(shell go env GOBIN 2>/dev/null))
+GOBIN=$(HOME)/go/bin
 else
-GOBIN=$(shell go env GOBIN)
+GOBIN=$(shell go env GOBIN 2>/dev/null)
 endif
 
 # CONTAINER_TOOL defines the container tool to be used for building images.
@@ -48,20 +51,67 @@ help: ## Display this help.
 ##@ Development
 
 .PHONY: manifests
-manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
-	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+manifests: ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
+	@if command -v go >/dev/null 2>&1; then \
+		$(MAKE) controller-gen; \
+		$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases; \
+	else \
+		$(MAKE) _docker-controller-gen CONTROLLER_GEN_ARGS='rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases'; \
+	fi
 
 .PHONY: generate
-generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
-	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
+generate: ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
+	@if command -v go >/dev/null 2>&1; then \
+		$(MAKE) controller-gen; \
+		$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."; \
+	else \
+		$(MAKE) _docker-controller-gen CONTROLLER_GEN_ARGS='object:headerFile="hack/boilerplate.go.txt" paths="./..."'; \
+	fi
+
+# Internal target: run controller-gen via Docker using vendor mode to avoid go.sum issues.
+.PHONY: _docker-controller-gen
+_docker-controller-gen:
+	docker run --rm \
+		-v "$$(pwd):/workspace" \
+		-w /workspace \
+		--user "$$(id -u):$$(id -g)" \
+		-e HOME=/workspace \
+		-e GOPATH=/workspace/.cache/go \
+		-e GOCACHE=/workspace/.cache/go-build \
+		$(GO_IMAGE) \
+		sh -c 'go mod vendor && \
+			GOBIN=/workspace/bin go install sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_TOOLS_VERSION) && \
+			GOFLAGS=-mod=vendor /workspace/bin/controller-gen $(CONTROLLER_GEN_ARGS) 2>/dev/null; \
+			rm -rf vendor/'
 
 .PHONY: fmt
 fmt: ## Run go fmt against code.
-	go fmt ./...
+	@if command -v go >/dev/null 2>&1; then \
+		go fmt ./...; \
+	else \
+		$(MAKE) _docker-go CMD='go fmt ./...'; \
+	fi
 
 .PHONY: vet
 vet: ## Run go vet against code.
-	go vet ./...
+	@if command -v go >/dev/null 2>&1; then \
+		go vet ./...; \
+	else \
+		$(MAKE) _docker-go CMD='CGO_ENABLED=0 go vet ./...'; \
+	fi
+
+# Internal target: run a Go command via Docker with cached modules.
+.PHONY: _docker-go
+_docker-go:
+	docker run --rm \
+		-v "$$(pwd):/workspace" \
+		-w /workspace \
+		--user "$$(id -u):$$(id -g)" \
+		-e HOME=/workspace \
+		-e GOPATH=/workspace/.cache/go \
+		-e GOCACHE=/workspace/.cache/go-build \
+		$(GO_IMAGE) \
+		sh -c '$(CMD)'
 
 .PHONY: test
 test: manifests generate fmt vet setup-envtest ## Run tests.
@@ -86,7 +136,7 @@ test-all: test test-e2e ## Run all tests (unit + E2E)
 # The default setup assumes Kind is pre-installed and builds/loads the Manager Docker image locally.
 # CertManager is installed by default; skip with:
 # - CERT_MANAGER_INSTALL_SKIP=true
-KIND_CLUSTER ?= toe-test-e2e
+KIND_CLUSTER ?= kubecodriver-test-e2e
 
 .PHONY: setup-test-e2e
 setup-test-e2e: ## Set up a Kind cluster for e2e tests if it does not exist
@@ -125,15 +175,69 @@ lint-config: golangci-lint ## Verify golangci-lint linter configuration
 
 ##@ Build
 
+
+.PHONY: clean
+clean: ## Remove build artifacts and Go caches.
+	rm -rf build/bin
+	chmod -R u+w .cache/ 2>/dev/null; rm -rf .cache/
+
 .PHONY: build
-build: manifests generate fmt vet ## Build manager binary.
+build: manifests generate fmt vet ## Build manager binary (uses Docker if Go not installed).
 	mkdir -p build/bin
-	go build -o build/bin/manager cmd/main.go
+	@if command -v go >/dev/null 2>&1; then \
+		go build -o build/bin/manager cmd/main.go; \
+	else \
+		echo "Go not found locally, using Docker..."; \
+		aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws >/dev/null 2>&1; \
+		docker run --rm \
+			-v "$$(pwd):/workspace" \
+			-w /workspace \
+			--user "$$(id -u):$$(id -g)" \
+			-e HOME=/workspace \
+			-e GOPATH=/workspace/.cache/go \
+			-e GOCACHE=/workspace/.cache/go-build \
+			-e CGO_ENABLED=0 \
+			$(GO_IMAGE) \
+			go build -o build/bin/manager cmd/main.go; \
+	fi
 
 .PHONY: build-collector
-build-collector: fmt vet ## Build collector binary.
+build-collector: fmt vet ## Build collector binary (uses Docker if Go not installed).
 	mkdir -p build/bin
-	go build -o build/bin/collector cmd/collector/main.go
+	@if command -v go >/dev/null 2>&1; then \
+		go build -o build/bin/collector cmd/collector/main.go; \
+	else \
+		echo "Go not found locally, using Docker..."; \
+		aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws >/dev/null 2>&1; \
+		docker run --rm \
+			-v "$$(pwd):/workspace" \
+			-w /workspace \
+			--user "$$(id -u):$$(id -g)" \
+			-e HOME=/workspace \
+			-e GOPATH=/workspace/.cache/go \
+			-e GOCACHE=/workspace/.cache/go-build \
+			-e CGO_ENABLED=0 \
+			$(GO_IMAGE) \
+			go build -o build/bin/collector cmd/collector/main.go; \
+	fi
+
+.PHONY: mod-tidy
+mod-tidy: ## Run go mod tidy (uses Docker if Go not installed).
+	@if command -v go >/dev/null 2>&1; then \
+		go mod tidy; \
+	else \
+		echo "Go not found locally, using Docker..."; \
+		aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws >/dev/null 2>&1; \
+		docker run --rm \
+			-v "$$(pwd):/workspace" \
+			-w /workspace \
+			--user "$$(id -u):$$(id -g)" \
+			-e HOME=/workspace \
+			-e GOPATH=/workspace/.cache/go \
+			-e GOCACHE=/workspace/.cache/go-build \
+			$(GO_IMAGE) \
+			go mod tidy; \
+	fi
 
 .PHONY: run
 run: manifests generate fmt vet ## Run a controller from your host.
@@ -191,10 +295,10 @@ PLATFORMS ?= linux/arm64,linux/amd64,linux/s390x,linux/ppc64le
 docker-buildx: ## Build and push docker image for the manager for cross-platform support
 	# copy existing Dockerfile and insert --platform=${BUILDPLATFORM} into Dockerfile.cross, and preserve the original Dockerfile
 	sed -e '1 s/\(^FROM\)/FROM --platform=\$$\{BUILDPLATFORM\}/; t' -e ' 1,// s//FROM --platform=\$$\{BUILDPLATFORM\}/' Dockerfile > Dockerfile.cross
-	- $(CONTAINER_TOOL) buildx create --name toe-builder
-	$(CONTAINER_TOOL) buildx use toe-builder
+	- $(CONTAINER_TOOL) buildx create --name kubecodriver-builder
+	$(CONTAINER_TOOL) buildx use kubecodriver-builder
 	- $(CONTAINER_TOOL) buildx build --push --platform=$(PLATFORMS) --tag ${IMG} -f Dockerfile.cross .
-	- $(CONTAINER_TOOL) buildx rm toe-builder
+	- $(CONTAINER_TOOL) buildx rm kubecodriver-builder
 	rm Dockerfile.cross
 
 ##@ GitHub Release
@@ -207,10 +311,10 @@ github-release: helm-chart release-package build-installer ## Generate all relea
 	mkdir -p dist/release
 	
 	# Copy installer YAML
-	cp dist/install.yaml dist/release/toe-operator-$(VERSION).yaml
+	cp dist/install.yaml dist/release/kubecodriver-operator-$(VERSION).yaml
 	
 	# Copy Helm package
-	cp dist/helm/toe-operator-*.tgz dist/release/
+	cp dist/helm/kubecodriver-operator-*.tgz dist/release/
 	
 	# Generate checksums
 	cd dist/release && sha256sum * > checksums.txt
@@ -222,22 +326,22 @@ github-release: helm-chart release-package build-installer ## Generate all relea
 	@echo ""
 	@echo "🔗 Usage:"
 	@echo "  # Direct YAML install:"
-	@echo "  kubectl apply -f https://github.com/codriverlabs/toe/releases/download/v$(VERSION)/toe-operator-$(VERSION).yaml"
+	@echo "  kubectl apply -f https://github.com/codriverlabs/kubecodriver/releases/download/v$(VERSION)/kubecodriver-operator-$(VERSION).yaml"
 	@echo ""
 	@echo "  # Helm install:"
-	@echo "  helm install toe-operator https://github.com/codriverlabs/toe/releases/download/v$(VERSION)/toe-operator-$(VERSION).tgz"
+	@echo "  helm install kubecodriver-operator https://github.com/codriverlabs/kubecodriver/releases/download/v$(VERSION)/kubecodriver-operator-$(VERSION).tgz"
 
 .PHONY: github-release-controller
 github-release-controller: ## Generate controller-only release artifacts
 	@echo "🎯 Generating controller-only release..."
-	$(MAKE) github-release IMG=ghcr.io/codriverlabs/toe-controller:$(VERSION)
+	$(MAKE) github-release IMG=ghcr.io/codriverlabs/kubecodriver-controller:$(VERSION)
 
 .PHONY: github-release-collector  
 github-release-collector: ## Generate collector-only release artifacts
 	@echo "📊 Generating collector-only release..."
 	mkdir -p dist/release
-	$(KUSTOMIZE) build deploy/collector > dist/release/toe-collector-$(VERSION).yaml
-	@echo "✅ Collector release ready: dist/release/toe-collector-$(VERSION).yaml"
+	$(KUSTOMIZE) build deploy/collector > dist/release/kubecodriver-collector-$(VERSION).yaml
+	@echo "✅ Collector release ready: dist/release/kubecodriver-collector-$(VERSION).yaml"
 
 ##@ Release
 
@@ -247,65 +351,65 @@ helm-chart: manifests generate kustomize ## Generate Helm chart with configurabl
 	
 	# Copy Helm chart structure
 	mkdir -p dist/helm
-	cp -r helm/toe-operator dist/helm/
+	cp -r helm/kubecodriver-operator dist/helm/
 	
 	# Update image tags in values.yaml based on build parameters
 	@CONTROLLER_TAG=$$(echo "$(CONTROLLER_IMG)" | sed 's/.*://'); \
 	COLLECTOR_TAG=$$(echo "$(COLLECTOR_IMG)" | sed 's/.*://'); \
 	APERF_TAG=$$(echo "$(APERF_IMG)" | sed 's/.*://'); \
-	sed -i "s|tag: \"1.1.4-beta\"|tag: \"$$CONTROLLER_TAG\"|g" dist/helm/toe-operator/values.yaml
+	sed -i "s|tag: \"1.1.4-beta\"|tag: \"$$CONTROLLER_TAG\"|g" dist/helm/kubecodriver-operator/values.yaml
 	
 	# Generate CRDs for Helm (installed before templates)
-	mkdir -p dist/helm/toe-operator/crds
-	$(KUSTOMIZE) build config/crd > dist/helm/toe-operator/crds/crds.yaml
+	mkdir -p dist/helm/kubecodriver-operator/crds
+	$(KUSTOMIZE) build config/crd > dist/helm/kubecodriver-operator/crds/crds.yaml
 	
 	# Generate controller manifests with Helm templating (excluding CRDs and Namespace)
-	mkdir -p dist/helm/toe-operator/templates
-	cd config/manager && $(KUSTOMIZE) edit set image controller='{{ include "toe-operator.controller.image" . }}'
+	mkdir -p dist/helm/kubecodriver-operator/templates
+	cd config/manager && $(KUSTOMIZE) edit set image controller='{{ include "kubecodriver-operator.controller.image" . }}'
 	$(KUSTOMIZE) build config/default > /tmp/kustomize-output.yaml
-	sed 's/namespace: toe-system/namespace: {{ include "toe-operator.namespace" . }}/g' /tmp/kustomize-output.yaml | \
+	sed 's/namespace: kubecodriver-system/namespace: {{ include "kubecodriver-operator.namespace" . }}/g' /tmp/kustomize-output.yaml | \
 		sed '/^apiVersion: apiextensions\.k8s\.io\/v1$$/,/^---$$/d' | \
-		sed "s|'{{ include \"toe-operator.controller.image\" . }}'|{{ include \"toe-operator.controller.image\" . }}|g" | \
-		sed "s|{{ include \"toe-operator.controller.image\" . }}:latest|{{ include \"toe-operator.controller.image\" . }}|g" > dist/helm/toe-operator/templates/controller.yaml
+		sed "s|'{{ include \"kubecodriver-operator.controller.image\" . }}'|{{ include \"kubecodriver-operator.controller.image\" . }}|g" | \
+		sed "s|{{ include \"kubecodriver-operator.controller.image\" . }}:latest|{{ include \"kubecodriver-operator.controller.image\" . }}|g" > dist/helm/kubecodriver-operator/templates/controller.yaml
 	rm -f /tmp/kustomize-output.yaml
 	
 	# Add Helm conditionals to controller template
-	sed -i '1i{{- if .Values.controller.enabled }}' dist/helm/toe-operator/templates/controller.yaml
-	echo '{{- end }}' >> dist/helm/toe-operator/templates/controller.yaml
+	sed -i '1i{{- if .Values.controller.enabled }}' dist/helm/kubecodriver-operator/templates/controller.yaml
+	echo '{{- end }}' >> dist/helm/kubecodriver-operator/templates/controller.yaml
 	
 	# Add imagePullSecrets to controller deployment if needed
-	sed -i '/serviceAccountName:/a\      {{- with include "toe-operator.imagePullSecrets" . }}\n      imagePullSecrets:\n{{ . | indent 8 }}\n      {{- end }}' dist/helm/toe-operator/templates/controller.yaml
+	sed -i '/serviceAccountName:/a\      {{- with include "kubecodriver-operator.imagePullSecrets" . }}\n      imagePullSecrets:\n{{ . | indent 8 }}\n      {{- end }}' dist/helm/kubecodriver-operator/templates/controller.yaml
 	
 	# Remove any hardcoded imagePullSecrets from kustomize output
-	sed -i '/^      imagePullSecrets:$$/,/^      securityContext:$$/{/^      imagePullSecrets:$$/d; /^      - name: /d;}' dist/helm/toe-operator/templates/controller.yaml
+	sed -i '/^      imagePullSecrets:$$/,/^      securityContext:$$/{/^      imagePullSecrets:$$/d; /^      - name: /d;}' dist/helm/kubecodriver-operator/templates/controller.yaml
 	
 	# Reset kustomize to original image
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	
-	@echo "✅ Helm chart generated in dist/helm/toe-operator/"
+	@echo "✅ Helm chart generated in dist/helm/kubecodriver-operator/"
 
 .PHONY: release-package
 release-package: helm-chart ## Package Helm chart into .tgz file
 	@command -v helm >/dev/null 2>&1 || { echo "❌ Helm is required. Install from https://helm.sh/docs/intro/install/"; exit 1; }
 	# Update Chart.yaml version before packaging
-	sed -i 's/^version: .*/version: $(VERSION)/' dist/helm/toe-operator/Chart.yaml
-	sed -i 's/^appVersion: .*/appVersion: "$(VERSION)"/' dist/helm/toe-operator/Chart.yaml
+	sed -i 's/^version: .*/version: $(VERSION)/' dist/helm/kubecodriver-operator/Chart.yaml
+	sed -i 's/^appVersion: .*/appVersion: "$(VERSION)"/' dist/helm/kubecodriver-operator/Chart.yaml
 	# Copy ECR sync script to helm chart directory
-	mkdir -p dist/helm/toe-operator/scripts
-	cp helper_scripts/ecr/sync-images-from-ghcr-to-ecr.sh dist/helm/toe-operator/scripts/
+	mkdir -p dist/helm/kubecodriver-operator/scripts
+	cp helper_scripts/ecr/sync-images-from-ghcr-to-ecr.sh dist/helm/kubecodriver-operator/scripts/
 	# Copy examples folder
-	mkdir -p dist/helm/toe-operator/examples
-	cp -r examples/* dist/helm/toe-operator/examples/
+	mkdir -p dist/helm/kubecodriver-operator/examples
+	cp -r examples/* dist/helm/kubecodriver-operator/examples/
 	# Generate power-tools configs from templates with correct image references
-	mkdir -p dist/helm/toe-operator/power-tools/aperf/config
-	mkdir -p dist/helm/toe-operator/power-tools/chaos/config
-	mkdir -p dist/helm/toe-operator/power-tools/tcpdump/config
+	mkdir -p dist/helm/kubecodriver-operator/power-tools/aperf/config
+	mkdir -p dist/helm/kubecodriver-operator/power-tools/chaos/config
+	mkdir -p dist/helm/kubecodriver-operator/power-tools/tcpdump/config
 	# Generate configs from templates
-	sed 's|__APERF_IMAGE__|$(APERF_IMG)|g' power-tools/aperf/config/powertoolconfig-aperf.yaml.template > dist/helm/toe-operator/power-tools/aperf/config/powertoolconfig-aperf.yaml
-	sed 's|__CHAOS_IMAGE__|$(CHAOS_IMG)|g' power-tools/chaos/config/powertoolconfig-chaos.yaml.template > dist/helm/toe-operator/power-tools/chaos/config/powertoolconfig-chaos.yaml
-	sed 's|__TCPDUMP_IMAGE__|$(TCPDUMP_IMG)|g' power-tools/tcpdump/config/powertoolconfig-tcpdump.yaml.template > dist/helm/toe-operator/power-tools/tcpdump/config/powertoolconfig-tcpdump.yaml
-	cd dist/helm && helm package toe-operator
-	@echo "✅ Helm chart packaged: dist/helm/toe-operator-$(VERSION).tgz"
+	sed 's|__APERF_IMAGE__|$(APERF_IMG)|g' power-tools/aperf/config/powertoolconfig-aperf.yaml.template > dist/helm/kubecodriver-operator/power-tools/aperf/config/powertoolconfig-aperf.yaml
+	sed 's|__CHAOS_IMAGE__|$(CHAOS_IMG)|g' power-tools/chaos/config/powertoolconfig-chaos.yaml.template > dist/helm/kubecodriver-operator/power-tools/chaos/config/powertoolconfig-chaos.yaml
+	sed 's|__TCPDUMP_IMAGE__|$(TCPDUMP_IMG)|g' power-tools/tcpdump/config/powertoolconfig-tcpdump.yaml.template > dist/helm/kubecodriver-operator/power-tools/tcpdump/config/powertoolconfig-tcpdump.yaml
+	cd dist/helm && helm package kubecodriver-operator
+	@echo "✅ Helm chart packaged: dist/helm/kubecodriver-operator-$(VERSION).tgz"
 
 .PHONY: render-locally-helm-chart
 render-locally-helm-chart: ## Render Helm chart locally with custom values for testing
@@ -335,14 +439,14 @@ render-locally-helm-chart: ## Render Helm chart locally with custom values for t
 	cp ./dist/helm/*.tgz ./tmp
 	cd ./tmp && tar -xf ./*.tgz
 	cd ./tmp && helm template \
-		--set-string global.registry.repository=$(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com/codriverlabs/toe \
+		--set-string global.registry.repository=$(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com/codriverlabs/kubecodriver \
 		--set-string controller.image.tag=$(VERSION) \
 		--set-string collector.image.tag=$(VERSION) \
-		toe-operator-$(VERSION) ./toe-operator > template.yaml
+		kubecodriver-operator-$(VERSION) ./kubecodriver-operator > template.yaml
 	
 	@echo "✅ Helm chart rendered locally: tmp/template.yaml"
-	@echo "📦 Extracted chart available in: tmp/toe-operator/"
-	@echo "🔧 Used registry: $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com/codriverlabs/toe"
+	@echo "📦 Extracted chart available in: tmp/kubecodriver-operator/"
+	@echo "🔧 Used registry: $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com/codriverlabs/kubecodriver"
 
 .PHONY: build-installer
 build-installer: manifests generate kustomize ## Generate a consolidated YAML with CRDs and deployment.
@@ -370,23 +474,23 @@ deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in
 	$(KUSTOMIZE) build config/default | $(KUBECTL) apply -f -
 
 .PHONY: generate-configs
-generate-configs: ## Generate PowerToolConfig files from templates with current image versions
-	@echo "🔧 Generating PowerToolConfigs from templates..."
+generate-configs: ## Generate CoDriverTool files from templates with current image versions
+	@echo "🔧 Generating CoDriverTools from templates..."
 	sed 's|__APERF_IMAGE__|$(APERF_IMG)|g' power-tools/aperf/config/powertoolconfig-aperf.yaml.template > power-tools/aperf/config/powertoolconfig-aperf.yaml
 	sed 's|__CHAOS_IMAGE__|$(CHAOS_IMG)|g' power-tools/chaos/config/powertoolconfig-chaos.yaml.template > power-tools/chaos/config/powertoolconfig-chaos.yaml
 	sed 's|__TCPDUMP_IMAGE__|$(TCPDUMP_IMG)|g' power-tools/tcpdump/config/powertoolconfig-tcpdump.yaml.template > power-tools/tcpdump/config/powertoolconfig-tcpdump.yaml
-	@echo "✅ PowerToolConfigs generated with images:"
+	@echo "✅ CoDriverTools generated with images:"
 	@echo "  - Aperf: $(APERF_IMG)"
 	@echo "  - Chaos: $(CHAOS_IMG)"
 	@echo "  - Tcpdump: $(TCPDUMP_IMG)"
 
 .PHONY: deploy-configs
-deploy-configs: generate-configs ## Generate and deploy PowerToolConfig resources to the cluster
-	@echo "🔧 Deploying PowerToolConfigs..."
+deploy-configs: generate-configs ## Generate and deploy CoDriverTool resources to the cluster
+	@echo "🔧 Deploying CoDriverTools..."
 	$(KUBECTL) apply -f power-tools/aperf/config/powertoolconfig-aperf.yaml
 	$(KUBECTL) apply -f power-tools/chaos/config/powertoolconfig-chaos.yaml
 	$(KUBECTL) apply -f power-tools/tcpdump/config/powertoolconfig-tcpdump.yaml
-	@echo "✅ PowerToolConfigs deployed"
+	@echo "✅ CoDriverTools deployed"
 
 .PHONY: undeploy-controller-only
 undeploy-controller-only: kustomize ## Undeploy only controller resources, preserving namespace and other components
@@ -397,12 +501,12 @@ undeploy: kustomize ## Undeploy controller from the K8s cluster specified in ~/.
 	$(KUSTOMIZE) build config/default | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f - --cascade=orphan || true
 	# Remove namespace separately only if it's empty (preserves collector)
 	@echo "Checking if namespace can be safely removed..."
-	@if kubectl get all -n toe-system 2>/dev/null | grep -q "No resources found"; then \
+	@if kubectl get all -n kubecodriver-system 2>/dev/null | grep -q "No resources found"; then \
 		echo "Namespace is empty, removing..."; \
-		kubectl delete namespace toe-system --ignore-not-found=true; \
+		kubectl delete namespace kubecodriver-system --ignore-not-found=true; \
 	else \
 		echo "Namespace contains other resources (like collector), preserving namespace"; \
-		kubectl get all -n toe-system; \
+		kubectl get all -n kubecodriver-system; \
 	fi
 
 ##@ Dependencies
@@ -421,13 +525,13 @@ ENVTEST ?= $(LOCALBIN)/setup-envtest
 GOLANGCI_LINT = $(LOCALBIN)/golangci-lint
 
 ## Tool Versions
-KUSTOMIZE_VERSION ?= v5.6.0
-CONTROLLER_TOOLS_VERSION ?= v0.18.0
+KUSTOMIZE_VERSION ?= v5.8.1
+CONTROLLER_TOOLS_VERSION ?= v0.20.1
 #ENVTEST_VERSION is the version of controller-runtime release branch to fetch the envtest setup script (i.e. release-0.20)
 ENVTEST_VERSION ?= $(shell go list -m -f "{{ .Version }}" sigs.k8s.io/controller-runtime | awk -F'[v.]' '{printf "release-%d.%d", $$2, $$3}')
 #ENVTEST_K8S_VERSION is the version of Kubernetes to use for setting up ENVTEST binaries (i.e. 1.31)
 ENVTEST_K8S_VERSION ?= $(shell go list -m -f "{{ .Version }}" k8s.io/api | awk -F'[v.]' '{printf "1.%d", $$3}')
-GOLANGCI_LINT_VERSION ?= v2.3.0
+GOLANGCI_LINT_VERSION ?= v2.11.4
 
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
@@ -467,7 +571,20 @@ set -e; \
 package=$(2)@$(3) ;\
 echo "Downloading $${package}" ;\
 rm -f $(1) ;\
-GOBIN=$(LOCALBIN) go install $${package} ;\
+if command -v go >/dev/null 2>&1; then \
+	GOBIN=$(LOCALBIN) go install $${package} ;\
+else \
+	docker run --rm \
+		-v "$$(pwd):/workspace" \
+		-w /workspace \
+		--user "$$(id -u):$$(id -g)" \
+		-e HOME=/workspace \
+		-e GOPATH=/workspace/.cache/go \
+		-e GOCACHE=/workspace/.cache/go-build \
+		-e GOBIN=/workspace/bin \
+		$(GO_IMAGE) \
+		go install $${package} ;\
+fi ;\
 mv $(1) $(1)-$(3) ;\
 } ;\
 ln -sf $$(realpath $(1)-$(3)) $(1)
@@ -477,13 +594,13 @@ endef
 .PHONY: collector-build collector-push collector-deploy collector-undeploy
 
 collector-build: ## Build the collector image
-	$(CONTAINER_TOOL) build -t localhost:32000/codriverlabs/toe-collector:$(VERSION) -f build/collector/Dockerfile .
+	$(CONTAINER_TOOL) build -t localhost:32000/codriverlabs/kubecodriver-collector:$(VERSION) -f build/collector/Dockerfile .
 
 collector-push: ## Push the collector image
-	$(CONTAINER_TOOL) push localhost:32000/codriverlabs/toe-collector:$(VERSION)
+	$(CONTAINER_TOOL) push localhost:32000/codriverlabs/kubecodriver-collector:$(VERSION)
 
 collector-deploy: ## Deploy the collector
-	cd deploy/collector && $(KUSTOMIZE) edit set image localhost:32000/codriverlabs/toe-collector:$(VERSION)
+	cd deploy/collector && $(KUSTOMIZE) edit set image localhost:32000/codriverlabs/kubecodriver-collector:$(VERSION)
 	cd deploy/collector && $(KUSTOMIZE) build . | $(KUBECTL) apply -f -
 
 collector-undeploy: ## Undeploy the collector

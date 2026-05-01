@@ -13,14 +13,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"toe/api/v1alpha1"
+	"github.com/codriverlabs/KubeCoDriver/api/v1alpha1"
 )
 
 var _ = Describe("Ephemeral Container Profiling", func() {
 	var (
 		testNs    *corev1.Namespace
 		targetPod *corev1.Pod
-		powerTool *v1alpha1.PowerTool
+		coDriverJob *v1alpha1.CoDriverJob
 		ctx       = context.Background()
 	)
 
@@ -31,16 +31,16 @@ var _ = Describe("Ephemeral Container Profiling", func() {
 	})
 
 	AfterEach(func() {
-		if powerTool != nil {
-			k8sClient.Delete(ctx, powerTool)
+		if coDriverJob != nil {
+			k8sClient.Delete(ctx, coDriverJob)
 		}
 		DeleteTestNamespace(testNs)
 	})
 
 	Context("Container Creation", func() {
 		It("should create ephemeral container in target pod", func() {
-			By("creating PowerTool with ephemeral output mode")
-			powerTool = CreatePowerTool(testNs.Name, "test-ephemeral", v1alpha1.PowerToolSpec{
+			By("creating CoDriverJob with ephemeral output mode")
+			coDriverJob = CreateCoDriverJob(testNs.Name, "test-ephemeral", v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "test"},
@@ -55,10 +55,10 @@ var _ = Describe("Ephemeral Container Profiling", func() {
 				},
 			})
 
-			By("waiting for PowerTool to reach Running phase")
+			By("waiting for CoDriverJob to reach Running phase")
 			Eventually(func() string {
-				updated := &v1alpha1.PowerTool{}
-				k8sClient.Get(ctx, client.ObjectKeyFromObject(powerTool), updated)
+				updated := &v1alpha1.CoDriverJob{}
+				k8sClient.Get(ctx, client.ObjectKeyFromObject(coDriverJob), updated)
 				if updated.Status.Phase != nil {
 					return *updated.Status.Phase
 				}
@@ -86,7 +86,7 @@ var _ = Describe("Ephemeral Container Profiling", func() {
 		})
 
 		It("should handle ephemeral container lifecycle", func() {
-			powerTool = CreatePowerTool(testNs.Name, "test-lifecycle", v1alpha1.PowerToolSpec{
+			coDriverJob = CreateCoDriverJob(testNs.Name, "test-lifecycle", v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "test"},
@@ -125,10 +125,10 @@ var _ = Describe("Ephemeral Container Profiling", func() {
 				return false
 			}, "30s", "2s").Should(BeTrue())
 
-			By("verifying PowerTool reaches Completed phase")
+			By("verifying CoDriverJob reaches Completed phase")
 			Eventually(func() string {
-				updated := &v1alpha1.PowerTool{}
-				k8sClient.Get(ctx, client.ObjectKeyFromObject(powerTool), updated)
+				updated := &v1alpha1.CoDriverJob{}
+				k8sClient.Get(ctx, client.ObjectKeyFromObject(coDriverJob), updated)
 				if updated.Status.Phase != nil {
 					return *updated.Status.Phase
 				}
@@ -139,7 +139,7 @@ var _ = Describe("Ephemeral Container Profiling", func() {
 
 	Context("Tool Execution", func() {
 		It("should execute profiling tool in ephemeral container", func() {
-			powerTool = CreatePowerTool(testNs.Name, "test-execution", v1alpha1.PowerToolSpec{
+			coDriverJob = CreateCoDriverJob(testNs.Name, "test-execution", v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "test"},
@@ -174,7 +174,7 @@ var _ = Describe("Ephemeral Container Profiling", func() {
 		})
 
 		It("should handle tool timeout correctly", func() {
-			powerTool = CreatePowerTool(testNs.Name, "test-timeout", v1alpha1.PowerToolSpec{
+			coDriverJob = CreateCoDriverJob(testNs.Name, "test-timeout", v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "test"},
@@ -205,7 +205,7 @@ var _ = Describe("Ephemeral Container Profiling", func() {
 
 	Context("Data Collection", func() {
 		It("should collect profiling data in ephemeral mode", func() {
-			powerTool = CreatePowerTool(testNs.Name, "test-data", v1alpha1.PowerToolSpec{
+			coDriverJob = CreateCoDriverJob(testNs.Name, "test-data", v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "test"},
@@ -222,8 +222,8 @@ var _ = Describe("Ephemeral Container Profiling", func() {
 
 			By("waiting for profiling to complete")
 			Eventually(func() string {
-				updated := &v1alpha1.PowerTool{}
-				k8sClient.Get(ctx, client.ObjectKeyFromObject(powerTool), updated)
+				updated := &v1alpha1.CoDriverJob{}
+				k8sClient.Get(ctx, client.ObjectKeyFromObject(coDriverJob), updated)
 				if updated.Status.Phase != nil {
 					return *updated.Status.Phase
 				}
@@ -231,8 +231,8 @@ var _ = Describe("Ephemeral Container Profiling", func() {
 			}, "60s", "2s").Should(Equal("Completed"))
 
 			By("verifying data artifacts in status")
-			updated := &v1alpha1.PowerTool{}
-			k8sClient.Get(ctx, client.ObjectKeyFromObject(powerTool), updated)
+			updated := &v1alpha1.CoDriverJob{}
+			k8sClient.Get(ctx, client.ObjectKeyFromObject(coDriverJob), updated)
 			Expect(updated.Status.Artifacts).NotTo(BeEmpty())
 		})
 	})
@@ -245,8 +245,8 @@ var _ = Describe("Ephemeral Container Profiling", func() {
 			WaitForPodRunning(targetPod2)
 			WaitForPodRunning(targetPod3)
 
-			By("creating PowerTool targeting all pods")
-			powerTool = CreatePowerTool(testNs.Name, "test-multi", v1alpha1.PowerToolSpec{
+			By("creating CoDriverJob targeting all pods")
+			coDriverJob = CreateCoDriverJob(testNs.Name, "test-multi", v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "test"},

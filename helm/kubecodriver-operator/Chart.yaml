@@ -1,0 +1,16 @@
+apiVersion: v2
+name: kubecodriver-operator
+description: KubeCoDriver - Kubernetes Profiling Operator
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - profiling
+  - observability
+  - kubernetes
+  - performance
+maintainers:
+  - name: CoDriverLabs
+    url: https://github.com/codriverlabs/KubeCoDriver
+sources:
+  - https://github.com/codriverlabs/KubeCoDriver

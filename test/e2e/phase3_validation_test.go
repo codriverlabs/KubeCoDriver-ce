@@ -6,7 +6,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"toe/api/v1alpha1"
+	"github.com/codriverlabs/KubeCoDriver/api/v1alpha1"
 )
 
 var _ = Describe("Phase 3 Validation Tests", func() {
@@ -17,7 +17,7 @@ var _ = Describe("Phase 3 Validation Tests", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		namespace = CreateSimpleTestNamespace()
-		CreateSimpleTestPowerToolConfig("phase3-config", namespace.Name)
+		CreateSimpleTestCoDriverTool("phase3-config", namespace.Name)
 		CreateSimpleMockTargetPod(namespace.Name, "phase3-pod", map[string]string{
 			"app": "phase3-app",
 		})
@@ -30,27 +30,27 @@ var _ = Describe("Phase 3 Validation Tests", func() {
 	})
 
 	Context("Basic RBAC Validation", func() {
-		It("should create PowerTool with basic configuration", func() {
-			By("creating a basic PowerTool")
-			spec := CreateSimpleBasicPowerToolSpec(map[string]string{"app": "phase3-app"})
-			powerTool := CreateSimpleTestPowerTool("basic-test", namespace.Name, spec)
+		It("should create CoDriverJob with basic configuration", func() {
+			By("creating a basic CoDriverJob")
+			spec := CreateSimpleBasicCoDriverJobSpec(map[string]string{"app": "phase3-app"})
+			coDriverJob := CreateSimpleTestCoDriverJob("basic-test", namespace.Name, spec)
 
-			By("verifying PowerTool is created successfully")
-			Expect(powerTool.Name).To(Equal("basic-test"))
-			Expect(powerTool.Namespace).To(Equal(namespace.Name))
+			By("verifying CoDriverJob is created successfully")
+			Expect(coDriverJob.Name).To(Equal("basic-test"))
+			Expect(coDriverJob.Namespace).To(Equal(namespace.Name))
 		})
 
 		It("should validate security context requirements", func() {
-			By("creating PowerToolConfig with security requirements")
+			By("creating CoDriverTool with security requirements")
 			allowPrivileged := true
-			secureConfig := &v1alpha1.PowerToolConfig{
+			secureConfig := &v1alpha1.CoDriverTool{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "secure-config",
 					Namespace: namespace.Name,
 				},
-				Spec: v1alpha1.PowerToolConfigSpec{
+				Spec: v1alpha1.CoDriverToolSpec{
 					Name:  "secure-tool",
-					Image: "ghcr.io/codriverlabs/toe-secure:latest",
+					Image: "ghcr.io/codriverlabs/ce/kubecodriver-secure:latest",
 					SecurityContext: v1alpha1.SecuritySpec{
 						AllowPrivileged: &allowPrivileged,
 						Capabilities: &v1alpha1.Capabilities{
@@ -61,8 +61,8 @@ var _ = Describe("Phase 3 Validation Tests", func() {
 			}
 			Expect(simpleK8sClient.Create(simpleCtx, secureConfig)).To(Succeed())
 
-			By("creating PowerTool using secure configuration")
-			spec := v1alpha1.PowerToolSpec{
+			By("creating CoDriverJob using secure configuration")
+			spec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "phase3-app"},
@@ -76,17 +76,17 @@ var _ = Describe("Phase 3 Validation Tests", func() {
 					Mode: "ephemeral",
 				},
 			}
-			powerTool := CreateSimpleTestPowerTool("secure-test", namespace.Name, spec)
+			coDriverJob := CreateSimpleTestCoDriverJob("secure-test", namespace.Name, spec)
 
-			By("verifying secure PowerTool is created")
-			Expect(powerTool.Spec.Tool.Name).To(Equal("secure-tool"))
+			By("verifying secure CoDriverJob is created")
+			Expect(coDriverJob.Spec.Tool.Name).To(Equal("secure-tool"))
 		})
 	})
 
 	Context("Webhook Validation", func() {
-		It("should reject PowerTool with invalid duration", func() {
-			By("attempting to create PowerTool with invalid duration")
-			spec := v1alpha1.PowerToolSpec{
+		It("should reject CoDriverJob with invalid duration", func() {
+			By("attempting to create CoDriverJob with invalid duration")
+			spec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "phase3-app"},
@@ -101,7 +101,7 @@ var _ = Describe("Phase 3 Validation Tests", func() {
 				},
 			}
 
-			powerTool := &v1alpha1.PowerTool{
+			coDriverJob := &v1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "invalid-duration",
 					Namespace: namespace.Name,
@@ -110,13 +110,13 @@ var _ = Describe("Phase 3 Validation Tests", func() {
 			}
 
 			By("expecting validation to fail")
-			err := simpleK8sClient.Create(simpleCtx, powerTool)
+			err := simpleK8sClient.Create(simpleCtx, coDriverJob)
 			Expect(err).To(HaveOccurred())
 		})
 
 		It("should validate output mode configuration", func() {
 			By("testing PVC mode without PVC spec")
-			spec := v1alpha1.PowerToolSpec{
+			spec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "phase3-app"},
@@ -132,7 +132,7 @@ var _ = Describe("Phase 3 Validation Tests", func() {
 				},
 			}
 
-			powerTool := &v1alpha1.PowerTool{
+			coDriverJob := &v1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "invalid-pvc",
 					Namespace: namespace.Name,
@@ -141,7 +141,7 @@ var _ = Describe("Phase 3 Validation Tests", func() {
 			}
 
 			By("expecting validation to fail for incomplete PVC config")
-			err := simpleK8sClient.Create(simpleCtx, powerTool)
+			err := simpleK8sClient.Create(simpleCtx, coDriverJob)
 			Expect(err).To(HaveOccurred())
 		})
 	})
@@ -156,48 +156,48 @@ var _ = Describe("Phase 3 Validation Tests", func() {
 				"app": "multi-app",
 			})
 
-			By("creating PowerTool targeting multiple pods")
-			spec := CreateSimpleBasicPowerToolSpec(map[string]string{"app": "multi-app"})
-			powerTool := CreateSimpleTestPowerTool("multi-pod-test", namespace.Name, spec)
+			By("creating CoDriverJob targeting multiple pods")
+			spec := CreateSimpleBasicCoDriverJobSpec(map[string]string{"app": "multi-app"})
+			coDriverJob := CreateSimpleTestCoDriverJob("multi-pod-test", namespace.Name, spec)
 
-			By("verifying PowerTool is created successfully")
-			Expect(powerTool.Spec.Targets.LabelSelector.MatchLabels["app"]).To(Equal("multi-app"))
+			By("verifying CoDriverJob is created successfully")
+			Expect(coDriverJob.Spec.Targets.LabelSelector.MatchLabels["app"]).To(Equal("multi-app"))
 		})
 
 		It("should validate tool configuration exists", func() {
-			By("creating PowerTool with existing configuration")
-			spec := CreateSimpleBasicPowerToolSpec(map[string]string{"app": "phase3-app"})
-			powerTool := CreateSimpleTestPowerTool("config-exists-test", namespace.Name, spec)
+			By("creating CoDriverJob with existing configuration")
+			spec := CreateSimpleBasicCoDriverJobSpec(map[string]string{"app": "phase3-app"})
+			coDriverJob := CreateSimpleTestCoDriverJob("config-exists-test", namespace.Name, spec)
 
-			By("verifying PowerTool references correct tool")
-			Expect(powerTool.Spec.Tool.Name).To(Equal("aperf"))
+			By("verifying CoDriverJob references correct tool")
+			Expect(coDriverJob.Spec.Tool.Name).To(Equal("aperf"))
 		})
 	})
 
 	Context("Error Handling", func() {
 		It("should handle missing target pods gracefully", func() {
-			By("creating PowerTool with non-matching selector")
-			spec := CreateSimpleBasicPowerToolSpec(map[string]string{"app": "nonexistent"})
-			powerTool := CreateSimpleTestPowerTool("no-targets", namespace.Name, spec)
+			By("creating CoDriverJob with non-matching selector")
+			spec := CreateSimpleBasicCoDriverJobSpec(map[string]string{"app": "nonexistent"})
+			coDriverJob := CreateSimpleTestCoDriverJob("no-targets", namespace.Name, spec)
 
-			By("verifying PowerTool is created but will fail to find targets")
-			Expect(powerTool.Spec.Targets.LabelSelector.MatchLabels["app"]).To(Equal("nonexistent"))
+			By("verifying CoDriverJob is created but will fail to find targets")
+			Expect(coDriverJob.Spec.Targets.LabelSelector.MatchLabels["app"]).To(Equal("nonexistent"))
 		})
 
 		It("should validate required fields", func() {
-			By("attempting to create PowerTool without required fields")
-			powerTool := &v1alpha1.PowerTool{
+			By("attempting to create CoDriverJob without required fields")
+			coDriverJob := &v1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "missing-fields",
 					Namespace: namespace.Name,
 				},
-				Spec: v1alpha1.PowerToolSpec{
+				Spec: v1alpha1.CoDriverJobSpec{
 					// Missing required fields
 				},
 			}
 
 			By("expecting validation to fail")
-			err := simpleK8sClient.Create(simpleCtx, powerTool)
+			err := simpleK8sClient.Create(simpleCtx, coDriverJob)
 			Expect(err).To(HaveOccurred())
 		})
 	})

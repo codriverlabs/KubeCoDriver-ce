@@ -1,6 +1,6 @@
 # Power Tools
 
-This directory contains the source code and configurations for various power tools used by the TOE operator.
+This directory contains the source code and configurations for various power tools used by the KubeCoDriver operator.
 
 ## Directory Structure
 
@@ -9,7 +9,7 @@ Each power tool has its own directory with the following structure:
 power-tools/
 ├── aperf/
 │   ├── config/
-│   │   └── powertoolconfig-aperf.yaml    # Kubernetes PowerToolConfig
+│   │   └── powertoolconfig-aperf.yaml    # Kubernetes CoDriverTool
 │   ├── Dockerfile                         # Container image definition
 │   └── entrypoint.sh                      # Tool entrypoint script
 ├── chaos/
@@ -52,21 +52,21 @@ power-tools/
 
 ```bash
 # Build aperf profiler image
-docker build -t localhost:32000/codriverlabs/toe/aperf:latest power-tools/aperf/
-docker push localhost:32000/codriverlabs/toe/aperf:latest
+docker build -t localhost:32000/codriverlabs/ce/kubecodriver-aperf:latest power-tools/aperf/
+docker push localhost:32000/codriverlabs/ce/kubecodriver-aperf:latest
 
 # Build chaos tool image
-docker build -t localhost:32000/codriverlabs/toe/chaos:latest power-tools/chaos/
-docker push localhost:32000/codriverlabs/toe/chaos:latest
+docker build -t localhost:32000/codriverlabs/ce/kubecodriver-chaos:latest power-tools/chaos/
+docker push localhost:32000/codriverlabs/ce/kubecodriver-chaos:latest
 
 # Build tcpdump image
-docker build -t localhost:32000/codriverlabs/toe/tcpdump:latest power-tools/tcpdump/
-docker push localhost:32000/codriverlabs/toe/tcpdump:latest
+docker build -t localhost:32000/codriverlabs/ce/kubecodriver-tcpdump:latest power-tools/tcpdump/
+docker push localhost:32000/codriverlabs/ce/kubecodriver-tcpdump:latest
 ```
 
-## Deploying PowerToolConfigs
+## Deploying CoDriverTools
 
-Deploy the PowerToolConfig to make the tool available in your cluster:
+Deploy the CoDriverTool to make the tool available in your cluster:
 
 ```bash
 # Deploy aperf configuration
@@ -81,7 +81,7 @@ kubectl apply -f power-tools/tcpdump/config/powertoolconfig-tcpdump.yaml
 
 ## Using Power Tools
 
-After deploying PowerToolConfigs, use PowerTool CRDs to execute tools against target pods.
+After deploying CoDriverTools, use CoDriverJob CRDs to execute tools against target pods.
 See `examples/` directory for usage examples.
 
 ## Environment Variables

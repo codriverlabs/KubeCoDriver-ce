@@ -2,7 +2,7 @@
 
 ## Overview
 
-The PowerTool controller requires specific RBAC permissions to manage PowerTool and PowerToolConfig resources, create ephemeral containers, and interact with the Kubernetes API.
+The CoDriverJob controller requires specific RBAC permissions to manage CoDriverJob and CoDriverTool resources, create ephemeral containers, and interact with the Kubernetes API.
 
 ## Service Account
 
@@ -10,46 +10,46 @@ The PowerTool controller requires specific RBAC permissions to manage PowerTool 
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: toe-controller-manager
-  namespace: toe-system
+  name: kubecodriver-controller-manager
+  namespace: kubecodriver-system
 ```
 
 ## ClusterRole Permissions
 
-### PowerTool Resources
+### CoDriverJob Resources
 
 ```yaml
-# PowerTool management
-- apiGroups: ["codriverlabs.ai.toe.run"]
+# CoDriverJob management
+- apiGroups: ["kubecodriver.codriverlabs.ai"]
   resources: ["powertools"]
   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 
-# PowerTool status updates
-- apiGroups: ["codriverlabs.ai.toe.run"]
+# CoDriverJob status updates
+- apiGroups: ["kubecodriver.codriverlabs.ai"]
   resources: ["powertools/status"]
   verbs: ["get", "update", "patch"]
 
-# PowerTool finalizers
-- apiGroups: ["codriverlabs.ai.toe.run"]
+# CoDriverJob finalizers
+- apiGroups: ["kubecodriver.codriverlabs.ai"]
   resources: ["powertools/finalizers"]
   verbs: ["update"]
 ```
 
-### PowerToolConfig Resources
+### CoDriverTool Resources
 
 ```yaml
-# PowerToolConfig lookup (read-only)
-- apiGroups: ["codriverlabs.ai.toe.run"]
+# CoDriverTool lookup (read-only)
+- apiGroups: ["kubecodriver.codriverlabs.ai"]
   resources: ["powertoolconfigs"]
   verbs: ["get", "list", "watch"]
 
-# PowerToolConfig status updates
-- apiGroups: ["codriverlabs.ai.toe.run"]
+# CoDriverTool status updates
+- apiGroups: ["kubecodriver.codriverlabs.ai"]
   resources: ["powertoolconfigs/status"]
   verbs: ["get", "update", "patch"]
 
-# PowerToolConfig finalizers
-- apiGroups: ["codriverlabs.ai.toe.run"]
+# CoDriverTool finalizers
+- apiGroups: ["kubecodriver.codriverlabs.ai"]
   resources: ["powertoolconfigs/finalizers"]
   verbs: ["update"]
 ```
@@ -79,11 +79,11 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: toe-manager-role
+  name: kubecodriver-manager-role
 rules:
-# PowerTool resources
+# CoDriverJob resources
 - apiGroups:
-  - codriverlabs.ai.toe.run
+  - kubecodriver.codriverlabs.ai
   resources:
   - powertools
   verbs:
@@ -95,13 +95,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - codriverlabs.ai.toe.run
+  - kubecodriver.codriverlabs.ai
   resources:
   - powertools/finalizers
   verbs:
   - update
 - apiGroups:
-  - codriverlabs.ai.toe.run
+  - kubecodriver.codriverlabs.ai
   resources:
   - powertools/status
   verbs:
@@ -109,9 +109,9 @@ rules:
   - patch
   - update
 
-# PowerToolConfig resources
+# CoDriverTool resources
 - apiGroups:
-  - codriverlabs.ai.toe.run
+  - kubecodriver.codriverlabs.ai
   resources:
   - powertoolconfigs
   verbs:
@@ -119,13 +119,13 @@ rules:
   - list
   - watch
 - apiGroups:
-  - codriverlabs.ai.toe.run
+  - kubecodriver.codriverlabs.ai
   resources:
   - powertoolconfigs/finalizers
   verbs:
   - update
 - apiGroups:
-  - codriverlabs.ai.toe.run
+  - kubecodriver.codriverlabs.ai
   resources:
   - powertoolconfigs/status
   verbs:
@@ -167,15 +167,15 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: toe-manager-rolebinding
+  name: kubecodriver-manager-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: toe-manager-role
+  name: kubecodriver-manager-role
 subjects:
 - kind: ServiceAccount
-  name: toe-controller-manager
-  namespace: toe-system
+  name: kubecodriver-controller-manager
+  namespace: kubecodriver-system
 ```
 
 ## Security Considerations
@@ -190,7 +190,7 @@ subjects:
 
 | Permission | Justification | Risk Level |
 |------------|---------------|------------|
-| powertools/* | Core functionality - manage PowerTool lifecycle | Low |
+| powertools/* | Core functionality - manage CoDriverJob lifecycle | Low |
 | powertoolconfigs/get,list,watch | Tool configuration lookup - read-only | Low |
 | pods/update,patch | Ephemeral container creation | Medium |
 | pods/ephemeralcontainers/* | Direct ephemeral container management | Medium |
@@ -208,7 +208,7 @@ subjects:
    - No write permissions to prevent configuration tampering
    - Limited to specific ConfigMaps via controller logic
 
-3. **PowerToolConfig Security**:
+3. **CoDriverTool Security**:
    - Read-only access prevents privilege escalation
    - Cannot modify security contexts
    - Enforces admin-defined security policies
@@ -223,7 +223,7 @@ Monitor for these potential security events:
 kubectl get events --field-selector reason=Forbidden
 
 # Controller permission denials
-kubectl logs -n toe-system deployment/toe-controller-manager | grep "forbidden\|unauthorized"
+kubectl logs -n kubecodriver-system deployment/kubecodriver-controller-manager | grep "forbidden\|unauthorized"
 
 # RBAC policy violations
 kubectl get events --field-selector involvedObject.kind=ClusterRole
@@ -233,22 +233,22 @@ kubectl get events --field-selector involvedObject.kind=ClusterRole
 
 ```bash
 # Review controller permissions
-kubectl auth can-i --list --as=system:serviceaccount:toe-system:toe-controller-manager
+kubectl auth can-i --list --as=system:serviceaccount:kubecodriver-system:kubecodriver-controller-manager
 
-# Check PowerToolConfig access
-kubectl auth can-i create powertoolconfigs --as=system:serviceaccount:toe-system:toe-controller-manager
+# Check CoDriverTool access
+kubectl auth can-i create powertoolconfigs --as=system:serviceaccount:kubecodriver-system:kubecodriver-controller-manager
 
 # Verify pod access scope
-kubectl auth can-i delete pods --as=system:serviceaccount:toe-system:toe-controller-manager
+kubectl auth can-i delete pods --as=system:serviceaccount:kubecodriver-system:kubecodriver-controller-manager
 ```
 
 ## Troubleshooting
 
 ### Common Permission Issues
 
-1. **PowerToolConfig Not Found**:
+1. **CoDriverTool Not Found**:
    ```
-   Error: failed to get tool configuration: powertoolconfigs.codriverlabs.ai.toe.run "aperf-config" is forbidden
+   Error: failed to get tool configuration: powertoolconfigs.kubecodriver.codriverlabs.ai "aperf-config" is forbidden
    ```
    - Check ClusterRole includes powertoolconfigs get/list/watch
    - Verify ClusterRoleBinding is correct
@@ -271,11 +271,11 @@ kubectl auth can-i delete pods --as=system:serviceaccount:toe-system:toe-control
 
 ```bash
 # Test controller permissions
-kubectl auth can-i get powertools --as=system:serviceaccount:toe-system:toe-controller-manager
-kubectl auth can-i update pods/ephemeralcontainers --as=system:serviceaccount:toe-system:toe-controller-manager
-kubectl auth can-i get powertoolconfigs --as=system:serviceaccount:toe-system:toe-controller-manager
+kubectl auth can-i get powertools --as=system:serviceaccount:kubecodriver-system:kubecodriver-controller-manager
+kubectl auth can-i update pods/ephemeralcontainers --as=system:serviceaccount:kubecodriver-system:kubecodriver-controller-manager
+kubectl auth can-i get powertoolconfigs --as=system:serviceaccount:kubecodriver-system:kubecodriver-controller-manager
 
 # Check effective permissions
-kubectl describe clusterrolebinding toe-manager-rolebinding
-kubectl describe clusterrole toe-manager-role
+kubectl describe clusterrolebinding kubecodriver-manager-rolebinding
+kubectl describe clusterrole kubecodriver-manager-role
 ```

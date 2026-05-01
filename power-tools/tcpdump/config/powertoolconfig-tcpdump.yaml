@@ -1,12 +1,12 @@
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerToolConfig
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverTool
 metadata:
   name: tcpdump-config
-  namespace: toe-system
+  namespace: kubecodriver-system
 spec:
   name: "tcpdump"
   description: "Network packet capture using tcpdump"
-  image: ghcr.io/codriverlabs/ce/toe-tcpdump:v1.1.0
+  image: ghcr.io/codriverlabs/ce/kubecodriver-tcpdump:v1.1.0
   defaultArgs:
     - "-i"
     - "any"

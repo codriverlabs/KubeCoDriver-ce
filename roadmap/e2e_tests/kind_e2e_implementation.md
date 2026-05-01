@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document provides a comprehensive guide for implementing end-to-end (E2E) tests using Kind (Kubernetes in Docker) for the TOE (Tactical Operations Engine) project. Kind enables running local Kubernetes clusters for testing actual pod profiling functionality that cannot be tested with envtest.
+This document provides a comprehensive guide for implementing end-to-end (E2E) tests using Kind (Kubernetes in Docker) for the KubeCoDriver project. Kind enables running local Kubernetes clusters for testing actual pod profiling functionality that cannot be tested with envtest.
 
 ## Architecture
 
@@ -14,11 +14,11 @@ This document provides a comprehensive guide for implementing end-to-end (E2E) t
 │  │   Kind Cluster  │  │         Test Suite              ││
 │  │                 │  │                                 ││
 │  │  ┌───────────┐  │  │  ┌─────────────────────────────┐ ││
-│  │  │ TOE       │  │  │  │     Ginkgo E2E Tests       │ ││
+│  │  │ KubeCoDriver       │  │  │  │     Ginkgo E2E Tests       │ ││
 │  │  │ Controller│  │  │  │                             │ ││
-│  │  └───────────┘  │  │  │  • PowerTool Lifecycle     │ ││
+│  │  └───────────┘  │  │  │  • CoDriverJob Lifecycle     │ ││
 │  │  ┌───────────┐  │  │  │  • Ephemeral Containers    │ ││
-│  │  │ TOE       │  │  │  │  • Pod Profiling           │ ││
+│  │  │ KubeCoDriver       │  │  │  │  • Pod Profiling           │ ││
 │  │  │ Collector │  │  │  │  • Real Workload Testing   │ ││
 │  │  └───────────┘  │  │  └─────────────────────────────┘ ││
 │  │  ┌───────────┐  │  │                                 ││
@@ -55,12 +55,12 @@ docker version
 
 ### Phase 1: Kind Cluster Setup
 - Automated cluster creation and teardown
-- Custom cluster configuration for TOE requirements
+- Custom cluster configuration for KubeCoDriver requirements
 - Image loading and registry setup
 
-### Phase 2: TOE Deployment
+### Phase 2: KubeCoDriver Deployment
 - Controller and collector deployment
-- PowerToolConfig setup
+- CoDriverTool setup
 - RBAC and security configuration
 
 ### Phase 3: E2E Test Execution
@@ -83,8 +83,8 @@ test/
 │   │   ├── setup-cluster.sh
 │   │   └── teardown-cluster.sh
 │   ├── manifests/
-│   │   ├── toe-controller.yaml
-│   │   ├── toe-collector.yaml
+│   │   ├── kubecodriver-controller.yaml
+│   │   ├── kubecodriver-collector.yaml
 │   │   ├── powertool-configs.yaml
 │   │   └── test-workloads.yaml
 │   ├── tests/
@@ -164,11 +164,11 @@ test/
 ## Next Steps
 
 1. **Implement Phase 1**: Cluster setup and configuration
-2. **Create Phase 2**: TOE deployment automation
+2. **Create Phase 2**: KubeCoDriver deployment automation
 3. **Develop Phase 3**: Core E2E test scenarios
 4. **Add Phase 4**: Cleanup and reporting
 5. **Integrate CI/CD**: GitHub Actions workflow
 6. **Performance Tuning**: Optimize for speed and reliability
 7. **Documentation**: Complete user guides and troubleshooting
 
-This Kind-based approach will provide comprehensive E2E testing capabilities that complement the existing envtest suite, enabling full validation of TOE's pod profiling functionality.
+This Kind-based approach will provide comprehensive E2E testing capabilities that complement the existing envtest suite, enabling full validation of KubeCoDriver's pod profiling functionality.

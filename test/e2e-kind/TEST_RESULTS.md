@@ -1,7 +1,7 @@
 # Phase 1 E2E Test Results
 
 **Date:** 2025-10-31  
-**Cluster:** kind-toe-test-e2e  
+**Cluster:** kind-kubecodriver-test-e2e  
 **Test Duration:** 234 seconds (~4 minutes)
 
 ## Summary
@@ -15,7 +15,7 @@
 
 ❌ **Functional Tests: FAIL (Expected)**
 - 0 Passed / 6 Failed
-- All failures due to missing TOE controller
+- All failures due to missing KubeCoDriver controller
 
 ## Test Execution Details
 
@@ -27,15 +27,15 @@
 - Created Kubernetes client
 - Created Kubernetes clientset
 - Verified cluster connectivity
-- Verified TOE CRDs installed
+- Verified KubeCoDriver CRDs installed
 ```
 
 ### Test Results
 
 #### 1. Container Creation - should create ephemeral container ❌
 - **Status:** FAILED (timeout after 60s)
-- **Issue:** PowerTool never reached "Running" phase
-- **Cause:** No controller to reconcile PowerTool resource
+- **Issue:** CoDriverJob never reached "Running" phase
+- **Cause:** No controller to reconcile CoDriverJob resource
 
 #### 2. Container Creation - should handle lifecycle ❌
 - **Status:** FAILED (timeout after 30s)
@@ -54,7 +54,7 @@
 
 #### 5. Data Collection - should collect profiling data ❌
 - **Status:** FAILED (timeout after 60s)
-- **Issue:** PowerTool never reached "Completed" phase
+- **Issue:** CoDriverJob never reached "Completed" phase
 - **Cause:** No controller to manage lifecycle
 
 #### 6. Multiple Pods - should create ephemeral containers ❌
@@ -73,21 +73,21 @@
 ✅ **Kubernetes Integration**
 - Client creation
 - CRD installation
-- Resource creation (PowerTools, Pods, Namespaces)
+- Resource creation (CoDriverJobs, Pods, Namespaces)
 - Resource cleanup
 
 ✅ **Test Utilities**
 - CreateTestNamespace()
 - CreateTargetPod()
-- CreatePowerTool()
+- CreateCoDriverJob()
 - WaitForPodRunning()
 - All utility functions functional
 
 ## What's Missing
 
-❌ **TOE Controller**
+❌ **KubeCoDriver Controller**
 - Controller deployment not present
-- No reconciliation of PowerTool resources
+- No reconciliation of CoDriverJob resources
 - No ephemeral container creation
 - No status updates
 
@@ -96,13 +96,13 @@
 ### Option 1: Deploy Controller (Recommended)
 ```bash
 # Build controller image
-make docker-build IMG=toe-controller:e2e
+make docker-build IMG=kubecodriver-controller:e2e
 
 # Load into Kind cluster
-kind load docker-image toe-controller:e2e --name toe-test-e2e
+kind load docker-image kubecodriver-controller:e2e --name kubecodriver-test-e2e
 
 # Deploy controller
-kubectl apply -f test/e2e-kind/manifests/toe-controller.yaml
+kubectl apply -f test/e2e-kind/manifests/kubecodriver-controller.yaml
 
 # Re-run tests
 ./test/e2e-kind/quick-test.sh
@@ -110,7 +110,7 @@ kubectl apply -f test/e2e-kind/manifests/toe-controller.yaml
 
 ### Option 2: Test with Mock Controller
 Create a minimal mock controller that:
-- Watches PowerTool resources
+- Watches CoDriverJob resources
 - Creates ephemeral containers
 - Updates status fields
 - Handles basic lifecycle
@@ -129,8 +129,8 @@ Modify tests to verify:
 2. **Build tags** - e2ekind tag working
 3. **Suite setup** - BeforeSuite logic correct
 4. **Client initialization** - K8s clients created
-5. **CRD installation** - PowerTool/PowerToolConfig CRDs working
-6. **Resource creation** - Pods and PowerTools created successfully
+5. **CRD installation** - CoDriverJob/CoDriverTool CRDs working
+6. **Resource creation** - Pods and CoDriverJobs created successfully
 7. **Namespace management** - Creation and cleanup working
 8. **Test cleanup** - AfterEach hooks executing correctly
 
@@ -144,9 +144,9 @@ Modify tests to verify:
 ## Cluster State After Tests
 
 ```
-Namespaces created: 6 (toe-kind-e2e-*)
+Namespaces created: 6 (kubecodriver-kind-e2e-*)
 Pods created: 10 (target-app, target-app-2, target-app-3 across namespaces)
-PowerTools created: 6 (all cleaned up after tests)
+CoDriverJobs created: 6 (all cleaned up after tests)
 Ephemeral containers: 0 (none created - no controller)
 ```
 
@@ -160,9 +160,9 @@ Ephemeral containers: 0 (none created - no controller)
 ## Recommendations
 
 ### Immediate (Phase 1 Completion)
-1. ✅ Build and deploy TOE controller
+1. ✅ Build and deploy KubeCoDriver controller
 2. ✅ Load tool images (aperf, strace) into cluster
-3. ✅ Create PowerToolConfig resources
+3. ✅ Create CoDriverTool resources
 4. ✅ Re-run Phase 1 tests
 5. ✅ Verify ephemeral container creation
 
@@ -190,10 +190,10 @@ The Phase 1 test implementation is complete and functional. All test infrastruct
 
 **Functional Testing: ⏸️ BLOCKED**
 
-Functional tests are blocked on TOE controller deployment. Once the controller is deployed and running, we expect:
-- PowerTool reconciliation to work
+Functional tests are blocked on KubeCoDriver controller deployment. Once the controller is deployed and running, we expect:
+- CoDriverJob reconciliation to work
 - Ephemeral containers to be created
 - Status updates to occur
 - Tests to pass
 
-**Next Action:** Deploy TOE controller to cluster and re-run tests.
+**Next Action:** Deploy KubeCoDriver controller to cluster and re-run tests.

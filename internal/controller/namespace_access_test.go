@@ -5,27 +5,27 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	toev1alpha1 "toe/api/v1alpha1"
+	kubecodriverv1alpha1 "github.com/codriverlabs/KubeCoDriver/api/v1alpha1"
 )
 
 func TestValidateNamespaceAccess(t *testing.T) {
-	r := &PowerToolReconciler{}
+	r := &CoDriverJobReconciler{}
 
 	tests := []struct {
-		name       string
-		powerTool  *toev1alpha1.PowerTool
-		toolConfig *toev1alpha1.PowerToolConfig
-		wantErr    bool
+		name        string
+		coDriverJob *kubecodriverv1alpha1.CoDriverJob
+		toolConfig  *kubecodriverv1alpha1.CoDriverTool
+		wantErr     bool
 	}{
 		{
 			name: "no namespace restrictions - allow all",
-			powerTool: &toev1alpha1.PowerTool{
+			coDriverJob: &kubecodriverv1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "any-namespace",
 				},
 			},
-			toolConfig: &toev1alpha1.PowerToolConfig{
-				Spec: toev1alpha1.PowerToolConfigSpec{
+			toolConfig: &kubecodriverv1alpha1.CoDriverTool{
+				Spec: kubecodriverv1alpha1.CoDriverToolSpec{
 					AllowedNamespaces: []string{},
 				},
 			},
@@ -33,13 +33,13 @@ func TestValidateNamespaceAccess(t *testing.T) {
 		},
 		{
 			name: "allowed namespace",
-			powerTool: &toev1alpha1.PowerTool{
+			coDriverJob: &kubecodriverv1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "production",
 				},
 			},
-			toolConfig: &toev1alpha1.PowerToolConfig{
-				Spec: toev1alpha1.PowerToolConfigSpec{
+			toolConfig: &kubecodriverv1alpha1.CoDriverTool{
+				Spec: kubecodriverv1alpha1.CoDriverToolSpec{
 					AllowedNamespaces: []string{"production", "staging"},
 				},
 			},
@@ -47,13 +47,13 @@ func TestValidateNamespaceAccess(t *testing.T) {
 		},
 		{
 			name: "disallowed namespace",
-			powerTool: &toev1alpha1.PowerTool{
+			coDriverJob: &kubecodriverv1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "development",
 				},
 			},
-			toolConfig: &toev1alpha1.PowerToolConfig{
-				Spec: toev1alpha1.PowerToolConfigSpec{
+			toolConfig: &kubecodriverv1alpha1.CoDriverTool{
+				Spec: kubecodriverv1alpha1.CoDriverToolSpec{
 					AllowedNamespaces: []string{"production", "staging"},
 				},
 			},
@@ -61,13 +61,13 @@ func TestValidateNamespaceAccess(t *testing.T) {
 		},
 		{
 			name: "nil allowed namespaces - allow all",
-			powerTool: &toev1alpha1.PowerTool{
+			coDriverJob: &kubecodriverv1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "any-namespace",
 				},
 			},
-			toolConfig: &toev1alpha1.PowerToolConfig{
-				Spec: toev1alpha1.PowerToolConfigSpec{
+			toolConfig: &kubecodriverv1alpha1.CoDriverTool{
+				Spec: kubecodriverv1alpha1.CoDriverToolSpec{
 					AllowedNamespaces: nil,
 				},
 			},
@@ -75,13 +75,13 @@ func TestValidateNamespaceAccess(t *testing.T) {
 		},
 		{
 			name: "single allowed namespace - match",
-			powerTool: &toev1alpha1.PowerTool{
+			coDriverJob: &kubecodriverv1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "production",
 				},
 			},
-			toolConfig: &toev1alpha1.PowerToolConfig{
-				Spec: toev1alpha1.PowerToolConfigSpec{
+			toolConfig: &kubecodriverv1alpha1.CoDriverTool{
+				Spec: kubecodriverv1alpha1.CoDriverToolSpec{
 					AllowedNamespaces: []string{"production"},
 				},
 			},
@@ -89,13 +89,13 @@ func TestValidateNamespaceAccess(t *testing.T) {
 		},
 		{
 			name: "single allowed namespace - no match",
-			powerTool: &toev1alpha1.PowerTool{
+			coDriverJob: &kubecodriverv1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "staging",
 				},
 			},
-			toolConfig: &toev1alpha1.PowerToolConfig{
-				Spec: toev1alpha1.PowerToolConfigSpec{
+			toolConfig: &kubecodriverv1alpha1.CoDriverTool{
+				Spec: kubecodriverv1alpha1.CoDriverToolSpec{
 					AllowedNamespaces: []string{"production"},
 				},
 			},
@@ -105,7 +105,7 @@ func TestValidateNamespaceAccess(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := r.validateNamespaceAccess(tt.powerTool, tt.toolConfig)
+			err := r.validateNamespaceAccess(tt.coDriverJob, tt.toolConfig)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("validateNamespaceAccess() error = %v, wantErr %v", err, tt.wantErr)
 			}

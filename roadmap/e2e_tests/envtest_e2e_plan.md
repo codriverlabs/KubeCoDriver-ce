@@ -1,15 +1,15 @@
-# TOE Envtest-Based E2E Testing Plan
+# KubeCoDriver Envtest-Based E2E Testing Plan
 
 ## Executive Summary
 
-This document outlines a comprehensive plan for implementing E2E tests for the TOE (Tactical Operations Engine) project using Kubebuilder's envtest framework. The plan focuses on testing controller logic, API interactions, and resource lifecycle management while acknowledging the limitations of envtest for actual pod profiling scenarios.
+This document outlines a comprehensive plan for implementing E2E tests for the KubeCoDriver project using Kubebuilder's envtest framework. The plan focuses on testing controller logic, API interactions, and resource lifecycle management while acknowledging the limitations of envtest for actual pod profiling scenarios.
 
 ## Testing Strategy Overview
 
 ### Scope Definition
 
 **✅ What We CAN Test with Envtest (High Confidence)**
-- PowerTool CRD validation and schema enforcement
+- CoDriverJob CRD validation and schema enforcement
 - Controller reconciliation logic and state transitions
 - RBAC permissions and security policies
 - Resource lifecycle management (create/update/delete)
@@ -63,8 +63,8 @@ var _ = BeforeSuite(func() {
     })
     Expect(err).NotTo(HaveOccurred())
     
-    // Setup PowerTool controller
-    err = (&controller.PowerToolReconciler{
+    // Setup CoDriverJob controller
+    err = (&controller.CoDriverJobReconciler{
         Client: mgr.GetClient(),
         Scheme: mgr.GetScheme(),
     }).SetupWithManager(mgr)
@@ -84,7 +84,7 @@ var _ = BeforeSuite(func() {
 func CreateTestNamespace() *corev1.Namespace {
     ns := &corev1.Namespace{
         ObjectMeta: metav1.ObjectMeta{
-            GenerateName: "toe-e2e-",
+            GenerateName: "kubecodriver-e2e-",
         },
     }
     Expect(k8sClient.Create(ctx, ns)).To(Succeed())
@@ -127,9 +127,9 @@ func CreateMockTargetPod(namespace string) *corev1.Pod {
 ### Phase 2: Core Controller Testing (Week 3-4)
 **Probability of Success: 90%**
 
-#### 2.1 PowerTool Lifecycle Tests
+#### 2.1 CoDriverJob Lifecycle Tests
 ```go
-var _ = Describe("PowerTool Lifecycle", func() {
+var _ = Describe("CoDriverJob Lifecycle", func() {
     var namespace *corev1.Namespace
     var targetPod *corev1.Pod
     
@@ -142,14 +142,14 @@ var _ = Describe("PowerTool Lifecycle", func() {
         Expect(k8sClient.Delete(ctx, namespace)).To(Succeed())
     })
     
-    Context("PowerTool Creation", func() {
-        It("should create PowerTool with valid spec", func() {
-            powerTool := &v1alpha1.PowerTool{
+    Context("CoDriverJob Creation", func() {
+        It("should create CoDriverJob with valid spec", func() {
+            powerTool := &v1alpha1.CoDriverJob{
                 ObjectMeta: metav1.ObjectMeta{
                     Name:      "test-powertool",
                     Namespace: namespace.Name,
                 },
-                Spec: v1alpha1.PowerToolSpec{
+                Spec: v1alpha1.CoDriverJobSpec{
                     Targets: v1alpha1.TargetSpec{
                         LabelSelector: &metav1.LabelSelector{
                             MatchLabels: map[string]string{"app": "test-app"},
@@ -168,19 +168,19 @@ var _ = Describe("PowerTool Lifecycle", func() {
             Expect(k8sClient.Create(ctx, powerTool)).To(Succeed())
             
             Eventually(func() string {
-                updated := &v1alpha1.PowerTool{}
+                updated := &v1alpha1.CoDriverJob{}
                 k8sClient.Get(ctx, client.ObjectKeyFromObject(powerTool), updated)
                 return updated.Status.Phase
             }).Should(Equal("Pending"))
         })
         
-        It("should reject PowerTool with invalid tool name", func() {
-            powerTool := &v1alpha1.PowerTool{
+        It("should reject CoDriverJob with invalid tool name", func() {
+            powerTool := &v1alpha1.CoDriverJob{
                 ObjectMeta: metav1.ObjectMeta{
                     Name:      "invalid-tool",
                     Namespace: namespace.Name,
                 },
-                Spec: v1alpha1.PowerToolSpec{
+                Spec: v1alpha1.CoDriverJobSpec{
                     Tool: v1alpha1.ToolSpec{
                         Name: "nonexistent-tool",
                     },
@@ -198,12 +198,12 @@ var _ = Describe("PowerTool Lifecycle", func() {
 ```go
 var _ = Describe("Controller Reconciliation", func() {
     It("should handle missing target pods gracefully", func() {
-        powerTool := &v1alpha1.PowerTool{
+        powerTool := &v1alpha1.CoDriverJob{
             ObjectMeta: metav1.ObjectMeta{
                 Name:      "no-targets",
                 Namespace: namespace.Name,
             },
-            Spec: v1alpha1.PowerToolSpec{
+            Spec: v1alpha1.CoDriverJobSpec{
                 Targets: v1alpha1.TargetSpec{
                     LabelSelector: &metav1.LabelSelector{
                         MatchLabels: map[string]string{"app": "nonexistent"},
@@ -216,13 +216,13 @@ var _ = Describe("Controller Reconciliation", func() {
         Expect(k8sClient.Create(ctx, powerTool)).To(Succeed())
         
         Eventually(func() string {
-            updated := &v1alpha1.PowerTool{}
+            updated := &v1alpha1.CoDriverJob{}
             k8sClient.Get(ctx, client.ObjectKeyFromObject(powerTool), updated)
             return updated.Status.Phase
         }).Should(Equal("Failed"))
         
         Eventually(func() []metav1.Condition {
-            updated := &v1alpha1.PowerTool{}
+            updated := &v1alpha1.CoDriverJob{}
             k8sClient.Get(ctx, client.ObjectKeyFromObject(powerTool), updated)
             return updated.Status.Conditions
         }).Should(ContainElement(HaveField("Type", "TargetsFound")))
@@ -233,8 +233,8 @@ var _ = Describe("Controller Reconciliation", func() {
         // Verify Ready, TargetsFound, ToolConfigured conditions
     })
     
-    It("should handle concurrent PowerTool conflicts", func() {
-        // Test conflict detection between multiple PowerTools
+    It("should handle concurrent CoDriverJob conflicts", func() {
+        // Test conflict detection between multiple CoDriverJobs
         // targeting the same pod
     })
 })
@@ -248,12 +248,12 @@ var _ = Describe("Controller Reconciliation", func() {
 var _ = Describe("RBAC and Security", func() {
     It("should enforce namespace restrictions", func() {
         // Test namespace access controls
-        // Verify PowerTool cannot target pods in restricted namespaces
+        // Verify CoDriverJob cannot target pods in restricted namespaces
     })
     
     It("should validate security context requirements", func() {
-        powerTool := &v1alpha1.PowerTool{
-            Spec: v1alpha1.PowerToolSpec{
+        powerTool := &v1alpha1.CoDriverJob{
+            Spec: v1alpha1.CoDriverJobSpec{
                 Security: v1alpha1.SecuritySpec{
                     Privileged: true,
                     Capabilities: v1alpha1.CapabilitiesSpec{
@@ -327,7 +327,7 @@ var _ = Describe("Resource Validation", func() {
     })
     
     It("should enforce concurrent tool limits", func() {
-        // Test maximum concurrent PowerTools per namespace
+        // Test maximum concurrent CoDriverJobs per namespace
     })
     
     It("should validate label selector complexity", func() {
@@ -342,17 +342,17 @@ var _ = Describe("Resource Validation", func() {
 #### 5.1 Scale Testing
 ```go
 var _ = Describe("Scale Testing", func() {
-    It("should handle multiple PowerTools efficiently", func() {
-        const numPowerTools = 50
+    It("should handle multiple CoDriverJobs efficiently", func() {
+        const numCoDriverJobs = 50
         
-        for i := 0; i < numPowerTools; i++ {
-            powerTool := createTestPowerTool(fmt.Sprintf("scale-test-%d", i))
+        for i := 0; i < numCoDriverJobs; i++ {
+            powerTool := createTestCoDriverJob(fmt.Sprintf("scale-test-%d", i))
             Expect(k8sClient.Create(ctx, powerTool)).To(Succeed())
         }
         
-        // Verify all PowerTools are processed within reasonable time
+        // Verify all CoDriverJobs are processed within reasonable time
         Eventually(func() int {
-            powerTools := &v1alpha1.PowerToolList{}
+            powerTools := &v1alpha1.CoDriverJobList{}
             k8sClient.List(ctx, powerTools, client.InNamespace(namespace.Name))
             
             completed := 0
@@ -362,7 +362,7 @@ var _ = Describe("Scale Testing", func() {
                 }
             }
             return completed
-        }).Should(Equal(numPowerTools))
+        }).Should(Equal(numCoDriverJobs))
     })
 })
 ```
@@ -394,7 +394,7 @@ test/
 │   ├── error_handling_test.go     # Error scenarios
 │   └── performance_test.go        # Scale and performance tests
 └── fixtures/
-    ├── powertools/               # Sample PowerTool manifests
+    ├── powertools/               # Sample CoDriverJob manifests
     ├── toolconfigs/             # Sample ToolConfig manifests
     └── pods/                    # Sample target pod manifests
 ```
@@ -426,8 +426,8 @@ test-e2e-parallel: manifests generate fmt vet envtest ## Run E2E tests in parall
 - **Error Handling Coverage:** 80%+ (Medium Probability: 75%)
 
 ### Performance Benchmarks
-- **Single PowerTool Processing:** <5 seconds (High Probability: 85%)
-- **50 Concurrent PowerTools:** <30 seconds (Medium Probability: 70%)
+- **Single CoDriverJob Processing:** <5 seconds (High Probability: 85%)
+- **50 Concurrent CoDriverJobs:** <30 seconds (Medium Probability: 70%)
 - **Memory Usage:** <100MB during tests (High Probability: 80%)
 
 ### Test Reliability
@@ -481,8 +481,8 @@ test-e2e-parallel: manifests generate fmt vet envtest ## Run E2E tests in parall
 
 ## Conclusion
 
-This comprehensive envtest-based E2E testing plan provides robust coverage of the TOE controller's core functionality while acknowledging the limitations of the envtest environment. The phased approach ensures incremental progress with measurable success criteria, while the probability assessments help set realistic expectations for each component.
+This comprehensive envtest-based E2E testing plan provides robust coverage of the KubeCoDriver controller's core functionality while acknowledging the limitations of the envtest environment. The phased approach ensures incremental progress with measurable success criteria, while the probability assessments help set realistic expectations for each component.
 
 The plan focuses on what can be effectively tested with envtest (controller logic, API interactions, resource management) while clearly identifying areas that require full cluster testing (actual pod profiling, container runtime interactions).
 
-Implementation of this plan will significantly improve the reliability and maintainability of the TOE project while providing a solid foundation for future testing enhancements.
+Implementation of this plan will significantly improve the reliability and maintainability of the KubeCoDriver project while providing a solid foundation for future testing enhancements.

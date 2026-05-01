@@ -1,6 +1,6 @@
-# TOE Operator - EKS Deployment Guide
+# KubeCoDriver Operator - EKS Deployment Guide
 
-This guide describes how to deploy the TOE (Tactical Operations Engine) operator on Amazon EKS using ECR for container images.
+This guide describes how to deploy the KubeCoDriver operator on Amazon EKS using ECR for container images.
 
 ## Prerequisites
 
@@ -28,11 +28,11 @@ kubectl wait --for=condition=ready pod -l app.kubernetes.io/instance=cert-manage
 
 The following images need to be synced to your ECR:
 
-- **Controller**: `ghcr.io/codriverlabs/ce/toe-controller:v1.1.0`
-- **Collector**: `ghcr.io/codriverlabs/ce/toe-collector:v1.1.0`
-- **Aperf Tool**: `ghcr.io/codriverlabs/ce/toe-aperf:v1.1.0`
-- **Tcpdump Tool**: `ghcr.io/codriverlabs/ce/toe-tcpdump:v1.1.0`
-- **Chaos Tool**: `ghcr.io/codriverlabs/ce/toe-chaos:v1.1.0`
+- **Controller**: `ghcr.io/codriverlabs/ce/kubecodriver-controller:v1.1.0`
+- **Collector**: `ghcr.io/codriverlabs/ce/kubecodriver-collector:v1.1.0`
+- **Aperf Tool**: `ghcr.io/codriverlabs/ce/kubecodriver-aperf:v1.1.0`
+- **Tcpdump Tool**: `ghcr.io/codriverlabs/ce/kubecodriver-tcpdump:v1.1.0`
+- **Chaos Tool**: `ghcr.io/codriverlabs/ce/kubecodriver-chaos:v1.1.0`
 
 ## Deployment Steps
 
@@ -43,10 +43,10 @@ Download the latest release from GitHub and extract the Helm chart:
 ```bash
 # Download the release
 VERSION=v1.1.0
-wget https://github.com/codriverlabs/toe-run-ce/releases/download/$VERSION/toe-operator-$VERSION.tgz
+wget https://github.com/codriverlabs/KubeCoDriver/releases/download/$VERSION/kubecodriver-operator-$VERSION.tgz
 
 # Extract the Helm chart
-tar -xf toe-operator-$VERSION.tgz
+tar -xf kubecodriver-operator-$VERSION.tgz
 ```
 
 ### 2. Configure Environment Variables
@@ -66,10 +66,10 @@ The Helm chart includes a script to sync all container images from GHCR to your 
 
 ```bash
 # Make the script executable
-chmod +x ./toe-operator/scripts/sync-images-from-ghcr-to-ecr.sh
+chmod +x ./kubecodriver-operator/scripts/sync-images-from-ghcr-to-ecr.sh
 
 # Run the sync script
-./toe-operator/scripts/sync-images-from-ghcr-to-ecr.sh \
+./kubecodriver-operator/scripts/sync-images-from-ghcr-to-ecr.sh \
   --account-id $AWS_ACCOUNT_ID \
   --region $AWS_REGION \
   --image-version $VERSION
@@ -81,28 +81,28 @@ This script will:
 - Create ECR repositories if they don't exist
 - Tag and push images to your ECR repositories
 
-### 4. Deploy TOE Operator (Standard Deployment)
+### 4. Deploy KubeCoDriver Operator (Standard Deployment)
 
-Install the TOE operator with controller and collector (PowerTools optional):
+Install the KubeCoDriver operator with controller and collector (CoDriverJobs optional):
 
 ```bash
-helm install toe-operator ./toe-operator \
+helm install kubecodriver-operator ./kubecodriver-operator \
   --create-namespace \
-  --namespace toe-system \
+  --namespace kubecodriver-system \
   --set global.version=$VERSION \
   --set global.registry.repository=$ECR_REGISTRY_PREFIX \
   --set powertools.enabled=true \
   --set collector.storage.storageClass=gp2
 ```
 
-### 5. Alternative: Without PowerTools
+### 5. Alternative: Without CoDriverJobs
 
-For deployment without PowerTool configurations:
+For deployment without CoDriverJob configurations:
 
 ```bash
-helm install toe-operator ./toe-operator \
+helm install kubecodriver-operator ./kubecodriver-operator \
   --create-namespace \
-  --namespace toe-system \
+  --namespace kubecodriver-system \
   --set global.version=$VERSION \
   --set global.registry.repository=$ECR_REGISTRY_PREFIX \
   --set powertools.enabled=false
@@ -114,25 +114,25 @@ Check that all components are running:
 
 ```bash
 # Check pods
-kubectl get pods -n toe-system
+kubectl get pods -n kubecodriver-system
 
 # Expected output (standard deployment):
 # NAME                                        READY   STATUS    RESTARTS   AGE
-# toe-collector-xxx                          1/1     Running   0          2m
-# toe-operator-controller-manager-xxx        2/2     Running   0          2m
+# kubecodriver-collector-xxx                          1/1     Running   0          2m
+# kubecodriver-operator-controller-manager-xxx        2/2     Running   0          2m
 
 # Check services
-kubectl get services -n toe-system
+kubectl get services -n kubecodriver-system
 
 # Check CRDs
 kubectl get crd | grep codriverlabs
 
 # Expected output:
-# powertoolconfigs.codriverlabs.ai.toe.run
-# powertools.codriverlabs.ai.toe.run
+# powertoolconfigs.kubecodriver.codriverlabs.ai
+# powertools.kubecodriver.codriverlabs.ai
 
-# Check PowerTool configurations (if enabled)
-kubectl get powertoolconfigs -n toe-system
+# Check CoDriverJob configurations (if enabled)
+kubectl get powertoolconfigs -n kubecodriver-system
 
 # Expected output:
 # NAME           AGE
@@ -160,9 +160,9 @@ parameters:
 EOF
 
 # Deploy with EFS storage
-helm install toe-operator ./toe-operator \
+helm install kubecodriver-operator ./kubecodriver-operator \
   --create-namespace \
-  --namespace toe-system \
+  --namespace kubecodriver-system \
   --set global.version=$VERSION \
   --set global.registry.repository=$ECR_REGISTRY_PREFIX \
   --set collector.storage.storageClass=efs-sc \
@@ -175,30 +175,30 @@ helm install toe-operator ./toe-operator \
 # Create IRSA role first (replace with your cluster name and account)
 eksctl create iamserviceaccount \
   --cluster=my-cluster \
-  --namespace=toe-system \
-  --name=toe-operator-controller-manager \
+  --namespace=kubecodriver-system \
+  --name=kubecodriver-operator-controller-manager \
   --attach-policy-arn=arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly \
   --approve
 
 # Deploy with IRSA
-helm install toe-operator ./toe-operator \
+helm install kubecodriver-operator ./kubecodriver-operator \
   --create-namespace \
-  --namespace toe-system \
+  --namespace kubecodriver-system \
   --set global.version=$VERSION \
   --set global.registry.repository=$ECR_REGISTRY_PREFIX \
   --set ecr.useIRSA=true \
-  --set serviceAccount.annotations."eks\.amazonaws\.com/role-arn"=arn:aws:iam::$AWS_ACCOUNT_ID:role/eksctl-my-cluster-addon-iamserviceaccount-toe-system-toe-operator-controller-manager-Role1-xxx
+  --set serviceAccount.annotations."eks\.amazonaws\.com/role-arn"=arn:aws:iam::$AWS_ACCOUNT_ID:role/eksctl-my-cluster-addon-iamserviceaccount-kubecodriver-system-kubecodriver-operator-controller-manager-Role1-xxx
 ```
 
 ## 🔧 Configuration Customization
 
-### Custom PowerTool Settings
+### Custom CoDriverJob Settings
 
 ```bash
-# Deploy with custom PowerTool configurations
-helm install toe-operator ./toe-operator \
+# Deploy with custom CoDriverJob configurations
+helm install kubecodriver-operator ./kubecodriver-operator \
   --create-namespace \
-  --namespace toe-system \
+  --namespace kubecodriver-system \
   --set global.version=$VERSION \
   --set global.registry.repository=$ECR_REGISTRY_PREFIX \
   --set powertools.aperf.allowedNamespaces="{production,staging}" \
@@ -211,29 +211,29 @@ helm install toe-operator ./toe-operator \
 For troubleshooting, enable debug mode:
 
 ```bash
-helm install toe-operator ./toe-operator \
+helm install kubecodriver-operator ./kubecodriver-operator \
   --debug \
   --create-namespace \
-  --namespace toe-system \
+  --namespace kubecodriver-system \
   --set global.version=$VERSION \
   --set global.registry.repository=$ECR_REGISTRY_PREFIX
 ```
 
 ## 🔍 Validation and Testing
 
-### Test PowerTool Functionality
+### Test CoDriverJob Functionality
 
 ```bash
 # Create a test pod
-kubectl apply -f ./toe-operator/examples/targets/target-pod-with-pvc.yaml
+kubectl apply -f ./kubecodriver-operator/examples/targets/target-pod-with-pvc.yaml
 
-# Create a PowerTool to profile it
-kubectl apply -f ./toe-operator/examples/powertool-aperf-ephemeral.yaml
+# Create a CoDriverJob to profile it
+kubectl apply -f ./kubecodriver-operator/examples/powertool-aperf-ephemeral.yaml
 
-# Check PowerTool status
+# Check CoDriverJob status
 kubectl get powertools -A
 
-# View PowerTool logs
+# View CoDriverJob logs
 kubectl describe powertool profile-my-app
 ```
 
@@ -269,61 +269,61 @@ kubectl describe node | grep ProviderID
 
 ```bash
 # Check image pull secrets
-kubectl get secrets -n toe-system
+kubectl get secrets -n kubecodriver-system
 
 # Verify image references in pods
-kubectl describe pod -n toe-system -l app.kubernetes.io/name=toe-operator
+kubectl describe pod -n kubecodriver-system -l app.kubernetes.io/name=kubecodriver-operator
 
-# Check PowerTool configurations
-kubectl get powertoolconfigs -n toe-system -o yaml
+# Check CoDriverJob configurations
+kubectl get powertoolconfigs -n kubecodriver-system -o yaml
 ```
 
 ### Certificate Issues
 
 ```bash
 # Check certificate status
-kubectl get certificates -n toe-system
+kubectl get certificates -n kubecodriver-system
 
 # Check issuer status
-kubectl get issuers -n toe-system
+kubectl get issuers -n kubecodriver-system
 
 # Recreate certificates if needed
-kubectl delete certificate toe-collector-cert -n toe-system
-kubectl delete secret toe-collector-certs -n toe-system
-helm upgrade toe-operator ./toe-operator --reuse-values
+kubectl delete certificate kubecodriver-collector-cert -n kubecodriver-system
+kubectl delete secret kubecodriver-collector-certs -n kubecodriver-system
+helm upgrade kubecodriver-operator ./kubecodriver-operator --reuse-values
 ```
 
 ## 🗑️ Uninstallation
 
-To completely remove the TOE operator:
+To completely remove the KubeCoDriver operator:
 
 ```bash
-# Delete all PowerTool resources first
+# Delete all CoDriverJob resources first
 kubectl delete powertools --all -A
 
 # Uninstall Helm release
-helm uninstall toe-operator -n toe-system
+helm uninstall kubecodriver-operator -n kubecodriver-system
 
 # Delete namespace
-kubectl delete namespace toe-system
+kubectl delete namespace kubecodriver-system
 
 # Clean up CRDs
-kubectl delete crd powertoolconfigs.codriverlabs.ai.toe.run
-kubectl delete crd powertools.codriverlabs.ai.toe.run
+kubectl delete crd powertoolconfigs.kubecodriver.codriverlabs.ai
+kubectl delete crd powertools.kubecodriver.codriverlabs.ai
 
 # Optional: Remove ECR repositories
-aws ecr delete-repository --repository-name codriverlabs/ce/toe-controller --region $AWS_REGION --force
-aws ecr delete-repository --repository-name codriverlabs/ce/toe-collector --region $AWS_REGION --force
-aws ecr delete-repository --repository-name codriverlabs/ce/toe-aperf --region $AWS_REGION --force
-aws ecr delete-repository --repository-name codriverlabs/ce/toe-tcpdump --region $AWS_REGION --force
-aws ecr delete-repository --repository-name codriverlabs/ce/toe-chaos --region $AWS_REGION --force
+aws ecr delete-repository --repository-name codriverlabs/ce/kubecodriver-controller --region $AWS_REGION --force
+aws ecr delete-repository --repository-name codriverlabs/ce/kubecodriver-collector --region $AWS_REGION --force
+aws ecr delete-repository --repository-name codriverlabs/ce/kubecodriver-aperf --region $AWS_REGION --force
+aws ecr delete-repository --repository-name codriverlabs/ce/kubecodriver-tcpdump --region $AWS_REGION --force
+aws ecr delete-repository --repository-name codriverlabs/ce/kubecodriver-chaos --region $AWS_REGION --force
 ```
 
 ## 📚 Next Steps
 
 After successful deployment:
 
-1. **Create PowerTools**: Use the examples in `./toe-operator/examples/` to create PowerTool resources
+1. **Create CoDriverJobs**: Use the examples in `./kubecodriver-operator/examples/` to create CoDriverJob resources
 2. **Monitor Performance**: Check controller and collector logs for performance insights  
 3. **Scale as Needed**: Adjust replica counts and resource limits based on your workload
 4. **Security Review**: Review the security documentation in `docs/security/`

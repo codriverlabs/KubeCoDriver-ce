@@ -1,5 +1,5 @@
 #!/bin/bash
-# Deploy script for toe-k8s-operator
+# Deploy script for kubecodriver-k8s-operator
 # Usage: ./deploy.sh [local|ecr] [--clean]
 
 set -euo pipefail
@@ -95,7 +95,7 @@ esac
 
 cd "$PROJECT_ROOT"
 
-echo "=== Deploying toe-k8s-operator ==="
+echo "=== Deploying kubecodriver-k8s-operator ==="
 echo "Image: $IMAGE:$VERSION"
 echo "Registry Type: $REGISTRY_TYPE"
 echo "Clean Deploy: $CLEAN_DEPLOY"
@@ -174,7 +174,7 @@ echo "✅ Operator deployed successfully"
 # Step 5: Verify deployment
 echo "Step 5: Verifying deployment..."
 sleep 5
-if ! kubectl get deployment -n "$NAMESPACE" | grep -q "toe-controller-manager"; then
+if ! kubectl get deployment -n "$NAMESPACE" | grep -q "kubecodriver-controller-manager"; then
     echo "⚠️  Warning: Operator deployment not found, checking pods..."
     kubectl get pods -n "$NAMESPACE" || true
 else
@@ -185,10 +185,10 @@ echo ""
 echo "🎉 Deployment completed successfully!"
 echo "🔍 Check status: kubectl get pods -n $NAMESPACE"
 echo ""
-echo "📝 Example PowerTool:"
+echo "📝 Example CoDriverJob:"
 cat << 'EOF'
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerTool
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverJob
 metadata:
   name: my-powertool
 spec:

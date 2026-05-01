@@ -1,0 +1,75 @@
+{{- if .Values.codriverjobs.enabled }}
+---
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverTool
+metadata:
+  name: aperf-config
+  namespace: {{ include "kubecodriver-operator.namespace" . }}
+spec:
+  name: "aperf"
+  image: {{ include "kubecodriver-operator.aperf.image" . }}
+  securityContext:
+    allowPrivileged: false
+    allowHostPID: false
+    runAsRoot: true
+    capabilities:
+      add: ["SYS_PTRACE", "PERFMON", "SYS_ADMIN"]
+      drop: ["ALL"]
+  allowedNamespaces:
+    {{- range .Values.codriverjobs.aperf.allowedNamespaces }}
+    - {{ . | quote }}
+    {{- end }}
+  description: {{ .Values.codriverjobs.aperf.description | quote }}
+  version: {{ .Values.codriverjobs.aperf.version | quote }}
+  defaultArgs: 
+    {{- range .Values.codriverjobs.aperf.defaultArgs }}
+    - {{ . | quote }}
+    {{- end }}
+
+---
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverTool
+metadata:
+  name: tcpdump-config
+  namespace: {{ include "kubecodriver-operator.namespace" . }}
+spec:
+  name: "tcpdump"
+  description: {{ .Values.codriverjobs.tcpdump.description | quote }}
+  image: {{ include "kubecodriver-operator.tcpdump.image" . }}
+  defaultArgs:
+    {{- range .Values.codriverjobs.tcpdump.defaultArgs }}
+    - {{ . | quote }}
+    {{- end }}
+  securityContext:
+    runAsRoot: true
+    capabilities:
+      add:
+        - NET_ADMIN
+        - NET_RAW
+
+---
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverTool
+metadata:
+  name: chaos-config
+  namespace: {{ include "kubecodriver-operator.namespace" . }}
+spec:
+  name: "chaos"
+  description: {{ .Values.codriverjobs.chaos.description | quote }}
+  image: {{ include "kubecodriver-operator.chaos.image" . }}
+  securityContext:
+    allowPrivileged: true
+    capabilities:
+      add:
+        - SYS_PTRACE
+        - SYS_ADMIN
+        - KILL
+        - NET_ADMIN
+  resources:
+    requests:
+      memory: {{ .Values.codriverjobs.chaos.resources.requests.memory | quote }}
+      cpu: {{ .Values.codriverjobs.chaos.resources.requests.cpu | quote }}
+    limits:
+      memory: {{ .Values.codriverjobs.chaos.resources.limits.memory | quote }}
+      cpu: {{ .Values.codriverjobs.chaos.resources.limits.cpu | quote }}
+{{- end }}

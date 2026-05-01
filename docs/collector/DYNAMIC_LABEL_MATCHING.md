@@ -7,7 +7,7 @@ The initial implementation hardcoded the `app` label for path organization:
 appLabel := targetPod.Labels["app"]  // ❌ Assumes "app" label exists
 ```
 
-This didn't align with the PowerTool CRD design, which allows ANY label selector:
+This didn't align with the CoDriverJob CRD design, which allows ANY label selector:
 ```yaml
 targets:
   labelSelector:
@@ -19,13 +19,13 @@ targets:
 
 ## Solution
 
-Extract the actual matching labels from the PowerTool's `labelSelector` that matched the target pod.
+Extract the actual matching labels from the CoDriverJob's `labelSelector` that matched the target pod.
 
 ### Implementation
 
 **Controller (`internal/controller/powertool_controller.go`):**
 ```go
-func (r *PowerToolReconciler) extractMatchingLabels(selector *metav1.LabelSelector, podLabels map[string]string) string {
+func (r *CoDriverJobReconciler) extractMatchingLabels(selector *metav1.LabelSelector, podLabels map[string]string) string {
     if selector == nil || selector.MatchLabels == nil {
         return "unknown"
     }
@@ -53,7 +53,7 @@ func (r *PowerToolReconciler) extractMatchingLabels(selector *metav1.LabelSelect
 
 **HTTP Header:**
 ```bash
--H "X-PowerTool-Matching-Labels: ${POD_MATCHING_LABELS:-unknown}"
+-H "X-CoDriverJob-Matching-Labels: ${POD_MATCHING_LABELS:-unknown}"
 ```
 
 ## Examples
@@ -98,7 +98,7 @@ targets:
 
 ## Benefits
 
-1. **Flexible:** Works with any label selector defined in PowerTool
+1. **Flexible:** Works with any label selector defined in CoDriverJob
 2. **Semantic:** Path reflects actual targeting criteria
 3. **Organized:** Groups profiles by the same selection criteria
 4. **Discoverable:** Easy to find profiles by label used
@@ -146,12 +146,12 @@ targets:
 
 **Before:**
 - Environment variable: `POD_APP_LABEL`
-- HTTP header: `X-PowerTool-App-Label`
+- HTTP header: `X-CoDriverJob-App-Label`
 - Path: `/data/{namespace}/{app-value}/...`
 
 **After:**
 - Environment variable: `POD_MATCHING_LABELS`
-- HTTP header: `X-PowerTool-Matching-Labels`
+- HTTP header: `X-CoDriverJob-Matching-Labels`
 - Path: `/data/{namespace}/{key=value}/...`
 
 ### Backward Compatibility

@@ -7,10 +7,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"toe/api/v1alpha1"
+	"github.com/codriverlabs/KubeCoDriver/api/v1alpha1"
 )
 
-var _ = Describe("PowerTool Lifecycle", func() {
+var _ = Describe("CoDriverJob Lifecycle", func() {
 	var namespace *corev1.Namespace
 
 	BeforeEach(func() {
@@ -19,33 +19,33 @@ var _ = Describe("PowerTool Lifecycle", func() {
 			"app": "test-app",
 			"env": "testing",
 		})
-		CreateSimpleTestPowerToolConfig("aperf-config", namespace.Name)
+		CreateSimpleTestCoDriverTool("aperf-config", namespace.Name)
 	})
 
 	AfterEach(func() {
 		DeleteSimpleTestNamespace(namespace)
 	})
 
-	Context("PowerTool Creation", func() {
-		It("should create PowerTool with valid spec", func() {
-			By("creating a PowerTool with basic configuration")
-			spec := CreateSimpleBasicPowerToolSpec(map[string]string{"app": "test-app"})
-			powerTool := CreateSimpleTestPowerTool("test-powertool", namespace.Name, spec)
+	Context("CoDriverJob Creation", func() {
+		It("should create CoDriverJob with valid spec", func() {
+			By("creating a CoDriverJob with basic configuration")
+			spec := CreateSimpleBasicCoDriverJobSpec(map[string]string{"app": "test-app"})
+			coDriverJob := CreateSimpleTestCoDriverJob("test-codriverjob", namespace.Name, spec)
 
-			By("verifying PowerTool is created successfully")
-			Expect(powerTool.Name).To(Equal("test-powertool"))
-			Expect(powerTool.Namespace).To(Equal(namespace.Name))
-			Expect(powerTool.Spec.Tool.Name).To(Equal("aperf"))
+			By("verifying CoDriverJob is created successfully")
+			Expect(coDriverJob.Name).To(Equal("test-codriverjob"))
+			Expect(coDriverJob.Namespace).To(Equal(namespace.Name))
+			Expect(coDriverJob.Spec.Tool.Name).To(Equal("aperf"))
 
-			By("waiting for PowerTool to be processed")
-			WaitForSimplePowerToolPhase(powerTool, "Pending")
+			By("waiting for CoDriverJob to be processed")
+			WaitForSimpleCoDriverJobPhase(coDriverJob, "Pending")
 
 			By("verifying status conditions are set")
-			updated := GetSimplePowerTool(powerTool)
+			updated := GetSimpleCoDriverJob(coDriverJob)
 			Expect(updated.Status.Conditions).NotTo(BeEmpty())
 		})
 
-		It("should handle PowerTool with multiple target pods", func() {
+		It("should handle CoDriverJob with multiple target pods", func() {
 			By("creating additional target pods")
 			CreateSimpleMockTargetPod(namespace.Name, "target-pod-2", map[string]string{
 				"app": "test-app",
@@ -56,32 +56,32 @@ var _ = Describe("PowerTool Lifecycle", func() {
 				"env": "production",
 			})
 
-			By("creating PowerTool targeting multiple pods")
-			spec := CreateSimpleBasicPowerToolSpec(map[string]string{"app": "test-app"})
-			powerTool := CreateSimpleTestPowerTool("multi-target", namespace.Name, spec)
+			By("creating CoDriverJob targeting multiple pods")
+			spec := CreateSimpleBasicCoDriverJobSpec(map[string]string{"app": "test-app"})
+			coDriverJob := CreateSimpleTestCoDriverJob("multi-target", namespace.Name, spec)
 
-			By("verifying PowerTool processes multiple targets")
-			WaitForSimplePowerToolPhase(powerTool, "Pending")
+			By("verifying CoDriverJob processes multiple targets")
+			WaitForSimpleCoDriverJobPhase(coDriverJob, "Pending")
 
-			updated := GetSimplePowerTool(powerTool)
+			updated := GetSimpleCoDriverJob(coDriverJob)
 			Expect(updated.Status.ActivePods).NotTo(BeEmpty())
 		})
 
 		It("should set appropriate finalizers", func() {
-			By("creating a PowerTool")
-			spec := CreateSimpleBasicPowerToolSpec(map[string]string{"app": "test-app"})
-			powerTool := CreateSimpleTestPowerTool("finalizer-test", namespace.Name, spec)
+			By("creating a CoDriverJob")
+			spec := CreateSimpleBasicCoDriverJobSpec(map[string]string{"app": "test-app"})
+			coDriverJob := CreateSimpleTestCoDriverJob("finalizer-test", namespace.Name, spec)
 
 			By("verifying finalizer is set")
-			updated := GetSimplePowerTool(powerTool)
-			Expect(updated.Finalizers).To(ContainElement("powertool.codriverlabs.ai.toe.run/finalizer"))
+			updated := GetSimpleCoDriverJob(coDriverJob)
+			Expect(updated.Finalizers).To(ContainElement("codriverjob.kubecodriver.codriverlabs.ai/finalizer"))
 		})
 	})
 
-	Context("PowerTool Validation", func() {
-		It("should reject PowerTool with invalid tool name", func() {
-			By("attempting to create PowerTool with nonexistent tool")
-			spec := v1alpha1.PowerToolSpec{
+	Context("CoDriverJob Validation", func() {
+		It("should reject CoDriverJob with invalid tool name", func() {
+			By("attempting to create CoDriverJob with nonexistent tool")
+			spec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "test-app"},
@@ -92,7 +92,7 @@ var _ = Describe("PowerTool Lifecycle", func() {
 				},
 			}
 
-			powerTool := &v1alpha1.PowerTool{
+			coDriverJob := &v1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "invalid-tool",
 					Namespace: namespace.Name,
@@ -101,16 +101,16 @@ var _ = Describe("PowerTool Lifecycle", func() {
 			}
 
 			By("expecting creation to fail")
-			err := simpleK8sClient.Create(simpleCtx, powerTool)
+			err := simpleK8sClient.Create(simpleCtx, coDriverJob)
 			Expect(err).To(HaveOccurred())
 		})
 
-		It("should reject PowerTool with invalid duration", func() {
-			By("attempting to create PowerTool with invalid duration")
-			spec := CreateSimpleBasicPowerToolSpec(map[string]string{"app": "test-app"})
+		It("should reject CoDriverJob with invalid duration", func() {
+			By("attempting to create CoDriverJob with invalid duration")
+			spec := CreateSimpleBasicCoDriverJobSpec(map[string]string{"app": "test-app"})
 			spec.Tool.Duration = "invalid-duration"
 
-			powerTool := &v1alpha1.PowerTool{
+			coDriverJob := &v1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "invalid-duration",
 					Namespace: namespace.Name,
@@ -119,20 +119,20 @@ var _ = Describe("PowerTool Lifecycle", func() {
 			}
 
 			By("expecting creation to fail")
-			err := simpleK8sClient.Create(simpleCtx, powerTool)
+			err := simpleK8sClient.Create(simpleCtx, coDriverJob)
 			Expect(err).To(HaveOccurred())
 		})
 	})
 
-	Context("PowerTool Status Updates", func() {
+	Context("CoDriverJob Status Updates", func() {
 		It("should update status phase correctly", func() {
-			By("creating a PowerTool")
-			spec := CreateSimpleBasicPowerToolSpec(map[string]string{"app": "test-app"})
-			powerTool := CreateSimpleTestPowerTool("status-test", namespace.Name, spec)
+			By("creating a CoDriverJob")
+			spec := CreateSimpleBasicCoDriverJobSpec(map[string]string{"app": "test-app"})
+			coDriverJob := CreateSimpleTestCoDriverJob("status-test", namespace.Name, spec)
 
 			By("verifying initial status")
 			Eventually(func() string {
-				updated := GetSimplePowerTool(powerTool)
+				updated := GetSimpleCoDriverJob(coDriverJob)
 				if updated.Status.Phase == nil {
 					return ""
 				}
@@ -140,39 +140,39 @@ var _ = Describe("PowerTool Lifecycle", func() {
 			}).Should(Equal("Pending"))
 
 			By("verifying status conditions are populated")
-			updated := GetSimplePowerTool(powerTool)
+			updated := GetSimpleCoDriverJob(coDriverJob)
 			Expect(updated.Status.Conditions).NotTo(BeEmpty())
 		})
 
 		It("should track target pods in status", func() {
-			By("creating a PowerTool")
-			spec := CreateSimpleBasicPowerToolSpec(map[string]string{"app": "test-app"})
-			powerTool := CreateSimpleTestPowerTool("target-tracking", namespace.Name, spec)
+			By("creating a CoDriverJob")
+			spec := CreateSimpleBasicCoDriverJobSpec(map[string]string{"app": "test-app"})
+			coDriverJob := CreateSimpleTestCoDriverJob("target-tracking", namespace.Name, spec)
 
 			By("verifying target pods are tracked")
 			Eventually(func() map[string]string {
-				updated := GetSimplePowerTool(powerTool)
+				updated := GetSimpleCoDriverJob(coDriverJob)
 				return updated.Status.ActivePods
 			}).Should(Not(BeEmpty()))
 		})
 	})
 
-	Context("PowerTool Deletion", func() {
+	Context("CoDriverJob Deletion", func() {
 		It("should handle deletion gracefully", func() {
-			By("creating a PowerTool")
-			spec := CreateSimpleBasicPowerToolSpec(map[string]string{"app": "test-app"})
-			powerTool := CreateSimpleTestPowerTool("deletion-test", namespace.Name, spec)
+			By("creating a CoDriverJob")
+			spec := CreateSimpleBasicCoDriverJobSpec(map[string]string{"app": "test-app"})
+			coDriverJob := CreateSimpleTestCoDriverJob("deletion-test", namespace.Name, spec)
 
-			By("waiting for PowerTool to be processed")
-			WaitForSimplePowerToolPhase(powerTool, "Pending")
+			By("waiting for CoDriverJob to be processed")
+			WaitForSimpleCoDriverJobPhase(coDriverJob, "Pending")
 
-			By("deleting the PowerTool")
-			Expect(simpleK8sClient.Delete(simpleCtx, powerTool)).To(Succeed())
+			By("deleting the CoDriverJob")
+			Expect(simpleK8sClient.Delete(simpleCtx, coDriverJob)).To(Succeed())
 
-			By("verifying PowerTool is deleted")
+			By("verifying CoDriverJob is deleted")
 			Eventually(func() bool {
-				updated := &v1alpha1.PowerTool{}
-				err := simpleK8sClient.Get(simpleCtx, client.ObjectKeyFromObject(powerTool), updated)
+				updated := &v1alpha1.CoDriverJob{}
+				err := simpleK8sClient.Get(simpleCtx, client.ObjectKeyFromObject(coDriverJob), updated)
 				return err != nil
 			}).Should(BeTrue())
 		})

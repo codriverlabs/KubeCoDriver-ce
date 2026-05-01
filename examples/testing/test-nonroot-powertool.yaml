@@ -1,8 +1,8 @@
-apiVersion: codriverlabs.ai.toe.run/v1alpha1
-kind: PowerTool
+apiVersion: kubecodriver.codriverlabs.ai/v1alpha1
+kind: CoDriverJob
 metadata:
   name: aperf-nonroot-test
-  namespace: toe-test
+  namespace: kubecodriver-test
 spec:
   targets:
     labelSelector:
@@ -16,7 +16,7 @@ spec:
   output:
     mode: "collector"
     collector:
-      endpoint: "https://toe-collector.toe-system.svc.cluster.local:8443"
+      endpoint: "https://kubecodriver-collector.kubecodriver-system.svc.cluster.local:8443"
   failurePolicy:
     onError: "stop"
     backoff:

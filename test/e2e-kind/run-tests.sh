@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# TOE Kind E2E Test Runner
+# KubeCoDriver Kind E2E Test Runner
 # Orchestrates cluster setup, test execution, and cleanup
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -9,14 +9,14 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 # Configuration
 COMMIT_HASH="${GITHUB_SHA:-$(git rev-parse --short HEAD 2>/dev/null || echo 'local')}"
-export CLUSTER_NAME="${CLUSTER_NAME:-toe-e2e-${COMMIT_HASH}}"
+export CLUSTER_NAME="${CLUSTER_NAME:-kubecodriver-e2e-${COMMIT_HASH}}"
 export IMAGE_TAG="e2e-${COMMIT_HASH}"
-export IMAGE_NAME="toe-controller:${IMAGE_TAG}"
+export IMAGE_NAME="kubecodriver-controller:${IMAGE_TAG}"
 KEEP_CLUSTER="${KEEP_CLUSTER:-false}"
 TEST_PHASE="${TEST_PHASE:-all}"
 TEST_TIMEOUT="${TEST_TIMEOUT:-30m}"
 
-echo "🎯 TOE Kind E2E Test Runner"
+echo "🎯 KubeCoDriver Kind E2E Test Runner"
 echo "Cluster Name: $CLUSTER_NAME"
 echo "Commit Hash: $COMMIT_HASH"
 echo "Image Tag: $IMAGE_TAG"
@@ -50,7 +50,7 @@ echo "📦 Step 1: Setting up Kind cluster..."
 echo "🔨 Step 2: Building controller image..."
 cd "$PROJECT_ROOT"
 
-if ! docker images | grep -q "toe-controller.*${IMAGE_TAG}"; then
+if ! docker images | grep -q "kubecodriver-controller.*${IMAGE_TAG}"; then
     echo "Building controller image: $IMAGE_NAME"
     make docker-build IMG="$IMAGE_NAME"
 else
@@ -60,21 +60,21 @@ fi
 echo "📦 Loading image into Kind cluster..."
 kind load docker-image "$IMAGE_NAME" --name "$CLUSTER_NAME"
 
-# Step 3: Deploy TOE components
-echo "🚀 Step 3: Deploying TOE components..."
+# Step 3: Deploy KubeCoDriver components
+echo "🚀 Step 3: Deploying KubeCoDriver components..."
 
 # Install CRDs
 kubectl apply -f config/crd/bases/
 
 # Deploy controller with dynamic image
-cat test/e2e-kind/manifests/toe-controller.yaml | \
-    sed "s|image: toe-controller:e2e|image: $IMAGE_NAME|g" | \
+cat test/e2e-kind/manifests/kubecodriver-controller.yaml | \
+    sed "s|image: kubecodriver-controller:e2e|image: $IMAGE_NAME|g" | \
     kubectl apply -f -
 
 # Wait for deployment
-echo "⏳ Waiting for TOE controller to be ready..."
+echo "⏳ Waiting for KubeCoDriver controller to be ready..."
 kubectl wait --for=condition=available --timeout=300s \
-    deployment/toe-controller-manager -n toe-system
+    deployment/kubecodriver-controller-manager -n kubecodriver-system
 
 # Step 4: Run tests
 echo "🧪 Step 4: Running E2E tests..."
@@ -126,9 +126,9 @@ go test $TEST_ARGS $GINKGO_ARGS -timeout="$TEST_TIMEOUT" ./... || {
     # Collect debug information
     echo "📋 Collecting debug information..."
     kubectl get all -A
-    kubectl get powertools -A
-    kubectl get powertoolconfigs -A
-    kubectl describe pods -n toe-system
+    kubectl get codriverjobs -A
+    kubectl get codrivertools -A
+    kubectl describe pods -n kubecodriver-system
     
     exit $TEST_EXIT_CODE
 }

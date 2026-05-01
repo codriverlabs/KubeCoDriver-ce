@@ -6,7 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"toe/pkg/collector/server"
+	"github.com/codriverlabs/KubeCoDriver/pkg/collector/server"
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"

@@ -5,20 +5,20 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 
-	toev1alpha1 "toe/api/v1alpha1"
+	kubecodriverv1alpha1 "github.com/codriverlabs/KubeCoDriver/api/v1alpha1"
 )
 
 func TestBuildSecurityContext(t *testing.T) {
-	r := &PowerToolReconciler{}
+	r := &CoDriverJobReconciler{}
 
 	tests := []struct {
 		name         string
-		securitySpec toev1alpha1.SecuritySpec
+		securitySpec kubecodriverv1alpha1.SecuritySpec
 		wantCheck    func(*corev1.SecurityContext) error
 	}{
 		{
 			name: "privileged mode",
-			securitySpec: toev1alpha1.SecuritySpec{
+			securitySpec: kubecodriverv1alpha1.SecuritySpec{
 				AllowPrivileged: boolPtr(true),
 			},
 			wantCheck: func(sc *corev1.SecurityContext) error {
@@ -30,8 +30,8 @@ func TestBuildSecurityContext(t *testing.T) {
 		},
 		{
 			name: "add capabilities",
-			securitySpec: toev1alpha1.SecuritySpec{
-				Capabilities: &toev1alpha1.Capabilities{
+			securitySpec: kubecodriverv1alpha1.SecuritySpec{
+				Capabilities: &kubecodriverv1alpha1.Capabilities{
 					Add: []string{"SYS_ADMIN", "NET_ADMIN"},
 				},
 			},
@@ -48,8 +48,8 @@ func TestBuildSecurityContext(t *testing.T) {
 		},
 		{
 			name: "drop capabilities",
-			securitySpec: toev1alpha1.SecuritySpec{
-				Capabilities: &toev1alpha1.Capabilities{
+			securitySpec: kubecodriverv1alpha1.SecuritySpec{
+				Capabilities: &kubecodriverv1alpha1.Capabilities{
 					Drop: []string{"ALL", "CHOWN"},
 				},
 			},
@@ -66,8 +66,8 @@ func TestBuildSecurityContext(t *testing.T) {
 		},
 		{
 			name: "both add and drop capabilities",
-			securitySpec: toev1alpha1.SecuritySpec{
-				Capabilities: &toev1alpha1.Capabilities{
+			securitySpec: kubecodriverv1alpha1.SecuritySpec{
+				Capabilities: &kubecodriverv1alpha1.Capabilities{
 					Add:  []string{"SYS_ADMIN"},
 					Drop: []string{"ALL"},
 				},
@@ -88,7 +88,7 @@ func TestBuildSecurityContext(t *testing.T) {
 		},
 		{
 			name:         "empty security spec",
-			securitySpec: toev1alpha1.SecuritySpec{},
+			securitySpec: kubecodriverv1alpha1.SecuritySpec{},
 			wantCheck: func(sc *corev1.SecurityContext) error {
 				if sc.Privileged != nil {
 					t.Error("expected Privileged to be nil")
@@ -101,7 +101,7 @@ func TestBuildSecurityContext(t *testing.T) {
 		},
 		{
 			name: "nil capabilities",
-			securitySpec: toev1alpha1.SecuritySpec{
+			securitySpec: kubecodriverv1alpha1.SecuritySpec{
 				Capabilities: nil,
 			},
 			wantCheck: func(sc *corev1.SecurityContext) error {

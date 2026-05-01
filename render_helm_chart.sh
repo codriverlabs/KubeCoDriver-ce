@@ -11,7 +11,7 @@ tar -xf ./*.tgz
 AWS_ACCOUNT_ID=864899852480
 AWS_REGION=ap-south-1
 helm template --debug \
---set-string global.registry.repository=864899852480.dkr.ecr.ap-south-1.amazonaws.com/codriverlabs/toe \
+--set-string global.registry.repository=864899852480.dkr.ecr.ap-south-1.amazonaws.com/codriverlabs/kubecodriver \
 --set-string controller.image.tag=$VERSION \
---set-string collector.image.tag=$VERSION toe-operator-$VERSION ./toe-operator > template.yaml
+--set-string collector.image.tag=$VERSION kubecodriver-operator-$VERSION ./kubecodriver-operator > template.yaml
 cd ..

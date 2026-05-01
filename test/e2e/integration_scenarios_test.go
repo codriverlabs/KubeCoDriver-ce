@@ -12,7 +12,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"toe/api/v1alpha1"
+	"github.com/codriverlabs/KubeCoDriver/api/v1alpha1"
 )
 
 var _ = Describe("Integration Scenarios", func() {
@@ -20,7 +20,7 @@ var _ = Describe("Integration Scenarios", func() {
 
 	BeforeEach(func() {
 		namespace = CreateSimpleTestNamespace()
-		CreateSimpleTestPowerToolConfig("integration-config", namespace.Name)
+		CreateSimpleTestCoDriverTool("integration-config", namespace.Name)
 	})
 
 	AfterEach(func() {
@@ -72,8 +72,8 @@ var _ = Describe("Integration Scenarios", func() {
 				return updated.Status.ReadyReplicas
 			}, "60s", "2s").Should(Equal(int32(3)))
 
-			By("creating PowerTool to profile the web application")
-			spec := v1alpha1.PowerToolSpec{
+			By("creating CoDriverJob to profile the web application")
+			spec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
@@ -90,11 +90,11 @@ var _ = Describe("Integration Scenarios", func() {
 					Mode: "ephemeral",
 				},
 			}
-			powerTool := CreateSimpleTestPowerTool("web-app-profile", namespace.Name, spec)
+			coDriverJob := CreateSimpleTestCoDriverJob("web-app-profile", namespace.Name, spec)
 
-			By("verifying PowerTool targets all deployment pods")
+			By("verifying CoDriverJob targets all deployment pods")
 			Eventually(func() int {
-				updated := GetSimplePowerTool(powerTool)
+				updated := GetSimpleCoDriverJob(coDriverJob)
 				return len(updated.Status.ActivePods)
 			}, "60s", "2s").Should(Equal(3))
 		})
@@ -137,8 +137,8 @@ var _ = Describe("Integration Scenarios", func() {
 			}
 			Expect(simpleK8sClient.Create(simpleCtx, statefulSet)).To(Succeed())
 
-			By("creating PowerTool for database profiling")
-			spec := v1alpha1.PowerToolSpec{
+			By("creating CoDriverJob for database profiling")
+			spec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
@@ -156,11 +156,11 @@ var _ = Describe("Integration Scenarios", func() {
 					Mode: "ephemeral",
 				},
 			}
-			powerTool := CreateSimpleTestPowerTool("database-profile", namespace.Name, spec)
+			coDriverJob := CreateSimpleTestCoDriverJob("database-profile", namespace.Name, spec)
 
 			By("verifying database profiling configuration")
-			WaitForSimplePowerToolPhase(powerTool, "Pending")
-			updated := GetSimplePowerTool(powerTool)
+			WaitForSimpleCoDriverJobPhase(coDriverJob, "Pending")
+			updated := GetSimpleCoDriverJob(coDriverJob)
 			Expect(updated.Spec.Tool.Args).To(ContainElement("--database-mode"))
 		})
 
@@ -203,8 +203,8 @@ var _ = Describe("Integration Scenarios", func() {
 				Expect(simpleK8sClient.Create(simpleCtx, deployment)).To(Succeed())
 			}
 
-			By("creating PowerTool to profile all microservices")
-			spec := v1alpha1.PowerToolSpec{
+			By("creating CoDriverJob to profile all microservices")
+			spec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
@@ -222,11 +222,11 @@ var _ = Describe("Integration Scenarios", func() {
 					Mode: "ephemeral",
 				},
 			}
-			powerTool := CreateSimpleTestPowerTool("microservices-profile", namespace.Name, spec)
+			coDriverJob := CreateSimpleTestCoDriverJob("microservices-profile", namespace.Name, spec)
 
 			By("verifying all microservice pods are targeted")
 			Eventually(func() int {
-				updated := GetSimplePowerTool(powerTool)
+				updated := GetSimpleCoDriverJob(coDriverJob)
 				return len(updated.Status.ActivePods)
 			}, "90s", "3s").Should(Equal(6)) // 3 services × 2 replicas
 		})
@@ -239,7 +239,7 @@ var _ = Describe("Integration Scenarios", func() {
 				"app": "multi-tool-app",
 			})
 
-			By("creating multiple PowerToolConfigs")
+			By("creating multiple CoDriverTools")
 			configs := []struct {
 				name string
 				tool string
@@ -251,14 +251,14 @@ var _ = Describe("Integration Scenarios", func() {
 
 			for _, config := range configs {
 				allowPrivileged := true
-				toolConfig := &v1alpha1.PowerToolConfig{
+				toolConfig := &v1alpha1.CoDriverTool{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      config.name,
 						Namespace: namespace.Name,
 					},
-					Spec: v1alpha1.PowerToolConfigSpec{
+					Spec: v1alpha1.CoDriverToolSpec{
 						Name:  config.tool,
-						Image: fmt.Sprintf("ghcr.io/codriverlabs/toe-%s:latest", config.tool),
+						Image: fmt.Sprintf("ghcr.io/codriverlabs/ce/kubecodriver-%s:latest", config.tool),
 						SecurityContext: v1alpha1.SecuritySpec{
 							AllowPrivileged: &allowPrivileged,
 							Capabilities: &v1alpha1.Capabilities{
@@ -270,9 +270,9 @@ var _ = Describe("Integration Scenarios", func() {
 				Expect(simpleK8sClient.Create(simpleCtx, toolConfig)).To(Succeed())
 			}
 
-			By("creating coordinated PowerTools with time offsets")
+			By("creating coordinated CoDriverJobs with time offsets")
 			for i, config := range configs {
-				spec := v1alpha1.PowerToolSpec{
+				spec := v1alpha1.CoDriverJobSpec{
 					Targets: v1alpha1.TargetSpec{
 						LabelSelector: &metav1.LabelSelector{
 							MatchLabels: map[string]string{"app": "multi-tool-app"},
@@ -292,10 +292,10 @@ var _ = Describe("Integration Scenarios", func() {
 					time.Sleep(5 * time.Second)
 				}
 
-				powerTool := CreateSimpleTestPowerTool(fmt.Sprintf("multi-tool-%s", config.tool), namespace.Name, spec)
+				coDriverJob := CreateSimpleTestCoDriverJob(fmt.Sprintf("multi-tool-%s", config.tool), namespace.Name, spec)
 
 				By(fmt.Sprintf("verifying %s tool is configured", config.tool))
-				WaitForSimplePowerToolCondition(powerTool, "ToolConfigured", "True")
+				WaitForSimpleCoDriverJobCondition(coDriverJob, "ToolConfigured", "True")
 			}
 		})
 
@@ -305,8 +305,8 @@ var _ = Describe("Integration Scenarios", func() {
 				"app": "priority-app",
 			})
 
-			By("creating high-priority PowerTool")
-			highPrioritySpec := v1alpha1.PowerToolSpec{
+			By("creating high-priority CoDriverJob")
+			highPrioritySpec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "priority-app"},
@@ -320,10 +320,10 @@ var _ = Describe("Integration Scenarios", func() {
 					Mode: "ephemeral",
 				},
 			}
-			highPriorityTool := CreateSimpleTestPowerTool("high-priority", namespace.Name, highPrioritySpec)
+			highPriorityTool := CreateSimpleTestCoDriverJob("high-priority", namespace.Name, highPrioritySpec)
 
-			By("creating low-priority PowerTool")
-			lowPrioritySpec := v1alpha1.PowerToolSpec{
+			By("creating low-priority CoDriverJob")
+			lowPrioritySpec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "priority-app"},
@@ -337,15 +337,15 @@ var _ = Describe("Integration Scenarios", func() {
 					Mode: "ephemeral",
 				},
 			}
-			lowPriorityTool := CreateSimpleTestPowerTool("low-priority", namespace.Name, lowPrioritySpec)
+			lowPriorityTool := CreateSimpleTestCoDriverJob("low-priority", namespace.Name, lowPrioritySpec)
 
 			By("verifying priority handling")
 			// First tool should succeed
-			WaitForSimplePowerToolPhase(highPriorityTool, "Pending")
+			WaitForSimpleCoDriverJobPhase(highPriorityTool, "Pending")
 
 			// Second tool should detect conflict
 			Eventually(func() string {
-				updated := GetSimplePowerTool(lowPriorityTool)
+				updated := GetSimpleCoDriverJob(lowPriorityTool)
 				if updated.Status.Phase == nil {
 					return ""
 				}
@@ -389,8 +389,8 @@ var _ = Describe("Integration Scenarios", func() {
 			}
 			Expect(simpleK8sClient.Create(simpleCtx, deployment)).To(Succeed())
 
-			By("creating PowerTool for large-scale profiling")
-			spec := v1alpha1.PowerToolSpec{
+			By("creating CoDriverJob for large-scale profiling")
+			spec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
@@ -407,12 +407,12 @@ var _ = Describe("Integration Scenarios", func() {
 					Mode: "ephemeral",
 				},
 			}
-			powerTool := CreateSimpleTestPowerTool("large-scale-profile", namespace.Name, spec)
+			coDriverJob := CreateSimpleTestCoDriverJob("large-scale-profile", namespace.Name, spec)
 
 			By("verifying large-scale profiling performance")
 			startTime := time.Now()
 			Eventually(func() int {
-				updated := GetSimplePowerTool(powerTool)
+				updated := GetSimpleCoDriverJob(coDriverJob)
 				return len(updated.Status.ActivePods)
 			}, "120s", "3s").Should(Equal(10))
 
@@ -467,8 +467,8 @@ var _ = Describe("Integration Scenarios", func() {
 				Expect(simpleK8sClient.Status().Update(simpleCtx, pod)).To(Succeed())
 			}
 
-			By("creating PowerTool under resource constraints")
-			spec := v1alpha1.PowerToolSpec{
+			By("creating CoDriverJob under resource constraints")
+			spec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
@@ -485,11 +485,11 @@ var _ = Describe("Integration Scenarios", func() {
 					Mode: "ephemeral",
 				},
 			}
-			powerTool := CreateSimpleTestPowerTool("constrained-profile", namespace.Name, spec)
+			coDriverJob := CreateSimpleTestCoDriverJob("constrained-profile", namespace.Name, spec)
 
 			By("verifying performance under constraints")
 			Eventually(func() int {
-				updated := GetSimplePowerTool(powerTool)
+				updated := GetSimpleCoDriverJob(coDriverJob)
 				return len(updated.Status.ActivePods)
 			}, "60s", "2s").Should(Equal(5))
 		})
@@ -530,8 +530,8 @@ var _ = Describe("Integration Scenarios", func() {
 			}
 			Expect(simpleK8sClient.Create(simpleCtx, deployment)).To(Succeed())
 
-			By("creating PowerTool")
-			spec := v1alpha1.PowerToolSpec{
+			By("creating CoDriverJob")
+			spec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
@@ -548,10 +548,10 @@ var _ = Describe("Integration Scenarios", func() {
 					Mode: "ephemeral",
 				},
 			}
-			powerTool := CreateSimpleTestPowerTool("recovery-test", namespace.Name, spec)
+			coDriverJob := CreateSimpleTestCoDriverJob("recovery-test", namespace.Name, spec)
 
 			By("waiting for initial profiling setup")
-			WaitForSimplePowerToolPhase(powerTool, "Pending")
+			WaitForSimpleCoDriverJobPhase(coDriverJob, "Pending")
 
 			By("simulating pod restart by updating deployment")
 			updated := &appsv1.Deployment{}
@@ -561,9 +561,9 @@ var _ = Describe("Integration Scenarios", func() {
 			)
 			Expect(simpleK8sClient.Update(simpleCtx, updated)).To(Succeed())
 
-			By("verifying PowerTool handles pod restarts gracefully")
+			By("verifying CoDriverJob handles pod restarts gracefully")
 			Consistently(func() string {
-				current := GetSimplePowerTool(powerTool)
+				current := GetSimpleCoDriverJob(coDriverJob)
 				if current.Status.Phase == nil {
 					return ""
 				}

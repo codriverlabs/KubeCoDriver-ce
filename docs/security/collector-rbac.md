@@ -10,8 +10,8 @@ The collector service requires minimal RBAC permissions for token validation and
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: toe-collector
-  namespace: toe-system
+  name: kubecodriver-collector
+  namespace: kubecodriver-system
 ```
 
 ## Role Permissions (Namespace-Scoped)
@@ -22,8 +22,8 @@ The collector uses a namespace-scoped Role instead of ClusterRole to limit its p
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  namespace: toe-system
-  name: toe-collector-role
+  namespace: kubecodriver-system
+  name: kubecodriver-collector-role
 rules:
 # Token validation - ServiceAccount token review
 - apiGroups: ["authentication.k8s.io"]
@@ -39,7 +39,7 @@ rules:
 - apiGroups: [""]
   resources: ["secrets"]
   verbs: ["get"]
-  resourceNames: ["toe-collector-certs"]
+  resourceNames: ["kubecodriver-collector-certs"]
 ```
 
 ## RoleBinding
@@ -48,15 +48,15 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: toe-collector-rolebinding
-  namespace: toe-system
+  name: kubecodriver-collector-rolebinding
+  namespace: kubecodriver-system
 subjects:
 - kind: ServiceAccount
-  name: toe-collector
-  namespace: toe-system
+  name: kubecodriver-collector
+  namespace: kubecodriver-system
 roleRef:
   kind: Role
-  name: toe-collector-role
+  name: kubecodriver-collector-role
   apiGroup: rbac.authorization.k8s.io
 ```
 
@@ -66,14 +66,14 @@ roleRef:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: toe-collector
-  namespace: toe-system
+  name: kubecodriver-collector
+  namespace: kubecodriver-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  namespace: toe-system
-  name: toe-collector-role
+  namespace: kubecodriver-system
+  name: kubecodriver-collector-role
 rules:
 # Token validation
 - apiGroups: ["authentication.k8s.io"]
@@ -89,21 +89,21 @@ rules:
 - apiGroups: [""]
   resources: ["secrets"]
   verbs: ["get"]
-  resourceNames: ["toe-collector-certs"]
+  resourceNames: ["kubecodriver-collector-certs"]
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: toe-collector-rolebinding
-  namespace: toe-system
+  name: kubecodriver-collector-rolebinding
+  namespace: kubecodriver-system
 subjects:
 - kind: ServiceAccount
-  name: toe-collector
-  namespace: toe-system
+  name: kubecodriver-collector
+  namespace: kubecodriver-system
 roleRef:
   kind: Role
-  name: toe-collector-role
+  name: kubecodriver-collector-role
   apiGroup: rbac.authorization.k8s.io
 ```
 
@@ -113,7 +113,7 @@ roleRef:
 
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│  PowerTool      │    │    Collector     │    │  Kubernetes     │
+│  CoDriverJob      │    │    Collector     │    │  Kubernetes     │
 │  (Client)       │    │    Service       │    │  API Server     │
 │                 │    │                  │    │                 │
 │ 1. Send Token   │───▶│ 2. Validate      │───▶│ 3. TokenReview  │
@@ -127,7 +127,7 @@ roleRef:
 
 | Permission | Purpose | Risk Level | Mitigation |
 |------------|---------|------------|------------|
-| tokenreviews/create | Validate PowerTool tokens | Low | Namespace-scoped, no data access |
+| tokenreviews/create | Validate CoDriverJob tokens | Low | Namespace-scoped, no data access |
 | configmaps/get,list,watch | Read collector configuration | Low | Read-only, specific ConfigMaps |
 | secrets/get | Access TLS certificates | Medium | Restricted to specific secret name |
 
@@ -139,8 +139,8 @@ roleRef:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: toe-collector-certs
-  namespace: toe-system
+  name: kubecodriver-collector-certs
+  namespace: kubecodriver-system
 type: kubernetes.io/tls
 data:
   tls.crt: <base64-encoded-certificate>
@@ -156,11 +156,11 @@ The collector requires TLS certificates for secure communication:
    # Generate self-signed certificate
    openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
      -keyout tls.key -out tls.crt \
-     -subj "/CN=toe-collector.toe-system.svc.cluster.local"
+     -subj "/CN=kubecodriver-collector.kubecodriver-system.svc.cluster.local"
    
    # Create secret
-   kubectl create secret tls toe-collector-certs \
-     --cert=tls.crt --key=tls.key -n toe-system
+   kubectl create secret tls kubecodriver-collector-certs \
+     --cert=tls.crt --key=tls.key -n kubecodriver-system
    ```
 
 2. **cert-manager Integration** (Production):
@@ -168,12 +168,12 @@ The collector requires TLS certificates for secure communication:
    apiVersion: cert-manager.io/v1
    kind: Certificate
    metadata:
-     name: toe-collector-cert
-     namespace: toe-system
+     name: kubecodriver-collector-cert
+     namespace: kubecodriver-system
    spec:
-     secretName: toe-collector-certs
+     secretName: kubecodriver-collector-certs
      dnsNames:
-     - toe-collector.toe-system.svc.cluster.local
+     - kubecodriver-collector.kubecodriver-system.svc.cluster.local
      issuerRef:
        name: cluster-issuer
        kind: ClusterIssuer
@@ -187,11 +187,11 @@ The collector requires TLS certificates for secure communication:
 apiVersion: v1
 kind: Service
 metadata:
-  name: toe-collector
-  namespace: toe-system
+  name: kubecodriver-collector
+  namespace: kubecodriver-system
 spec:
   selector:
-    app: toe-collector
+    app: kubecodriver-collector
   ports:
   - port: 8443
     targetPort: 8443
@@ -206,17 +206,17 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: toe-collector-netpol
-  namespace: toe-system
+  name: kubecodriver-collector-netpol
+  namespace: kubecodriver-system
 spec:
   podSelector:
     matchLabels:
-      app: toe-collector
+      app: kubecodriver-collector
   policyTypes:
   - Ingress
   - Egress
   ingress:
-  # Allow PowerTool connections
+  # Allow CoDriverJob connections
   - from:
     - namespaceSelector: {}  # All namespaces
     ports:
@@ -238,11 +238,11 @@ spec:
 
 1. **Namespace Isolation**:
    - Role instead of ClusterRole
-   - Limited to toe-system namespace
+   - Limited to kubecodriver-system namespace
    - No cross-namespace access
 
 2. **Resource Restrictions**:
-   - No PowerTool/PowerToolConfig access
+   - No CoDriverJob/CoDriverTool access
    - No pod manipulation capabilities
    - No secret access beyond TLS certs
 
@@ -259,7 +259,7 @@ spec:
    - Checks token expiration
 
 2. **Token Scope**:
-   - Tokens are scoped to specific PowerTool
+   - Tokens are scoped to specific CoDriverJob
    - Time-limited based on tool duration
    - Cannot be reused across jobs
 
@@ -271,39 +271,39 @@ Monitor for these collector security events:
 
 ```bash
 # Authentication failures
-kubectl logs -n toe-system deployment/toe-collector | grep "authentication failed"
+kubectl logs -n kubecodriver-system deployment/kubecodriver-collector | grep "authentication failed"
 
 # Unauthorized access attempts
-kubectl logs -n toe-system deployment/toe-collector | grep "unauthorized"
+kubectl logs -n kubecodriver-system deployment/kubecodriver-collector | grep "unauthorized"
 
 # TLS certificate issues
-kubectl logs -n toe-system deployment/toe-collector | grep "tls\|certificate"
+kubectl logs -n kubecodriver-system deployment/kubecodriver-collector | grep "tls\|certificate"
 ```
 
 ### Audit Queries
 
 ```bash
 # Check collector permissions
-kubectl auth can-i --list --as=system:serviceaccount:toe-system:toe-collector -n toe-system
+kubectl auth can-i --list --as=system:serviceaccount:kubecodriver-system:kubecodriver-collector -n kubecodriver-system
 
 # Verify token review access
-kubectl auth can-i create tokenreviews --as=system:serviceaccount:toe-system:toe-collector
+kubectl auth can-i create tokenreviews --as=system:serviceaccount:kubecodriver-system:kubecodriver-collector
 
 # Check secret access
-kubectl auth can-i get secrets/toe-collector-certs --as=system:serviceaccount:toe-system:toe-collector -n toe-system
+kubectl auth can-i get secrets/kubecodriver-collector-certs --as=system:serviceaccount:kubecodriver-system:kubecodriver-collector -n kubecodriver-system
 ```
 
 ### Health Checks
 
 ```bash
 # Test collector endpoint
-curl -k https://toe-collector.toe-system.svc.cluster.local:8443/health
+curl -k https://kubecodriver-collector.kubecodriver-system.svc.cluster.local:8443/health
 
 # Check certificate validity
-openssl s_client -connect toe-collector.toe-system.svc.cluster.local:8443 -servername toe-collector.toe-system.svc.cluster.local
+openssl s_client -connect kubecodriver-collector.kubecodriver-system.svc.cluster.local:8443 -servername kubecodriver-collector.kubecodriver-system.svc.cluster.local
 
 # Verify service account token
-kubectl get serviceaccount toe-collector -n toe-system -o yaml
+kubectl get serviceaccount kubecodriver-collector -n kubecodriver-system -o yaml
 ```
 
 ## Troubleshooting
@@ -319,9 +319,9 @@ kubectl get serviceaccount toe-collector -n toe-system -o yaml
 
 2. **TLS Certificate Issues**:
    ```
-   Error: failed to load TLS certificate: secret "toe-collector-certs" not found
+   Error: failed to load TLS certificate: secret "kubecodriver-collector-certs" not found
    ```
-   - Ensure secret exists in toe-system namespace
+   - Ensure secret exists in kubecodriver-system namespace
    - Check secret has correct tls.crt and tls.key data
 
 3. **ConfigMap Access Denied**:
@@ -335,11 +335,11 @@ kubectl get serviceaccount toe-collector -n toe-system -o yaml
 
 ```bash
 # Test collector RBAC
-kubectl auth can-i create tokenreviews --as=system:serviceaccount:toe-system:toe-collector
-kubectl auth can-i get configmaps --as=system:serviceaccount:toe-system:toe-collector -n toe-system
-kubectl auth can-i get secrets/toe-collector-certs --as=system:serviceaccount:toe-system:toe-collector -n toe-system
+kubectl auth can-i create tokenreviews --as=system:serviceaccount:kubecodriver-system:kubecodriver-collector
+kubectl auth can-i get configmaps --as=system:serviceaccount:kubecodriver-system:kubecodriver-collector -n kubecodriver-system
+kubectl auth can-i get secrets/kubecodriver-collector-certs --as=system:serviceaccount:kubecodriver-system:kubecodriver-collector -n kubecodriver-system
 
 # Check effective permissions
-kubectl describe rolebinding toe-collector-rolebinding -n toe-system
-kubectl describe role toe-collector-role -n toe-system
+kubectl describe rolebinding kubecodriver-collector-rolebinding -n kubecodriver-system
+kubectl describe role kubecodriver-collector-role -n kubecodriver-system
 ```

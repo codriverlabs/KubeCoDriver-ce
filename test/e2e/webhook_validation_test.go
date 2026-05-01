@@ -7,7 +7,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	"toe/api/v1alpha1"
+	"github.com/codriverlabs/KubeCoDriver/api/v1alpha1"
 )
 
 var _ = Describe("Webhook Validation", func() {
@@ -15,7 +15,7 @@ var _ = Describe("Webhook Validation", func() {
 
 	BeforeEach(func() {
 		namespace = CreateSimpleTestNamespace()
-		CreateSimpleTestPowerToolConfig("webhook-config", namespace.Name)
+		CreateSimpleTestCoDriverTool("webhook-config", namespace.Name)
 		CreateSimpleMockTargetPod(namespace.Name, "webhook-pod", map[string]string{
 			"app": "webhook-app",
 		})
@@ -25,21 +25,21 @@ var _ = Describe("Webhook Validation", func() {
 		DeleteSimpleTestNamespace(namespace)
 	})
 
-	Context("PowerTool Validation", func() {
+	Context("CoDriverJob Validation", func() {
 		It("should validate required fields", func() {
-			By("attempting to create PowerTool without required fields")
-			powerTool := &v1alpha1.PowerTool{
+			By("attempting to create CoDriverJob without required fields")
+			coDriverJob := &v1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "invalid-required",
 					Namespace: namespace.Name,
 				},
-				Spec: v1alpha1.PowerToolSpec{
+				Spec: v1alpha1.CoDriverJobSpec{
 					// Missing required fields
 				},
 			}
 
 			By("expecting validation webhook to reject")
-			err := simpleK8sClient.Create(simpleCtx, powerTool)
+			err := simpleK8sClient.Create(simpleCtx, coDriverJob)
 			Expect(err).To(HaveOccurred())
 		})
 
@@ -54,7 +54,7 @@ var _ = Describe("Webhook Validation", func() {
 			}
 
 			for _, name := range invalidNames {
-				spec := v1alpha1.PowerToolSpec{
+				spec := v1alpha1.CoDriverJobSpec{
 					Targets: v1alpha1.TargetSpec{
 						LabelSelector: &metav1.LabelSelector{
 							MatchLabels: map[string]string{"app": "webhook-app"},
@@ -69,7 +69,7 @@ var _ = Describe("Webhook Validation", func() {
 					},
 				}
 
-				powerTool := &v1alpha1.PowerTool{
+				coDriverJob := &v1alpha1.CoDriverJob{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "invalid-name-" + name,
 						Namespace: namespace.Name,
@@ -78,7 +78,7 @@ var _ = Describe("Webhook Validation", func() {
 				}
 
 				By("expecting validation to fail for name: " + name)
-				err := simpleK8sClient.Create(simpleCtx, powerTool)
+				err := simpleK8sClient.Create(simpleCtx, coDriverJob)
 				Expect(err).To(HaveOccurred())
 			}
 		})
@@ -100,7 +100,7 @@ var _ = Describe("Webhook Validation", func() {
 			}
 
 			for _, tc := range testCases {
-				spec := v1alpha1.PowerToolSpec{
+				spec := v1alpha1.CoDriverJobSpec{
 					Targets: v1alpha1.TargetSpec{
 						LabelSelector: &metav1.LabelSelector{
 							MatchLabels: map[string]string{"app": "webhook-app"},
@@ -115,7 +115,7 @@ var _ = Describe("Webhook Validation", func() {
 					},
 				}
 
-				powerTool := &v1alpha1.PowerTool{
+				coDriverJob := &v1alpha1.CoDriverJob{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "duration-" + tc.duration,
 						Namespace: namespace.Name,
@@ -124,13 +124,13 @@ var _ = Describe("Webhook Validation", func() {
 				}
 
 				By("testing duration: " + tc.duration + " (" + tc.description + ")")
-				err := simpleK8sClient.Create(simpleCtx, powerTool)
+				err := simpleK8sClient.Create(simpleCtx, coDriverJob)
 				if tc.shouldFail {
 					Expect(err).To(HaveOccurred())
 				} else {
 					Expect(err).NotTo(HaveOccurred())
 					// Cleanup successful creation
-					Expect(simpleK8sClient.Delete(simpleCtx, powerTool)).To(Succeed())
+					Expect(simpleK8sClient.Delete(simpleCtx, coDriverJob)).To(Succeed())
 				}
 			}
 		})
@@ -151,7 +151,7 @@ var _ = Describe("Webhook Validation", func() {
 				},
 			}
 
-			spec := v1alpha1.PowerToolSpec{
+			spec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: validSelector,
 				},
@@ -163,17 +163,17 @@ var _ = Describe("Webhook Validation", func() {
 					Mode: "ephemeral",
 				},
 			}
-			powerTool := CreateSimpleTestPowerTool("complex-selector", namespace.Name, spec)
+			coDriverJob := CreateSimpleTestCoDriverJob("complex-selector", namespace.Name, spec)
 
 			By("verifying complex selector is accepted")
-			updated := GetSimplePowerTool(powerTool)
+			updated := GetSimpleCoDriverJob(coDriverJob)
 			Expect(updated.Spec.Targets.LabelSelector.MatchLabels).To(HaveLen(2))
 			Expect(updated.Spec.Targets.LabelSelector.MatchExpressions).To(HaveLen(1))
 		})
 
 		It("should validate output configuration consistency", func() {
 			By("testing PVC mode without PVC spec")
-			spec := v1alpha1.PowerToolSpec{
+			spec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "webhook-app"},
@@ -189,7 +189,7 @@ var _ = Describe("Webhook Validation", func() {
 				},
 			}
 
-			powerTool := &v1alpha1.PowerTool{
+			coDriverJob := &v1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "invalid-pvc-config",
 					Namespace: namespace.Name,
@@ -198,13 +198,13 @@ var _ = Describe("Webhook Validation", func() {
 			}
 
 			By("expecting validation to fail for incomplete PVC config")
-			err := simpleK8sClient.Create(simpleCtx, powerTool)
+			err := simpleK8sClient.Create(simpleCtx, coDriverJob)
 			Expect(err).To(HaveOccurred())
 		})
 
 		It("should validate collector configuration", func() {
 			By("testing collector mode with invalid endpoint")
-			spec := v1alpha1.PowerToolSpec{
+			spec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "webhook-app"},
@@ -222,7 +222,7 @@ var _ = Describe("Webhook Validation", func() {
 				},
 			}
 
-			powerTool := &v1alpha1.PowerTool{
+			coDriverJob := &v1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "invalid-collector",
 					Namespace: namespace.Name,
@@ -231,21 +231,21 @@ var _ = Describe("Webhook Validation", func() {
 			}
 
 			By("expecting validation to fail for invalid collector endpoint")
-			err := simpleK8sClient.Create(simpleCtx, powerTool)
+			err := simpleK8sClient.Create(simpleCtx, coDriverJob)
 			Expect(err).To(HaveOccurred())
 		})
 	})
 
-	Context("PowerToolConfig Validation", func() {
+	Context("CoDriverTool Validation", func() {
 		It("should validate security context requirements", func() {
 			By("testing invalid capability combinations")
 			allowPrivileged := false
-			invalidConfig := &v1alpha1.PowerToolConfig{
+			invalidConfig := &v1alpha1.CoDriverTool{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "invalid-security",
 					Namespace: namespace.Name,
 				},
-				Spec: v1alpha1.PowerToolConfigSpec{
+				Spec: v1alpha1.CoDriverToolSpec{
 					Name:  "invalid-tool",
 					Image: "test:latest",
 					SecurityContext: v1alpha1.SecuritySpec{
@@ -273,12 +273,12 @@ var _ = Describe("Webhook Validation", func() {
 
 			for _, image := range invalidImages {
 				allowPrivileged := true
-				config := &v1alpha1.PowerToolConfig{
+				config := &v1alpha1.CoDriverTool{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "invalid-image-" + image,
 						Namespace: namespace.Name,
 					},
-					Spec: v1alpha1.PowerToolConfigSpec{
+					Spec: v1alpha1.CoDriverToolSpec{
 						Name:  "test-tool",
 						Image: image,
 						SecurityContext: v1alpha1.SecuritySpec{
@@ -296,12 +296,12 @@ var _ = Describe("Webhook Validation", func() {
 		It("should validate allowed namespaces format", func() {
 			By("testing invalid namespace names")
 			allowPrivileged := true
-			invalidConfig := &v1alpha1.PowerToolConfig{
+			invalidConfig := &v1alpha1.CoDriverTool{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "invalid-namespaces",
 					Namespace: namespace.Name,
 				},
-				Spec: v1alpha1.PowerToolConfigSpec{
+				Spec: v1alpha1.CoDriverToolSpec{
 					Name:  "test-tool",
 					Image: "test:latest",
 					SecurityContext: v1alpha1.SecuritySpec{
@@ -323,8 +323,8 @@ var _ = Describe("Webhook Validation", func() {
 
 	Context("Mutation Webhook", func() {
 		It("should apply default values", func() {
-			By("creating PowerTool without optional fields")
-			spec := v1alpha1.PowerToolSpec{
+			By("creating CoDriverJob without optional fields")
+			spec := v1alpha1.CoDriverJobSpec{
 				Targets: v1alpha1.TargetSpec{
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{"app": "webhook-app"},
@@ -340,54 +340,54 @@ var _ = Describe("Webhook Validation", func() {
 					// No Path specified
 				},
 			}
-			powerTool := CreateSimpleTestPowerTool("default-values", namespace.Name, spec)
+			coDriverJob := CreateSimpleTestCoDriverJob("default-values", namespace.Name, spec)
 
 			By("verifying default values are applied")
-			_ = GetSimplePowerTool(powerTool)
+			_ = GetSimpleCoDriverJob(coDriverJob)
 		})
 
 		It("should normalize resource names", func() {
-			By("creating PowerTool with name that needs normalization")
-			spec := CreateSimpleBasicPowerToolSpec(map[string]string{"app": "webhook-app"})
-			powerTool := CreateSimpleTestPowerTool("Name-With-Caps", namespace.Name, spec)
+			By("creating CoDriverJob with name that needs normalization")
+			spec := CreateSimpleBasicCoDriverJobSpec(map[string]string{"app": "webhook-app"})
+			coDriverJob := CreateSimpleTestCoDriverJob("Name-With-Caps", namespace.Name, spec)
 
 			By("verifying name normalization")
-			updated := GetSimplePowerTool(powerTool)
+			updated := GetSimpleCoDriverJob(coDriverJob)
 			Expect(updated.Name).To(Equal("name-with-caps"))
 		})
 
 		It("should add required labels and annotations", func() {
-			By("creating PowerTool")
-			spec := CreateSimpleBasicPowerToolSpec(map[string]string{"app": "webhook-app"})
-			powerTool := CreateSimpleTestPowerTool("label-annotation-test", namespace.Name, spec)
+			By("creating CoDriverJob")
+			spec := CreateSimpleBasicCoDriverJobSpec(map[string]string{"app": "webhook-app"})
+			coDriverJob := CreateSimpleTestCoDriverJob("label-annotation-test", namespace.Name, spec)
 
 			By("verifying required labels and annotations are added")
-			updated := GetSimplePowerTool(powerTool)
-			Expect(updated.Labels).To(HaveKey("toe.run/managed-by"))
-			Expect(updated.Annotations).To(HaveKey("toe.run/created-at"))
+			updated := GetSimpleCoDriverJob(coDriverJob)
+			Expect(updated.Labels).To(HaveKey("kubecodriver.codriverlabs.ai/managed-by"))
+			Expect(updated.Annotations).To(HaveKey("kubecodriver.codriverlabs.ai/created-at"))
 		})
 	})
 
 	Context("Webhook Error Handling", func() {
 		It("should handle webhook timeout gracefully", func() {
-			By("creating PowerTool that might trigger webhook timeout")
-			spec := CreateSimpleBasicPowerToolSpec(map[string]string{"app": "webhook-app"})
-			powerTool := CreateSimpleTestPowerTool("timeout-test", namespace.Name, spec)
+			By("creating CoDriverJob that might trigger webhook timeout")
+			spec := CreateSimpleBasicCoDriverJobSpec(map[string]string{"app": "webhook-app"})
+			coDriverJob := CreateSimpleTestCoDriverJob("timeout-test", namespace.Name, spec)
 
-			By("verifying PowerTool is eventually created despite potential delays")
+			By("verifying CoDriverJob is eventually created despite potential delays")
 			Eventually(func() error {
-				return simpleK8sClient.Get(simpleCtx, types.NamespacedName{Name: powerTool.Name, Namespace: powerTool.Namespace}, powerTool)
+				return simpleK8sClient.Get(simpleCtx, types.NamespacedName{Name: coDriverJob.Name, Namespace: coDriverJob.Namespace}, coDriverJob)
 			}, "60s", "2s").Should(Succeed())
 		})
 
 		It("should provide clear validation error messages", func() {
-			By("creating PowerTool with multiple validation errors")
-			powerTool := &v1alpha1.PowerTool{
+			By("creating CoDriverJob with multiple validation errors")
+			coDriverJob := &v1alpha1.CoDriverJob{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "multi-error-test",
 					Namespace: namespace.Name,
 				},
-				Spec: v1alpha1.PowerToolSpec{
+				Spec: v1alpha1.CoDriverJobSpec{
 					Targets: v1alpha1.TargetSpec{
 						// Missing label selector
 					},
@@ -402,7 +402,7 @@ var _ = Describe("Webhook Validation", func() {
 			}
 
 			By("expecting detailed validation error")
-			err := simpleK8sClient.Create(simpleCtx, powerTool)
+			err := simpleK8sClient.Create(simpleCtx, coDriverJob)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("validation"))
 		})

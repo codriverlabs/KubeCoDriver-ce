@@ -7,8 +7,8 @@ Both clusters and images use commit-based naming for **complete isolation**:
 ```
 Commit: a1b2c3d4
 
-Cluster: toe-e2e-a1b2c3d4
-Image:   toe-controller:e2e-a1b2c3d4
+Cluster: kubecodriver-e2e-a1b2c3d4
+Image:   kubecodriver-controller:e2e-a1b2c3d4
 ```
 
 ## Benefits
@@ -19,13 +19,13 @@ Run multiple test suites simultaneously without conflicts:
 ```bash
 # Terminal 1 - PR #123 (commit: abc123)
 ./test/e2e-kind/run-tests.sh
-# Creates: toe-e2e-abc123
-# Builds:  toe-controller:e2e-abc123
+# Creates: kubecodriver-e2e-abc123
+# Builds:  kubecodriver-controller:e2e-abc123
 
 # Terminal 2 - PR #456 (commit: def456)
 ./test/e2e-kind/run-tests.sh
-# Creates: toe-e2e-def456
-# Builds:  toe-controller:e2e-def456
+# Creates: kubecodriver-e2e-def456
+# Builds:  kubecodriver-controller:e2e-def456
 
 # No conflicts!
 ```
@@ -36,15 +36,15 @@ Each commit gets its own image - no cache conflicts:
 ```bash
 # First run - builds image
 GITHUB_SHA=abc123 ./test/e2e-kind/run-tests.sh
-# Builds: toe-controller:e2e-abc123
+# Builds: kubecodriver-controller:e2e-abc123
 
 # Second run - reuses image
 GITHUB_SHA=abc123 ./test/e2e-kind/run-tests.sh
-# Reuses: toe-controller:e2e-abc123 (no rebuild)
+# Reuses: kubecodriver-controller:e2e-abc123 (no rebuild)
 
 # Different commit - new image
 GITHUB_SHA=def456 ./test/e2e-kind/run-tests.sh
-# Builds: toe-controller:e2e-def456 (isolated)
+# Builds: kubecodriver-controller:e2e-def456 (isolated)
 ```
 
 ### ✅ CI/CD Safety
@@ -57,15 +57,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - run: ./test/e2e-kind/run-tests.sh
-    # Uses: toe-e2e-<pr-123-commit>
-    # Image: toe-controller:e2e-<pr-123-commit>
+    # Uses: kubecodriver-e2e-<pr-123-commit>
+    # Image: kubecodriver-controller:e2e-<pr-123-commit>
 
   e2e-pr-456:
     runs-on: ubuntu-latest
     steps:
     - run: ./test/e2e-kind/run-tests.sh
-    # Uses: toe-e2e-<pr-456-commit>
-    # Image: toe-controller:e2e-<pr-456-commit>
+    # Uses: kubecodriver-e2e-<pr-456-commit>
+    # Image: kubecodriver-controller:e2e-<pr-456-commit>
 ```
 
 ### ✅ Debugging
@@ -76,15 +76,15 @@ Keep specific test environment for investigation:
 GITHUB_SHA=abc123 KEEP_CLUSTER=true ./test/e2e-kind/run-tests.sh
 
 # Cluster and image remain:
-# - toe-e2e-abc123
-# - toe-controller:e2e-abc123
+# - kubecodriver-e2e-abc123
+# - kubecodriver-controller:e2e-abc123
 
 # Investigate
-kubectl --context kind-toe-e2e-abc123 get pods -A
+kubectl --context kind-kubecodriver-e2e-abc123 get pods -A
 
 # Cleanup when done
-kind delete cluster --name toe-e2e-abc123
-docker rmi toe-controller:e2e-abc123
+kind delete cluster --name kubecodriver-e2e-abc123
+docker rmi kubecodriver-controller:e2e-abc123
 ```
 
 ## How It Works
@@ -105,16 +105,16 @@ COMMIT_HASH="local"
 ### 2. Resource Naming
 
 ```bash
-CLUSTER_NAME="toe-e2e-${COMMIT_HASH}"
+CLUSTER_NAME="kubecodriver-e2e-${COMMIT_HASH}"
 IMAGE_TAG="e2e-${COMMIT_HASH}"
-IMAGE_NAME="toe-controller:${IMAGE_TAG}"
+IMAGE_NAME="kubecodriver-controller:${IMAGE_TAG}"
 ```
 
 ### 3. Build Process
 
 ```bash
 # Check if image exists
-if ! docker images | grep -q "toe-controller.*${IMAGE_TAG}"; then
+if ! docker images | grep -q "kubecodriver-controller.*${IMAGE_TAG}"; then
     # Build with commit-specific tag
     make docker-build IMG="$IMAGE_NAME"
 fi
@@ -127,8 +127,8 @@ kind load docker-image "$IMAGE_NAME" --name "$CLUSTER_NAME"
 
 ```bash
 # Deploy with commit-specific image
-cat manifests/toe-controller.yaml | \
-    sed "s|image: toe-controller:e2e|image: $IMAGE_NAME|g" | \
+cat manifests/kubecodriver-controller.yaml | \
+    sed "s|image: kubecodriver-controller:e2e|image: $IMAGE_NAME|g" | \
     kubectl apply -f -
 ```
 
@@ -138,10 +138,10 @@ cat manifests/toe-controller.yaml | \
 
 ```bash
 # List all E2E clusters
-kind get clusters | grep "^toe-e2e-"
+kind get clusters | grep "^kubecodriver-e2e-"
 
 # List all E2E images
-docker images | grep "toe-controller.*e2e-"
+docker images | grep "kubecodriver-controller.*e2e-"
 ```
 
 ### Cleanup Strategies
@@ -168,12 +168,12 @@ CLEANUP_IMAGES=true ./test/e2e-kind/run-tests.sh
 #### 4. Manual Cleanup
 ```bash
 # Specific commit
-kind delete cluster --name toe-e2e-abc123
-docker rmi toe-controller:e2e-abc123
+kind delete cluster --name kubecodriver-e2e-abc123
+docker rmi kubecodriver-controller:e2e-abc123
 
 # All E2E resources
-kind get clusters | grep "^toe-e2e-" | xargs -I {} kind delete cluster --name {}
-docker images | grep "toe-controller.*e2e-" | awk '{print $1":"$2}' | xargs docker rmi
+kind get clusters | grep "^kubecodriver-e2e-" | xargs -I {} kind delete cluster --name {}
+docker images | grep "kubecodriver-controller.*e2e-" | awk '{print $1":"$2}' | xargs docker rmi
 ```
 
 ## Examples
@@ -185,15 +185,15 @@ docker images | grep "toe-controller.*e2e-" | awk '{print $1":"$2}' | xargs dock
 ./test/e2e-kind/run-tests.sh
 
 # Creates:
-# - Cluster: toe-e2e-a1b2c3d
-# - Image: toe-controller:e2e-a1b2c3d
+# - Cluster: kubecodriver-e2e-a1b2c3d
+# - Image: kubecodriver-controller:e2e-a1b2c3d
 
 # Make code changes, commit: b2c3d4e5
 ./test/e2e-kind/run-tests.sh
 
 # Creates:
-# - Cluster: toe-e2e-b2c3d4e
-# - Image: toe-controller:e2e-b2c3d4e
+# - Cluster: kubecodriver-e2e-b2c3d4e
+# - Image: kubecodriver-controller:e2e-b2c3d4e
 
 # Both environments isolated!
 ```
@@ -203,13 +203,13 @@ docker images | grep "toe-controller.*e2e-" | awk '{print $1":"$2}' | xargs dock
 ```bash
 # PR #123 - Commit: abc123
 GITHUB_SHA=abc123 ./test/e2e-kind/run-tests.sh
-# Cluster: toe-e2e-abc123
-# Image: toe-controller:e2e-abc123
+# Cluster: kubecodriver-e2e-abc123
+# Image: kubecodriver-controller:e2e-abc123
 
 # PR #456 - Commit: def456 (runs simultaneously)
 GITHUB_SHA=def456 ./test/e2e-kind/run-tests.sh
-# Cluster: toe-e2e-def456
-# Image: toe-controller:e2e-def456
+# Cluster: kubecodriver-e2e-def456
+# Image: kubecodriver-controller:e2e-def456
 
 # No interference!
 ```
@@ -221,28 +221,28 @@ GITHUB_SHA=def456 ./test/e2e-kind/run-tests.sh
 GITHUB_SHA=abc123 KEEP_CLUSTER=true ./test/e2e-kind/run-tests.sh
 
 # Test fails - environment preserved
-# Cluster: toe-e2e-abc123
-# Image: toe-controller:e2e-abc123
+# Cluster: kubecodriver-e2e-abc123
+# Image: kubecodriver-controller:e2e-abc123
 
 # Investigate
-kubectl --context kind-toe-e2e-abc123 get all -A
-kubectl --context kind-toe-e2e-abc123 logs -n toe-system -l app=toe-controller
+kubectl --context kind-kubecodriver-e2e-abc123 get all -A
+kubectl --context kind-kubecodriver-e2e-abc123 logs -n kubecodriver-system -l app=kubecodriver-controller
 
 # Fix code, test again with same environment
 GITHUB_SHA=abc123 ./test/e2e-kind/run-tests.sh
-# Reuses image: toe-controller:e2e-abc123 (no rebuild)
+# Reuses image: kubecodriver-controller:e2e-abc123 (no rebuild)
 
 # Cleanup when done
-kind delete cluster --name toe-e2e-abc123
-docker rmi toe-controller:e2e-abc123
+kind delete cluster --name kubecodriver-e2e-abc123
+docker rmi kubecodriver-controller:e2e-abc123
 ```
 
 ## Comparison
 
 ### Before (Shared Resources)
 ```
-Cluster: toe-e2e (shared)
-Image: toe-controller:e2e (shared)
+Cluster: kubecodriver-e2e (shared)
+Image: kubecodriver-controller:e2e (shared)
 
 Problems:
 ❌ Parallel tests conflict
@@ -253,8 +253,8 @@ Problems:
 
 ### After (Isolated Resources)
 ```
-Cluster: toe-e2e-<commit> (isolated)
-Image: toe-controller:e2e-<commit> (isolated)
+Cluster: kubecodriver-e2e-<commit> (isolated)
+Image: kubecodriver-controller:e2e-<commit> (isolated)
 
 Benefits:
 ✅ Parallel tests work
@@ -267,8 +267,8 @@ Benefits:
 ## Summary
 
 **Complete Isolation Achieved:**
-- ✅ Cluster: `toe-e2e-<commit-hash>`
-- ✅ Image: `toe-controller:e2e-<commit-hash>`
+- ✅ Cluster: `kubecodriver-e2e-<commit-hash>`
+- ✅ Image: `kubecodriver-controller:e2e-<commit-hash>`
 - ✅ Parallel testing supported
 - ✅ Build caching per commit
 - ✅ CI/CD safe

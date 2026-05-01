@@ -35,10 +35,10 @@ func (tm *K8sTokenManager) GenerateToken(ctx context.Context, jobID string, dura
 		},
 	}
 
-	// Request token from collector's ServiceAccount in toe-system
-	result, err := tm.client.CoreV1().ServiceAccounts("toe-system").CreateToken(
+	// Request token from collector's ServiceAccount in kubecodriver-system
+	result, err := tm.client.CoreV1().ServiceAccounts("kubecodriver-system").CreateToken(
 		ctx,
-		"toe-collector", // Collector's ServiceAccount (with kustomize prefix)
+		"kubecodriver-collector", // Collector's ServiceAccount (with kustomize prefix)
 		treq,
 		metav1.CreateOptions{},
 	)
