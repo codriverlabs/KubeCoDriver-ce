@@ -21,7 +21,7 @@ RUN --mount=type=cache,target=/gomodcache --mount=type=cache,target=/gocache \
     go build -a -ldflags '-extldflags "-static"' -o manager cmd/main.go
 
 # Use EKS minimal base image (nonroot, AL2023-based, ~27MB)
-FROM public.ecr.aws/eks-distro-build-tooling/eks-distro-minimal-base:latest-al23@sha256:cc6a42d7466110f8445a5fd7acd32461367b5cf1067a5ac7760dcb9f4f0ae507
+FROM public.ecr.aws/eks-distro-build-tooling/eks-distro-minimal-base:latest-al23@sha256:b9188d3b949bae3e3f22ab3d0f3e0e450aaa4faec03deac31298031596f3aa19
 WORKDIR /
 COPY --from=builder /workspace/manager .
 USER 65532:65532
