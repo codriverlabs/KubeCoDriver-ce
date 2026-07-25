@@ -18,10 +18,10 @@ import (
 
 var _ = Describe("Ephemeral Container Profiling", func() {
 	var (
-		testNs    *corev1.Namespace
-		targetPod *corev1.Pod
+		testNs      *corev1.Namespace
+		targetPod   *corev1.Pod
 		coDriverJob *v1alpha1.CoDriverJob
-		ctx       = context.Background()
+		ctx         = context.Background()
 	)
 
 	BeforeEach(func() {
