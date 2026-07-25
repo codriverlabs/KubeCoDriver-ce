@@ -40,17 +40,17 @@ metadata:
 ```yaml
 # CoDriverTool lookup (read-only)
 - apiGroups: ["kubecodriver.codriverlabs.ai"]
-  resources: ["powertoolconfigs"]
+  resources: ["codrivertools"]
   verbs: ["get", "list", "watch"]
 
 # CoDriverTool status updates
 - apiGroups: ["kubecodriver.codriverlabs.ai"]
-  resources: ["powertoolconfigs/status"]
+  resources: ["codrivertools/status"]
   verbs: ["get", "update", "patch"]
 
 # CoDriverTool finalizers
 - apiGroups: ["kubecodriver.codriverlabs.ai"]
-  resources: ["powertoolconfigs/finalizers"]
+  resources: ["codrivertools/finalizers"]
   verbs: ["update"]
 ```
 
@@ -113,7 +113,7 @@ rules:
 - apiGroups:
   - kubecodriver.codriverlabs.ai
   resources:
-  - powertoolconfigs
+  - codrivertools
   verbs:
   - get
   - list
@@ -121,13 +121,13 @@ rules:
 - apiGroups:
   - kubecodriver.codriverlabs.ai
   resources:
-  - powertoolconfigs/finalizers
+  - codrivertools/finalizers
   verbs:
   - update
 - apiGroups:
   - kubecodriver.codriverlabs.ai
   resources:
-  - powertoolconfigs/status
+  - codrivertools/status
   verbs:
   - get
   - patch
@@ -191,7 +191,7 @@ subjects:
 | Permission | Justification | Risk Level |
 |------------|---------------|------------|
 | powertools/* | Core functionality - manage CoDriverJob lifecycle | Low |
-| powertoolconfigs/get,list,watch | Tool configuration lookup - read-only | Low |
+| codrivertools/get,list,watch | Tool configuration lookup - read-only | Low |
 | pods/update,patch | Ephemeral container creation | Medium |
 | pods/ephemeralcontainers/* | Direct ephemeral container management | Medium |
 | configmaps/get,list,watch | Token configuration - read-only | Low |
@@ -236,7 +236,7 @@ kubectl get events --field-selector involvedObject.kind=ClusterRole
 kubectl auth can-i --list --as=system:serviceaccount:kubecodriver-system:kubecodriver-controller-manager
 
 # Check CoDriverTool access
-kubectl auth can-i create powertoolconfigs --as=system:serviceaccount:kubecodriver-system:kubecodriver-controller-manager
+kubectl auth can-i create codrivertools --as=system:serviceaccount:kubecodriver-system:kubecodriver-controller-manager
 
 # Verify pod access scope
 kubectl auth can-i delete pods --as=system:serviceaccount:kubecodriver-system:kubecodriver-controller-manager
@@ -248,9 +248,9 @@ kubectl auth can-i delete pods --as=system:serviceaccount:kubecodriver-system:ku
 
 1. **CoDriverTool Not Found**:
    ```
-   Error: failed to get tool configuration: powertoolconfigs.kubecodriver.codriverlabs.ai "aperf-config" is forbidden
+   Error: failed to get tool configuration: codrivertools.kubecodriver.codriverlabs.ai "aperf-config" is forbidden
    ```
-   - Check ClusterRole includes powertoolconfigs get/list/watch
+   - Check ClusterRole includes codrivertools get/list/watch
    - Verify ClusterRoleBinding is correct
 
 2. **Ephemeral Container Creation Failed**:
@@ -273,7 +273,7 @@ kubectl auth can-i delete pods --as=system:serviceaccount:kubecodriver-system:ku
 # Test controller permissions
 kubectl auth can-i get powertools --as=system:serviceaccount:kubecodriver-system:kubecodriver-controller-manager
 kubectl auth can-i update pods/ephemeralcontainers --as=system:serviceaccount:kubecodriver-system:kubecodriver-controller-manager
-kubectl auth can-i get powertoolconfigs --as=system:serviceaccount:kubecodriver-system:kubecodriver-controller-manager
+kubectl auth can-i get codrivertools --as=system:serviceaccount:kubecodriver-system:kubecodriver-controller-manager
 
 # Check effective permissions
 kubectl describe clusterrolebinding kubecodriver-manager-rolebinding

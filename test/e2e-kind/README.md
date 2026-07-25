@@ -228,7 +228,7 @@ kubectl get all -A
 
 # Check KubeCoDriver resources
 kubectl get powertools -A -o yaml
-kubectl get powertoolconfigs -A -o yaml
+kubectl get codrivertools -A -o yaml
 
 # Check logs
 kubectl logs -n kubecodriver-system -l app=kubecodriver-controller --tail=100

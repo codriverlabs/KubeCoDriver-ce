@@ -142,7 +142,7 @@ kubectl get pods -n kubecodriver-system
 kubectl get crd | grep codriverlabs
 
 # Check CoDriverJob configurations
-kubectl get powertoolconfigs -n kubecodriver-system
+kubectl get codrivertools -n kubecodriver-system
 
 # View controller logs
 kubectl logs -n kubecodriver-system deployment/kubecodriver-operator-controller-manager
@@ -157,7 +157,7 @@ After deployment, CoDriverJob configurations are automatically created:
 
 ```bash
 # List available tools
-kubectl get powertoolconfigs -n kubecodriver-system
+kubectl get codrivertools -n kubecodriver-system
 
 # Expected output:
 # NAME           AGE
@@ -195,8 +195,8 @@ helm uninstall kubecodriver-operator -n kubecodriver-system
 kubectl delete -f https://github.com/codriverlabs/KubeCoDriver/releases/download/v1.1.0/kubecodriver-operator-v1.1.0.yaml
 
 # Remove CRDs (this will delete all CoDriverJob resources!)
-kubectl delete crd powertools.kubecodriver.codriverlabs.ai
-kubectl delete crd powertoolconfigs.kubecodriver.codriverlabs.ai
+kubectl delete crd codriverjobs.kubecodriver.codriverlabs.ai
+kubectl delete crd codrivertools.kubecodriver.codriverlabs.ai
 
 # Remove namespace
 kubectl delete namespace kubecodriver-system
