@@ -107,7 +107,7 @@ securityContext:
 - `api/v1alpha1/common_types.go` - Added RunAsRoot field
 - `internal/controller/powertool_controller.go` - Implemented runAsRoot logic
 - `internal/controller/runasroot_test.go` - Added unit tests
-- `config/crd/bases/kubecodriver.codriverlabs.ai_powertoolconfigs.yaml` - Generated CRD
+- `config/crd/bases/kubecodriver.codriverlabs.ai_codrivertools.yaml` - Generated CRD
 
 ## Next Steps
 1. Update CoDriverTool examples to use runAsRoot for aperf

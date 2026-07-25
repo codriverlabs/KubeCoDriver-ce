@@ -232,7 +232,7 @@ metadata:
   namespace: kubecodriver-system
 rules:
 - apiGroups: ["kubecodriver.codriverlabs.ai"]
-  resources: ["powertoolconfigs"]
+  resources: ["codrivertools"]
   verbs: ["create", "update"]
   resourceNames: ["aperf-config", "perf-config"]  # Explicit allow-list
 ```

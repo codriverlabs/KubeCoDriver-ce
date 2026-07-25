@@ -27,10 +27,10 @@ metadata:
   name: powertool-admin-role
 rules:
 - apiGroups: ["kubecodriver.codriverlabs.ai"]
-  resources: ["powertools", "powertoolconfigs"]
+  resources: ["codrivertools", "codriverjobs"]
   verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
 - apiGroups: ["kubecodriver.codriverlabs.ai"]
-  resources: ["powertools/status", "powertoolconfigs/status"]
+  resources: ["codrivertools/status", "codriverjobs/status"]
   verbs: ["get", "patch", "update"]
 ```
 
@@ -61,10 +61,10 @@ rules:
   resources: ["powertools/status"]
   verbs: ["get", "patch", "update"]
 - apiGroups: ["kubecodriver.codriverlabs.ai"]
-  resources: ["powertoolconfigs"]
+  resources: ["codrivertools"]
   verbs: ["get", "list", "watch"]
 - apiGroups: ["kubecodriver.codriverlabs.ai"]
-  resources: ["powertoolconfigs/status"]
+  resources: ["codrivertools/status"]
   verbs: ["get"]
 ```
 
@@ -90,10 +90,10 @@ metadata:
   name: powertool-viewer-role
 rules:
 - apiGroups: ["kubecodriver.codriverlabs.ai"]
-  resources: ["powertools", "powertoolconfigs"]
+  resources: ["codrivertools", "codriverjobs"]
   verbs: ["get", "list", "watch"]
 - apiGroups: ["kubecodriver.codriverlabs.ai"]
-  resources: ["powertools/status", "powertoolconfigs/status"]
+  resources: ["codrivertools/status", "codriverjobs/status"]
   verbs: ["get"]
 ```
 
@@ -224,12 +224,12 @@ roleRef:
 
 ```bash
 # Test admin permissions
-kubectl auth can-i create powertoolconfigs --as=user:admin@company.com
-kubectl auth can-i delete powertoolconfigs --as=user:admin@company.com
+kubectl auth can-i create codrivertools --as=user:admin@company.com
+kubectl auth can-i delete codrivertools --as=user:admin@company.com
 
 # Test editor permissions
 kubectl auth can-i create powertools --as=user:developer@company.com
-kubectl auth can-i create powertoolconfigs --as=user:developer@company.com  # Should be false
+kubectl auth can-i create codrivertools --as=user:developer@company.com  # Should be false
 
 # Test viewer permissions
 kubectl auth can-i get powertools --as=user:monitor@company.com

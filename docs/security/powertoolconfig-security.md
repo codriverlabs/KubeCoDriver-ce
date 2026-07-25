@@ -15,10 +15,10 @@ Only cluster administrators can create and modify CoDriverTool resources:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: powertoolconfig-admin
+  name: codrivertool-admin
 rules:
 - apiGroups: ["kubecodriver.codriverlabs.ai"]
-  resources: ["powertoolconfigs"]
+  resources: ["codrivertools"]
   verbs: ["create", "update", "patch", "delete", "get", "list", "watch"]
 ```
 
@@ -36,7 +36,7 @@ rules:
 - apiGroups: ["kubecodriver.codriverlabs.ai"]
   resources: ["powertools"]
   verbs: ["create", "update", "patch", "delete", "get", "list", "watch"]
-# Note: No powertoolconfigs permissions
+# Note: No codrivertools permissions
 ```
 
 ## Security Configuration
@@ -252,10 +252,10 @@ webhooks:
 2. **Regular Security Reviews**:
    ```bash
    # Audit all CoDriverTools
-   kubectl get powertoolconfigs -A -o yaml | grep -A 10 security:
+   kubectl get codrivertools -A -o yaml | grep -A 10 security:
    
    # Check for privileged tools
-   kubectl get powertoolconfigs -A -o jsonpath='{range .items[*]}{.metadata.name}: {.spec.security.allowPrivileged}{"\n"}{end}'
+   kubectl get codrivertools -A -o jsonpath='{range .items[*]}{.metadata.name}: {.spec.security.allowPrivileged}{"\n"}{end}'
    ```
 
 3. **Documentation and Approval**:
@@ -288,10 +288,10 @@ webhooks:
 1. **Use Existing Configurations**:
    ```bash
    # List available tools
-   kubectl get powertoolconfigs -n kubecodriver-system
+   kubectl get codrivertools -n kubecodriver-system
    
    # Check tool security profile
-   kubectl describe powertoolconfig aperf-config -n kubecodriver-system
+   kubectl describe codrivertool aperf-config -n kubecodriver-system
    ```
 
 2. **Request New Tools Properly**:
@@ -308,10 +308,10 @@ webhooks:
 kubectl get events --field-selector involvedObject.kind=CoDriverTool
 
 # Check for privileged tool usage
-kubectl get powertoolconfigs -A -o json | jq '.items[] | select(.spec.security.allowPrivileged == true) | .metadata.name'
+kubectl get codrivertools -A -o json | jq '.items[] | select(.spec.security.allowPrivileged == true) | .metadata.name'
 
 # Audit capability usage
-kubectl get powertoolconfigs -A -o json | jq '.items[] | {name: .metadata.name, capabilities: .spec.security.capabilities.add}'
+kubectl get codrivertools -A -o json | jq '.items[] | {name: .metadata.name, capabilities: .spec.security.capabilities.add}'
 ```
 
 ### Compliance Reporting
@@ -324,13 +324,13 @@ echo "CoDriverTool Security Report - $(date)"
 echo "=================================="
 echo
 echo "Total CoDriverTools:"
-kubectl get powertoolconfigs -A --no-headers | wc -l
+kubectl get codrivertools -A --no-headers | wc -l
 echo
 echo "Privileged Tools:"
-kubectl get powertoolconfigs -A -o json | jq -r '.items[] | select(.spec.security.allowPrivileged == true) | .metadata.name'
+kubectl get codrivertools -A -o json | jq -r '.items[] | select(.spec.security.allowPrivileged == true) | .metadata.name'
 echo
 echo "High-Risk Capabilities:"
-kubectl get powertoolconfigs -A -o json | jq -r '.items[] | select(.spec.security.capabilities.add[]? | contains("SYS_ADMIN", "SYS_MODULE", "SYS_RAWIO")) | .metadata.name'
+kubectl get codrivertools -A -o json | jq -r '.items[] | select(.spec.security.capabilities.add[]? | contains("SYS_ADMIN", "SYS_MODULE", "SYS_RAWIO")) | .metadata.name'
 EOF
 chmod +x security-report.sh
 ```
@@ -364,10 +364,10 @@ chmod +x security-report.sh
 
 ```bash
 # Check CoDriverTool security
-kubectl get powertoolconfig aperf-config -o jsonpath='{.spec.security}'
+kubectl get codrivertool aperf-config -o jsonpath='{.spec.security}'
 
 # Validate capability syntax
-kubectl apply --dry-run=client -f powertoolconfig.yaml
+kubectl apply --dry-run=client -f codrivertool.yaml
 
 # Test tool execution
 kubectl apply -f powertool-test.yaml

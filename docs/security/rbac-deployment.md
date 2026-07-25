@@ -36,10 +36,10 @@ metadata:
 rules:
 # CoDriverTool management (admin-only)
 - apiGroups: ["kubecodriver.codriverlabs.ai"]
-  resources: ["powertoolconfigs"]
+  resources: ["codrivertools"]
   verbs: ["create", "update", "patch", "delete", "get", "list", "watch"]
 - apiGroups: ["kubecodriver.codriverlabs.ai"]
-  resources: ["powertoolconfigs/status"]
+  resources: ["codrivertools/status"]
   verbs: ["get", "update", "patch"]
 
 # CoDriverJob management (for testing/debugging)
@@ -90,7 +90,7 @@ rules:
 
 # CoDriverTool read-only (to see available tools)
 - apiGroups: ["kubecodriver.codriverlabs.ai"]
-  resources: ["powertoolconfigs"]
+  resources: ["codrivertools"]
   verbs: ["get", "list", "watch"]
 
 ---
@@ -169,7 +169,7 @@ metadata:
   name: powertool-config-reader
 rules:
 - apiGroups: ["kubecodriver.codriverlabs.ai"]
-  resources: ["powertoolconfigs"]
+  resources: ["codrivertools"]
   verbs: ["get", "list", "watch"]
 ```
 
@@ -369,12 +369,12 @@ spec:
 
 ```bash
 # Test admin permissions
-kubectl auth can-i create powertoolconfigs --as=user:admin@company.com
-kubectl auth can-i update powertoolconfigs --as=user:admin@company.com
+kubectl auth can-i create codrivertools --as=user:admin@company.com
+kubectl auth can-i update codrivertools --as=user:admin@company.com
 
 # Test user permissions
 kubectl auth can-i create powertools --as=user:developer@company.com
-kubectl auth can-i create powertoolconfigs --as=user:developer@company.com  # Should be false
+kubectl auth can-i create codrivertools --as=user:developer@company.com  # Should be false
 
 # Test namespace restrictions
 kubectl auth can-i create powertools --as=user:prod-lead@company.com -n production
@@ -442,16 +442,16 @@ EOF
 1. **Check Available Tools**:
    ```bash
    # List all available tools
-   kubectl get powertoolconfigs -A
+   kubectl get codrivertools -A
    
    # Check tool restrictions
-   kubectl describe powertoolconfig prod-profiler-config
+   kubectl describe codrivertool prod-profiler-config
    ```
 
 2. **Understand Namespace Restrictions**:
    ```bash
    # Check which tools are available in your namespace
-   kubectl get powertoolconfigs -o json | jq '.items[] | select(.spec.allowedNamespaces == null or (.spec.allowedNamespaces[] | contains("'$(kubectl config view --minify -o jsonpath='{..namespace}')'"))) | .spec.name'
+   kubectl get codrivertools -o json | jq '.items[] | select(.spec.allowedNamespaces == null or (.spec.allowedNamespaces[] | contains("'$(kubectl config view --minify -o jsonpath='{..namespace}')'"))) | .spec.name'
    ```
 
 This RBAC model provides fine-grained control over who can create CoDriverTool, define security contexts, and restrict tools to specific namespaces while maintaining usability for different user roles.

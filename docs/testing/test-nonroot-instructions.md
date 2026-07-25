@@ -152,7 +152,7 @@ kubectl logs -n kubecodriver-system -l control-plane=controller-manager --tail=1
 kubectl describe powertool aperf-nonroot-test -n kubecodriver-test
 
 # Check if aperf-config exists
-kubectl get powertoolconfig -n kubecodriver-system
+kubectl get codrivertool -n kubecodriver-system
 ```
 
 ### Ephemeral Container Stuck in Waiting

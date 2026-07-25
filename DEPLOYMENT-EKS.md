@@ -128,11 +128,11 @@ kubectl get services -n kubecodriver-system
 kubectl get crd | grep codriverlabs
 
 # Expected output:
-# powertoolconfigs.kubecodriver.codriverlabs.ai
-# powertools.kubecodriver.codriverlabs.ai
+# codrivertools.kubecodriver.codriverlabs.ai
+# codriverjobs.kubecodriver.codriverlabs.ai
 
 # Check CoDriverJob configurations (if enabled)
-kubectl get powertoolconfigs -n kubecodriver-system
+kubectl get codrivertools -n kubecodriver-system
 
 # Expected output:
 # NAME           AGE
@@ -275,7 +275,7 @@ kubectl get secrets -n kubecodriver-system
 kubectl describe pod -n kubecodriver-system -l app.kubernetes.io/name=kubecodriver-operator
 
 # Check CoDriverJob configurations
-kubectl get powertoolconfigs -n kubecodriver-system -o yaml
+kubectl get codrivertools -n kubecodriver-system -o yaml
 ```
 
 ### Certificate Issues
@@ -308,8 +308,8 @@ helm uninstall kubecodriver-operator -n kubecodriver-system
 kubectl delete namespace kubecodriver-system
 
 # Clean up CRDs
-kubectl delete crd powertoolconfigs.kubecodriver.codriverlabs.ai
-kubectl delete crd powertools.kubecodriver.codriverlabs.ai
+kubectl delete crd codrivertools.kubecodriver.codriverlabs.ai
+kubectl delete crd codriverjobs.kubecodriver.codriverlabs.ai
 
 # Optional: Remove ECR repositories
 aws ecr delete-repository --repository-name codriverlabs/ce/kubecodriver-controller --region $AWS_REGION --force
